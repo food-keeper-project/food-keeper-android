@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+    kotlin("kapt")
 }
 
 android {
@@ -56,4 +60,46 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    // Lottie
+    implementation(libs.lottie.compose)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // DateTime
+    implementation(libs.kotlinx.datetime)
+
+    // Ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Firebase FCM
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
 }
