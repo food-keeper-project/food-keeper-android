@@ -1,0 +1,1 @@
+각 계층 간의 데이터 모델을 변환해주는 역할을 합니다. 예를 들어, 네트워크에서 받은 FoodItemDto를 domain 계층의 FoodItem 모델로, 또는 FoodItemEntity를 FoodItem 모델로 변환하는 코드가 여기에 들어갑니다.

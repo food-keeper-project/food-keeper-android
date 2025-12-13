@@ -1,0 +1,1 @@
+ Room DB, DataStore 등 로컬 데이터베이스를 다루는 DAO(Data Access Object)와 데이터베이스 엔티티가 위치합니다.

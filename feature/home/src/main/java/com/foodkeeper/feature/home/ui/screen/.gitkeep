@@ -1,0 +1,1 @@
+HomeScreen.kt와 같이 Composable 함수로 실제 화면을 그리는 코드가 위치합니다.
