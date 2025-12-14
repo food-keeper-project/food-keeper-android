@@ -19,6 +19,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 카카오 SDK는 이 저장소에만 존재합니다.
+        maven { url = uri("https://devrepo.kakao.com/nexus/content/groups/public/") }
     }
 
 }

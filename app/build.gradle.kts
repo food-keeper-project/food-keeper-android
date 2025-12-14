@@ -102,4 +102,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
+    // 실제 SDK 구현체는 app 모듈에만 위치시킵니다.
+    implementation(libs.kakao.sdk.user)
+
 }
