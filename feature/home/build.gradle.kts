@@ -1,7 +1,9 @@
 plugins {
     id("foodkeeper.android.library")
 }
-
+android {
+    namespace = "com.foodkeeper.feature.home"
+}
 dependencies {
     implementation(project(":core"))
 

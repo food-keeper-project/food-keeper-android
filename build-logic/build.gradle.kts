@@ -19,13 +19,18 @@ val libs = extensions.getByType<org.gradle.accessors.dm.LibrariesForLibs>()
 
 // build-logic 모듈이 필요로 하는 의존성 추가
 dependencies {
+
     // Gradle, Android Gradle Plugin, Kotlin Gradle Plugin의 API를 사용하기 위해 추가
     implementation(gradleApi())
     // libs.versions.toml에서 버전을 가져오도록 수정
     // 안드로이드 애플리케이션 플러그인 API
-    implementation(libs.plugins.android.application)
-    // 코틀린 안드로이드 플러그인 API
-    implementation(libs.plugins.kotlin.android)
+//    implementation(libs.plugins.android.application)
+//    // 코틀린 안드로이드 플러그인 API
+//    implementation(libs.plugins.kotlin.android)
+
+    implementation(libs.android.gradlePlugin)
+    implementation(libs.kotlin.gradlePlugin)
+
 }
 
 // 우리가 만들 커스텀 플러그인들을 Gradle에 정식으로 등록하는 과정
@@ -34,11 +39,11 @@ gradlePlugin {
         // "플러그인 이름" to (id = "ID", implementationClass = "클래스 경로")
         val androidApplication by creating {
             id = "foodkeeper.android.application"
-            implementationClass = "AndroidApplicationConventionPlugin"
+            implementationClass = "com.foodkeeper.buildlogic.AndroidApplicationConventionPlugin"
         }
         val androidLibrary by creating {
             id = "foodkeeper.android.library"
-            implementationClass = "AndroidLibraryConventionPlugin"
+            implementationClass = "com.foodkeeper.buildlogic.AndroidLibraryConventionPlugin"
         }
     }
 }

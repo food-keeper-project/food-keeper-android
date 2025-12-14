@@ -4,7 +4,9 @@
 plugins {
     id("foodkeeper.android.library")
 }
-
+android {
+    namespace = "com.foodkeeper.core"
+}
 
 dependencies {
     // core 모듈에서 필요한 공통 라이브러리를 여기에 추가합니다.
