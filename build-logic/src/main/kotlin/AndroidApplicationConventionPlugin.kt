@@ -15,23 +15,19 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.android")
 
             extensions.configure<ApplicationExtension> {
+
                 compileSdk = 34
 
                 defaultConfig {
-                    applicationId = "com.foodkeeper"
-                    targetSdk = 34
                     minSdk = 24
-
-                    // 2. versionCode와 versionName을 defaultConfig 블록 안으로 이동
+                    targetSdk = 34
                     versionCode = 1
                     versionName = "1.0"
                 }
 
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_1_8
-                    targetCompatibility = JavaVersion.VERSION_1_8
+                buildFeatures {
+                    compose = true
                 }
-
 
                 composeOptions {
                     kotlinCompilerExtensionVersion = "1.5.14"
