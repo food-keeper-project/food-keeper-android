@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.domain.model.LoginResult
 import com.foodkeeper.core.domain.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 // UI가 관찰할 로그인 상태를 정의하는 sealed interface.
 // sealed interface는 sealed class와 유사하지만, 상태 값 자체에 데이터가 필요 없을 때 더 간결합니다.
@@ -19,7 +21,8 @@ sealed interface LoginUiState {
     data class Error(val message: String?) : LoginUiState // 실패
 }
 
-class LoginViewModel(
+@HiltViewModel
+class LoginViewModel  @Inject constructor(
     // Domain 계층의 인터페이스(:core 모듈의 AuthRepository)에만 의존합니다.
     private val authRepository: AuthRepository
 ) : ViewModel() {

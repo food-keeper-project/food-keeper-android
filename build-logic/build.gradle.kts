@@ -37,13 +37,13 @@ dependencies {
 gradlePlugin {
     plugins {
         // "플러그인 이름" to (id = "ID", implementationClass = "클래스 경로")
-        val androidApplication by creating {
+        register("androidApplication") {
             id = "foodkeeper.android.application"
-            implementationClass = "com.foodkeeper.buildlogic.AndroidApplicationConventionPlugin"
+            implementationClass = "AndroidApplicationConventionPlugin"
         }
-        val androidLibrary by creating {
+        register("androidLibrary") {
             id = "foodkeeper.android.library"
-            implementationClass = "com.foodkeeper.buildlogic.AndroidLibraryConventionPlugin"
+            implementationClass = "AndroidLibraryConventionPlugin"
         }
     }
 }

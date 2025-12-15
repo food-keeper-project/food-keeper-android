@@ -1,5 +1,5 @@
 package com.foodkeeper.feature.kakaologin
-
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,8 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
 
 @Composable
 fun LoginScreen(
@@ -33,7 +33,8 @@ fun LoginScreen(
         when (val state = uiState) {
             is LoginUiState.Error -> {
                 // 로그인 실패 시 Toast 메시지 표시
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                Log.d("TAG", "로그인 실패: ${state.message}")
             }
             is LoginUiState.Success -> {
                 // 로그인 성공 시 Toast 메시지 표시 및 다음 화면으로 이동 준비
@@ -74,20 +75,21 @@ private fun KakaoLoginButton(onClick: () -> Unit) {
             .padding(horizontal = 32.dp)
             .clickable(onClick = onClick) // 클릭 이벤트를 Box에 연결
     ) {
-        // 여기에 Image Composable을 사용하여 카카오 로그인 버튼 이미지를 넣으세요.
-        // Image(
-        //     painter = painterResource(id = R.drawable.kakao_login_button_image),
-        //     contentDescription = "카카오 로그인"
-        // )
+
+        Image(
+            painterResource(R.drawable.kakao_login_medium_narrow),
+            // 파일 이름에 맞춰 수정
+            contentDescription = "카카오 로그인"
+        )
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-private fun LoginScreenPreview() {
-    // 미리보기에서는 실제 ViewModel 없이 UI 컴포넌트만 확인할 수 있습니다.
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        KakaoLoginButton {}
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun LoginScreenPreview() {
+//    // 미리보기에서는 실제 ViewModel 없이 UI 컴포넌트만 확인할 수 있습니다.
+//    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//        KakaoLoginButton {}
+//    }
+//}
