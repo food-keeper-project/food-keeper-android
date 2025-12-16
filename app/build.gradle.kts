@@ -3,11 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
-    kotlin("kapt")
 }
-
+kotlin {
+    jvmToolchain(17)
+}
 android {
     namespace = "com.example.foodkeeper"
     compileSdk = 36
@@ -32,12 +34,10 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
         compose = true
     }
@@ -101,5 +101,13 @@ dependencies {
     // Firebase FCM
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+
+    // 실제 SDK 구현체는 app 모듈에만 위치시킵니다.
+    implementation(libs.kakao.sdk.user)
+    // --- 아래 한 줄을 추가하여 :app 모듈이 :core 모듈을 참조하도록 합니다 ---
+    implementation(project(":core"))
+    // ----------------------------------------------------------------
+    // 기존에 있던 다른 모듈 의존성
+    implementation(project(":feature:kakao-login"))
 
 }
