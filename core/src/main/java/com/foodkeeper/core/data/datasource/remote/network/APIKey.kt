@@ -1,4 +1,4 @@
-package com.foodkeeper.core.data.network
+package com.foodkeeper.core.data.datasource.remote.network
 
 object ApiKey {
 

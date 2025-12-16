@@ -1,4 +1,4 @@
-package com.foodkeeper.core.data.network
+package com.foodkeeper.core.data.datasource.remote.network
 
 import io.ktor.http.HttpMethod // Ktor의 HttpMethod 사용
 
@@ -9,16 +9,19 @@ sealed class ApiRoute {
         val kakaoID: String,
     ) : ApiRoute()
 
-    object RefreshToken : ApiRoute()
+    data class RefreshToken(
+        val token: String
+    ) : ApiRoute()
 
 //    data class Logout(val userId: String) : ApiRoute()
 
     // ========== 경로 정의 ==========
     val path: String
+        // TODO: URL 선언 시 앞에 '/' 제거!!
         get() = when (this) {
             // Auth
-            is Login -> "/auth/login"
-            is RefreshToken -> "/auth/refresh"
+            is Login -> "api/v1" //로그인 API
+            is RefreshToken -> "auth/refresh" // 엑세스 토큰 갱신 API
 //            is Logout -> "/auth/logout"
 
         }
@@ -26,8 +29,9 @@ sealed class ApiRoute {
     // ========== HTTP 메서드 정의 ==========
     val method: HttpMethod
         get() = when (this) {
-            is Login, is RefreshToken -> HttpMethod.Get
-        //            is Logout -> HttpMethod.GET
+            is Login -> HttpMethod.Get
+            is RefreshToken -> HttpMethod.Post
+//            is Logout -> HttpMethod.GET
         }
 
     // ========== 인증 필요 여부 ==========
@@ -40,18 +44,13 @@ sealed class ApiRoute {
     // ========== Body 데이터 ==========
     val body: Any?
         get() = when (this) {
-            is Login -> mapOf("kakaoID" to kakaoID)
             else -> null
         }
 
     // ========== 쿼리 파라미터 ==========
     val queryParameters: Map<String, Any>
         get() = when (this) {
-//            is exaple -> mapOf(
-//                "q" to query,
-//                "page" to page,
-//                "size" to size
-//            )
+            is Login -> mapOf("members" to kakaoID)
             else -> emptyMap()
         }
 
