@@ -11,6 +11,8 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+
 import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 
@@ -20,15 +22,30 @@ class FoodApiService @Inject constructor(
 ) {
 
     /**
-     * 제네릭 API 호출 함수
-     * ApiRoute를 받아서 자동으로 요청 설정 + 인증 처리
+     * 최종 사용자(ViewModel 등)가 호출할 공개 API.
+     * inline을 유지하여 reified T의 장점을 살린다.
      */
     suspend inline fun <reified T> request(route: ApiRoute): T {
+        // 1. 내부 구현체를 호출하고, 결과(HttpResponse)를 받는다.
+        val response = internalRequest(route)
+
+        // 2. 받은 응답을 원하는 타입 T로 변환하여 반환한다. (reified의 역할)
+        return response.body()
+    }
+
+    /**
+     * 토큰 갱신을 포함한 모든 내부 로직을 처리하는 핵심 함수.
+     * Non-inline이며, 외부에는 노출되지 않는다.
+     * 결과로 HttpResponse를 반환한다.
+     */
+    @PublishedApi
+    internal suspend fun internalRequest(route: ApiRoute): HttpResponse {
         return try {
-            executeRequest(route)
+            // 실제 요청을 실행하고 HttpResponse를 그대로 반환
+            executeHttpRequest(route)
         } catch (e: ClientRequestException) {
-            // 401 Unauthorized 발생 시 토큰 갱신 후 재시도
             if (e.response.status == HttpStatusCode.Unauthorized && route.requiresAuth) {
+                // 토큰 갱신 및 재시도 로직 호출
                 refreshTokenAndRetry(route)
             } else {
                 throw e
@@ -37,14 +54,41 @@ class FoodApiService @Inject constructor(
     }
 
     /**
-     * 실제 HTTP 요청 실행
+     * 토큰 갱신 후 원래 요청을 재시도하는 함수.
+     * Non-inline이며, 결과로 HttpResponse를 반환한다.
      */
-    @PublishedApi
-    internal suspend inline fun <reified T> executeRequest(route: ApiRoute): T {
+    private suspend fun refreshTokenAndRetry(route: ApiRoute): HttpResponse {
+        val refreshToken = tokenManager.getRefreshToken()
+            ?: throw UnauthorizedException("리프레시 토큰이 없습니다. 다시 로그인해주세요.")
+
+        try {
+            // 토큰 갱신 API 호출 (결과로 HttpResponse를 받음)
+            val refreshResponse = executeHttpRequest(ApiRoute.RefreshToken(refreshToken))
+            val tokenDto: ToKenDTO = refreshResponse.body() // 수동으로 타입 변환
+
+            // 새로운 토큰 저장
+            tokenManager.saveTokens(
+                accessToken = tokenDto.accessToken,
+                refreshToken = tokenDto.refreshToken
+            )
+
+            // 원래 요청 재시도
+            return executeHttpRequest(route)
+
+        } catch (e: Exception) {
+            tokenManager.clearTokens()
+            throw UnauthorizedException("토큰 갱신에 실패했습니다. 다시 로그인해주세요.")
+        }
+    }
+
+    /**
+     * 순수하게 HTTP 요청만 실행하는 가장 내부 함수.
+     * Non-inline이며, 결과로 HttpResponse를 반환한다.
+     */
+    private suspend fun executeHttpRequest(route: ApiRoute): HttpResponse {
         return client.request(route.path) {
             method = route.method
 
-            // 인증이 필요한 경우 토큰 추가
             if (route.requiresAuth) {
                 val accessToken = tokenManager.getAccessToken()
                 if (accessToken != null) {
@@ -56,55 +100,13 @@ class FoodApiService @Inject constructor(
                 header("Authorization", "Bearer ${route.token}")
             }
 
-            // Body 설정
             route.body?.let { setBody(it) }
-
-            // 쿼리 파라미터 설정
-            route.queryParameters.forEach { (key, value) ->
-                parameter(key, value)
-            }
-
-            // 커스텀 헤더 설정
-            route.headers.forEach { (key, value) ->
-                header(key, value)
-            }
-
-            // 타임아웃 설정
+            route.queryParameters.forEach { (key, value) -> parameter(key, value) }
+            route.headers.forEach { (key, value) -> header(key, value) }
             route.timeoutMillis?.let {
-                timeout {
-                    requestTimeoutMillis = it
-                }
+                timeout { requestTimeoutMillis = it }
             }
-        }.body()
-    }
-
-    /**
-     * 토큰 갱신 후 원래 요청 재시도
-     */
-    @PublishedApi
-    internal suspend inline fun <reified T> refreshTokenAndRetry(route: ApiRoute): T {
-        // 1. 리프레시 토큰 확인
-        val refreshToken = tokenManager.getRefreshToken()
-            ?: throw UnauthorizedException("리프레시 토큰이 없습니다. 다시 로그인해주세요.")
-
-        try {
-            // 2. 토큰 갱신 API 호출
-            val refreshResponse = executeRequest<ToKenDTO>(ApiRoute.RefreshToken(refreshToken))
-
-            // 3. 새로운 토큰 저장
-            tokenManager.saveTokens(
-                accessToken = refreshResponse.accessToken,
-                refreshToken = refreshResponse.refreshToken
-            )
-
-            // 4. 원래 요청 재시도
-            return executeRequest(route)
-
-        } catch (e: Exception) {
-            // 토큰 갱신 실패 시 로그아웃 처리
-            tokenManager.clearTokens()
-            throw UnauthorizedException("토큰 갱신에 실패했습니다. 다시 로그인해주세요.")
-        }
+        } // .body()를 여기서 호출하지 않고 HttpResponse 자체를 반환
     }
 }
 
