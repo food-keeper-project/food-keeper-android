@@ -1,4 +1,4 @@
-package com.foodkeeper.core.data.datasource.remote.network
+package com.foodkeeper.core.data.network
 
 sealed class ApiResult<out T> {
     data class Success<T>(val data: T): ApiResult<T>()

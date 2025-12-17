@@ -1,8 +1,7 @@
-package com.foodkeeper.core.data.datasource.remote
+package com.foodkeeper.core.data.network
 
 import com.foodkeeper.core.data.datasource.local.TokenManager
-import com.foodkeeper.core.data.datasource.mapper.External.ToKenDTO
-import com.foodkeeper.core.data.datasource.remote.network.ApiRoute
+import com.foodkeeper.core.data.mapper.External.ToKenDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException

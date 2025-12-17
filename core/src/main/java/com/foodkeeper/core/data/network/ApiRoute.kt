@@ -1,4 +1,4 @@
-package com.foodkeeper.core.data.datasource.remote.network
+package com.foodkeeper.core.data.network
 
 import io.ktor.http.HttpMethod // Ktor의 HttpMethod 사용
 
