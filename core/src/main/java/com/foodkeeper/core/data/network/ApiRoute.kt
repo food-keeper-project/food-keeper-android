@@ -13,8 +13,12 @@ sealed class ApiRoute {
         val token: String
     ) : ApiRoute()
 
-//    data class Logout(val userId: String) : ApiRoute()
-
+    //    data class Logout(val userId: String) : ApiRoute()
+    // ========== 경로 정의 ==========
+    val baseURL: String
+        get() = when (this) {
+            else -> ApiKey.BASE_URL
+        }
     // ========== 경로 정의 ==========
     val path: String
         // TODO: URL 선언 시 앞에 '/' 제거!!

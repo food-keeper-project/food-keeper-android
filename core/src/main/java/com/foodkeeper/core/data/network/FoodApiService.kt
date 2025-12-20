@@ -13,6 +13,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class FoodApiService @Inject constructor(
@@ -20,16 +22,9 @@ class FoodApiService @Inject constructor(
     private val tokenManager: TokenManager
 ) {
 
-    /**
-     * 최종 사용자(ViewModel 등)가 호출할 공개 API.
-     * inline을 유지하여 reified T의 장점을 살린다.
-     */
-    suspend inline fun <reified T> request(route: ApiRoute): T {
-        // 1. 내부 구현체를 호출하고, 결과(HttpResponse)를 받는다.
+    inline fun <reified T> request(route: ApiRoute): Flow<T> = flow {
         val response = internalRequest(route)
-
-        // 2. 받은 응답을 원하는 타입 T로 변환하여 반환한다. (reified의 역할)
-        return response.body()
+        emit(response.body<T>())
     }
 
     /**
@@ -85,7 +80,7 @@ class FoodApiService @Inject constructor(
      * Non-inline이며, 결과로 HttpResponse를 반환한다.
      */
     private suspend fun executeHttpRequest(route: ApiRoute): HttpResponse {
-        return client.request(route.path) {
+        return client.request(route.baseURL + route.path) {
             method = route.method
 
             if (route.requiresAuth) {

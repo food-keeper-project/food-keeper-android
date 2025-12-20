@@ -1,28 +1,25 @@
 package com.foodkeeper.core.data.datasource.external
 
 import com.foodkeeper.core.data.mapper.External.AutoTokenDTO
+import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.data.network.ApiRoute
 import com.foodkeeper.core.data.network.FoodApiService
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 interface AuthRemoteDataSource {
-//    suspend fun login(kakaoId: String): LoginResponseDTO
-    suspend fun refreshToken(refreshToken: String): AutoTokenDTO
+    fun login(kakaoId: String): Flow<AutoTokenDTO>
 }
 
-class AuthRemoteDataSourceImpl @Inject constructor(
+class DefaultAuthRemoteDataSource @Inject constructor(
     private val apiService: FoodApiService
 ) : AuthRemoteDataSource {
 
-//    override suspend fun login(kakaoId: String): LoginResponseDTO {
-//        return apiService.request(
-//            ApiRoute.Login(kakaoID = kakaoId)
-//        )
-//    }
-
-    override suspend fun refreshToken(refreshToken: String): AutoTokenDTO {
+    override fun login(kakaoId: String): Flow<AutoTokenDTO> {
         return apiService.request(
-            ApiRoute.RefreshToken(token = refreshToken)
+            ApiRoute.Login(kakaoID = kakaoId)
         )
     }
+
 }
