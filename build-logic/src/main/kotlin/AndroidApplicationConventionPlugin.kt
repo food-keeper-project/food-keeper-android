@@ -1,5 +1,7 @@
 // build-logic/src/main/kotlin/AndroidApplicationConventionPlugin.kt
 
+package com.foodkeeper.buildlogic
+
 import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
