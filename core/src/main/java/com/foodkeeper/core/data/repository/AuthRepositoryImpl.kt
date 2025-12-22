@@ -1,28 +1,33 @@
-package com.example.foodkeeper.data.repository
+package com.foodkeeper.core.data.repository
 
 import android.content.Context
-import com.foodkeeper.core.domain.model.LoginResult // 'domain'이 없는 경로로 수정
-import com.foodkeeper.core.domain.repository.AuthRepository // 'domain'이 없는 경로로 수정
+import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
+import com.foodkeeper.core.data.datasource.local.TokenManager
+import com.foodkeeper.core.data.mapper.External.toUser
+import com.foodkeeper.core.domain.model.LoginResult
+import com.foodkeeper.core.domain.model.User
+import com.foodkeeper.core.domain.repository.AuthRepository
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+// --- 카카오 관련 임포트 추가 ---
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+//-------------------------------------
+import dagger.hilt.android.qualifiers.ApplicationContext
 
-// :core 모듈의 AuthRepository 인터페이스를 실제로 구현하는 클래스
-class KakaoAuthRepositoryImpl @Inject constructor(
-    private val context: Context // Hilt를 통해 ApplicationContext가 주입됩니다.
+class AuthRepositoryImpl @Inject constructor(
+    private val remoteDataSource: AuthRemoteDataSource,
+    private val tokenManager: TokenManager,
+    @ApplicationContext private val context: Context
 ) : AuthRepository {
-
-    /**
-     * 카카오 로그인을 비동기적으로 처리하고 결과를 Flow로 반환합니다.
-     * 카카오 SDK의 콜백 기반 API를 코루틴의 Flow로 변환합니다.
-     */
     override fun login(): Flow<LoginResult> = callbackFlow {
         // 실제 로그인 로직을 수행하는 함수 호출
         val result = kakaoLogin(context)
@@ -34,11 +39,6 @@ class KakaoAuthRepositoryImpl @Inject constructor(
         // Flow가 닫힐 때까지 대기
         awaitClose { }
     }
-
-    /**
-     * 카카오 로그인을 처리하고 결과를 반환하는 suspend 함수.
-     * 코루틴의 suspendCoroutine을 사용하여 콜백을 동기식 코드처럼 변환합니다.
-     */
     private suspend fun kakaoLogin(context: Context): LoginResult = suspendCoroutine { continuation ->
         // 카카오톡이 설치되어 있는지 확인
         val isKakaoTalkLoginAvailable = UserApiClient.instance.isKakaoTalkLoginAvailable(context)
@@ -102,5 +102,28 @@ class KakaoAuthRepositoryImpl @Inject constructor(
             // 토큰과 에러가 모두 null인 경우 (이론적으로 발생하기 어려움)
             onFailure(IllegalStateException("Kakao login failed with unknown error"))
         }
+    }
+    override fun login(kakaoId: String): Flow<User> {
+        return remoteDataSource.login(kakaoId)
+            .onEach { dto ->
+                // 토큰 저장
+                tokenManager.saveTokens(
+                    accessToken = dto.accessToken,
+                    refreshToken = dto.refreshToken,
+                )
+            }
+            .map { dto ->
+                // DTO → Domain Model 변환
+                dto.toUser()
+            }
+    }
+
+    override fun hasToken(): Flow<Boolean> {
+        return tokenManager.accessToken.map { !it.isNullOrBlank() }
+    }
+    override fun hasSeenOnboarding(): Flow<Boolean> = tokenManager.hasSeenOnboarding
+
+    override suspend fun saveOnboardingStatus(completed: Boolean) {
+        tokenManager.saveOnboardingCompleted(completed)
     }
 }

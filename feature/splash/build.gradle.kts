@@ -1,7 +1,7 @@
-// feature/kakao-login/build.gradle.kts
+// feature/splash/build.gradle.kts
 
 plugins {
-    // build-logic에 정의한 공통 라이브러리 플러그인을 적용합니다.
+    // 공통 라이브러리 설정을 적용합니다. (Android 설정, Compose 기초 등 포함되어 있을 것임)
     id("foodkeeper.android.library")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
@@ -9,30 +9,28 @@ plugins {
 }
 
 android {
-    namespace = "com.foodkeeper.feature.kakaologin"
+    namespace = "com.foodkeeper.feature.splash"
 }
+
 dependencies {
-    // 이 모듈은 Domain 계층의 규칙을 사용해야 하므로 :core 모듈을 implementation 합니다.
+    // 핵심 로직과 모델을 사용하기 위해 core 모듈 의존
     implementation(project(":core"))
 
-
-    // ViewModel
+    // ViewModel 및 Compose 연동
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.activity.compose) // viewModel() 사용을 위해 추가
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose) // collectAsStateWithLifecycle 사용을 위해 권장
 
-    // Compose UI
-    // libs.versions.toml에 정의된 라이브러리들을 사용합니다.
+    // Compose UI (BOM을 사용하여 버전 관리)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    implementation(libs.kakao.sdk.user)
-
-    implementation(libs.hilt.android) // <-- 이 줄 추가
-    kapt(libs.hilt.compiler) // <-- 이 줄 추가
+    // DI (Hilt)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-
 }

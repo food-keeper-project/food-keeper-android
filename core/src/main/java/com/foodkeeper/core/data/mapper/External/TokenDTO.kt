@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ToKenDTO(
-    @SerialName("accesstoken")
+    @SerialName("accessToken")
     val accessToken: String,
 
     @SerialName("refreshToken")

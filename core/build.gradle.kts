@@ -3,19 +3,21 @@
 // 안드로이드 라이브러리 플러그인을 적용합니다.
 plugins {
     id("foodkeeper.android.library")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.kapt)
 }
 android {
     namespace = "com.foodkeeper.core"
 }
 
 dependencies {
-    implementation(libs.firebase.crashlytics.buildtools)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
     // Hilt
     implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     // Room
     implementation(libs.androidx.room.runtime)
@@ -35,9 +37,9 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.transport.runtime)
     // core 모듈에서 필요한 공통 라이브러리를 여기에 추가합니다.
     // 예: implementation("androidx.core:core-ktx:1.12.0")
     // core 모듈에만 필요한 특별한 의존성만 남깁니다.
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kakao.sdk.user)
 }
