@@ -20,7 +20,8 @@ datetime = "0.6.1"
 ktor = "2.3.12"
 firebaseBom = "33.1.2"
 googleServices = "4.4.2"
-kakao = "2.20.1"  # 카카오 SDK 최신 버전 (변경될 수 있음)
+kakao = "2.20.1"
+material3 = "1.4.0"  # 카카오 SDK 최신 버전 (변경될 수 있음)
 
 
 [libraries]
@@ -90,6 +91,7 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 
 # ---------------- Kakao ----------------
 kakao-sdk-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kakao" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
