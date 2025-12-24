@@ -5,5 +5,5 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.hilt) apply false // <-- 이 줄 추가
     alias(libs.plugins.kotlin.kapt) apply false // <-- 이 줄 추가
-
+    alias(libs.plugins.kotlin.serialization) apply false
 }

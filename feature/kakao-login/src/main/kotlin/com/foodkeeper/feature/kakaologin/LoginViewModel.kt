@@ -42,7 +42,7 @@ class LoginViewModel  @Inject constructor(
             .onEach { result ->
                 // :core 모듈에서 정의한 LoginResult 결과에 따라 UI 상태를 업데이트합니다.
                 val newState = when (result) {
-                    is LoginResult.Success -> LoginUiState.Success(result.token)
+                    is LoginResult.Success -> LoginUiState.Success(result.accessToken)
                     is LoginResult.Failure -> LoginUiState.Error(result.message)
                     // 사용자가 로그인을 취소하면 다시 초기 상태로 돌아갑니다.
                     is LoginResult.Canceled -> LoginUiState.Idle

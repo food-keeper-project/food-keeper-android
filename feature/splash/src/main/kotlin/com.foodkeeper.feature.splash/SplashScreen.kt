@@ -43,8 +43,8 @@ fun SplashScreen(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Food Keeper",
-            fontSize = 32.sp,
+            text = "푸드키퍼",
+            fontSize = 44.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF4CAF50) // 푸드키퍼의 메인 브랜드 컬러
         )

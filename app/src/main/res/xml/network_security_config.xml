@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 모든 통신에 대해 시스템 및 사용자 인증서를 모두 신뢰하도록 설정 -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" /> 
+        </trust-anchors>
+    </base-config>
+</network-security-config>

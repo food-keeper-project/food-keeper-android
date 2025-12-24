@@ -1,4 +1,4 @@
-package com.foodkeeper.core.data.mapper.External
+package com.foodkeeper.core.data.mapper.external
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

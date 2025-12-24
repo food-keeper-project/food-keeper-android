@@ -18,7 +18,7 @@ coil = "2.7.0"
 lottie = "6.4.0"
 serialization = "1.7.3"
 datetime = "0.6.1"
-ktor = "2.3.12"
+ktor = "2.3.13"
 firebaseBom = "33.1.2"
 googleServices = "4.4.2"
 kakao = "2.20.1"  # 카카오 SDK 최신 버전 (변경될 수 있음)
@@ -55,7 +55,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 # ---------------- Coroutines ----------------
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
-
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
 # ---------------- Hilt ----------------
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
@@ -86,7 +86,7 @@ ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref =
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
-
+ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 # ---------------- Firebase ----------------
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
