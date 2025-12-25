@@ -2,8 +2,10 @@ package com.foodkeeper.core.data.datasource.local
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -17,8 +19,19 @@ class TokenManager @Inject constructor(
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("accessToken")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refreshToken")
         private val USER_ID_KEY = stringPreferencesKey("userID")
+        val HAS_SEEN_ONBOARDING_KEY = booleanPreferencesKey("hasSeenOnboarding")
     }
+    // 함수가 아니라 'Flow 프로퍼티'로 정의하는 것이 일반적입니다.
+    val accessToken: Flow<String?> = dataStore.data.map { it[ACCESS_TOKEN_KEY] }
+    // 온보딩 상태 읽기
+    val hasSeenOnboarding: Flow<Boolean> = dataStore.data.map { it[HAS_SEEN_ONBOARDING_KEY] == true }
 
+    // 온보딩 완료 처리
+    suspend fun saveOnboardingCompleted(completed: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[HAS_SEEN_ONBOARDING_KEY] = completed
+        }
+    }
     /**
      * 토큰 저장
      */

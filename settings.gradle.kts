@@ -31,4 +31,5 @@ include(":core")
 include(":feature")
 include(":feature:home")
 include(":feature:kakao-login")
+include(":feature:splash")
  

@@ -16,12 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 
 @Composable
 fun LoginScreen(
-    // ViewModel은 외부(Activity 또는 Navigation)에서 주입받는 구조입니다.
-    viewModel: LoginViewModel
+    // 1. hiltViewModel()을 사용하여 뷰모델 주입
+    viewModel: LoginViewModel = hiltViewModel(),
+    // 2. 외부(app 모듈)에서 넘겨줄 성공 콜백
+    onLoginSuccess: () -> Unit
 ) {
     // ViewModel의 uiState를 구독하여 상태가 변경될 때마다 리컴포지션을 트리거합니다.
     val uiState by viewModel.uiState.collectAsState()
@@ -41,6 +44,8 @@ fun LoginScreen(
                 Toast.makeText(context, "로그인 성공! 토큰: ${state.token}", Toast.LENGTH_SHORT).show()
                 // TODO: 여기서 내비게이션 라이브러리를 사용해 홈 화면 등으로 이동하는 코드를 작성합니다.
                 // 예: navigator.navigateToHome()
+                // 3. 성공 시점에 콜백 호출!
+                onLoginSuccess()
             }
             else -> { /* Idle, Loading 상태에서는 별도의 Side Effect가 필요 없습니다. */ }
         }

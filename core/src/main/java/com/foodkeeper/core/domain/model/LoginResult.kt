@@ -9,7 +9,7 @@ sealed class LoginResult {
      * 로그인 성공 시 상태. 성공의 증표로 받은 값(예: 액세스 토큰)을 포함합니다.
      * @param token 인증에 성공하여 발급된 토큰
      */
-    data class Success(val token: String) : LoginResult()
+    data class Success(val accessToken: String) : LoginResult()
 
     /**
      * 로그인 실패 시 상태. 실패 원인을 담는 메시지를 포함할 수 있습니다.

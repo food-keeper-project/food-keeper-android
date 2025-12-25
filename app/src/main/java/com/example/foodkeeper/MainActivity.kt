@@ -8,18 +8,21 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
 import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
+import com.foodkeeper.feature.splash.OnboardingScreen
+import com.foodkeeper.feature.splash.SplashScreen
 import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint // Hilt를 사용하기 위한 어노테이션
 class MainActivity : ComponentActivity() {
-
-    // Hilt를 통해 LoginViewModel의 인스턴스를 주입받습니다.
-    private val loginViewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,13 +33,71 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // --- 이 코드를 추가합니다 ---
-                    val keyHash = Utility.getKeyHash(this)
-                    Log.d("KakaoKeyHash", "keyHash: $keyHash")
-                    // :feature:kakao-login 모듈의 LoginScreen을 호출하고,
-                    // Hilt로부터 주입받은 ViewModel을 파라미터로 전달합니다.
-                    LoginScreen(viewModel = loginViewModel)
+                    // 메인 진입점에서 내비게이션 함수 호출
+                    FoodKeeperNavHost()
                 }
+            }
+        }
+    }
+}
+/**
+* 앱 전체의 화면 흐름을 관리하는 함수
+*/
+@Composable
+fun FoodKeeperNavHost() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "splash" // 앱 시작 시 스플래시를 먼저 띄움
+    ) {
+        composable("onboarding") {
+            OnboardingScreen(
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        // 뒤로가기 눌렀을 때 온보딩으로 다시 오지 않게 제거
+                        popUpTo("onboarding") { inclusive = true }
+                    }
+                }
+            )
+        }
+        // 1. 스플래시 화면
+        composable("splash") {
+            SplashScreen(
+                onNavigateToOnboarding = {
+                    navController.navigate("onboarding") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onNavigateToMain = {
+                    navController.navigate("main") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // 2. 로그인 화면
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // 3. 메인 화면 (임시)
+        composable("main") {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                // 나중에 만들 메인 화면 연결
+                // MainScreen()
             }
         }
     }
