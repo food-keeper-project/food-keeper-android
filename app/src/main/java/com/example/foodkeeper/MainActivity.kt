@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
 import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
+import com.foodkeeper.feature.home.HomeScreen
+import com.foodkeeper.feature.home.HomeViewModel
 import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,6 +22,7 @@ class MainActivity : ComponentActivity() {
 
     // Hilt를 통해 LoginViewModel의 인스턴스를 주입받습니다.
     private val loginViewModel: LoginViewModel by viewModels()
+    private val homeViewModel: HomeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +38,8 @@ class MainActivity : ComponentActivity() {
                     Log.d("KakaoKeyHash", "keyHash: $keyHash")
                     // :feature:kakao-login 모듈의 LoginScreen을 호출하고,
                     // Hilt로부터 주입받은 ViewModel을 파라미터로 전달합니다.
-                    LoginScreen(viewModel = loginViewModel)
+//                    LoginScreen(viewModel = loginViewModel)
+                    HomeScreen()
                 }
             }
         }

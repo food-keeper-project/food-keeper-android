@@ -14,3 +14,9 @@ fun Date.isExpiringSoon(): Boolean {
     val diffDays = TimeUnit.MILLISECONDS.toDays(diffMillis)
     return diffDays in 0..EXPIRING_SOON_DAYS
 }
+
+// 디데이 계산
+fun Date.getDDay(from: Date = Date()): Int {
+    val diffMillis = this.time - from.time
+    return TimeUnit.MILLISECONDS.toDays(diffMillis).toInt()
+}
