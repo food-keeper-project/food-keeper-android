@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +36,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,10 +47,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.foodkeeper.core.domain.model.Food
+import com.foodkeeper.core.domain.model.FoodCategory
+import com.foodkeeper.core.ui.base.BaseUiState
+import com.foodkeeper.core.ui.util.getDDay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 /**
@@ -53,7 +71,125 @@ import com.foodkeeper.core.domain.model.Food
  * 유통기한 임박 식품 + 나의 식재료 리스트
  */
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    // ViewModel Input 생성
+    val screenEnterFlow = remember {
+        MutableSharedFlow<Unit>(replay = 1).apply {
+            tryEmit(Unit) // 초기 화면 진입 이벤트
+        }
+    }
+
+    // ViewModel Transform 호출
+    val output = remember {
+        viewModel.transform(
+            HomeViewModel.Input(
+                screenEnter = screenEnterFlow
+            )
+        )
+    }
+
+    // Output State 수집
+    val uiState by output.uiState.collectAsState()
+    val foodList by output.foodList.collectAsState()
+    val expiringFoodList by output.expiringFoodList.collectAsState()
+
+    // LaunchedEffect로 화면 진입 이벤트 발생
+    LaunchedEffect(Unit) {
+        screenEnterFlow.emit(Unit)
+    }
+
+    // UI State에 따른 화면 분기
+    when (uiState) {
+        is BaseUiState.Init -> {
+            // 초기 상태
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("초기화 중...")
+            }
+        }
+
+        is BaseUiState.Loading -> {
+            // 로딩 상태
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFFFF9500)
+                )
+            }
+        }
+
+        is BaseUiState.Content -> {
+            // 컨텐츠 표시
+            HomeContent(
+                expiringFoodList = expiringFoodList,
+                foodList = foodList,
+                onSeeAllClick = { /* 바로가기 */ }
+            )
+        }
+
+        is BaseUiState.ErrorState -> {
+            // 에러 상태
+            val error = uiState as BaseUiState.ErrorState
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "오류가 발생했습니다",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = error.message ?: "알 수 없는 오류",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Button(
+                        onClick = {
+                            // 재시도
+                            screenEnterFlow.tryEmit(Unit)
+                        }
+                    ) {
+                        Text("다시 시도")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 홈 화면 컨텐츠
+ * 실제 데이터를 표시하는 컴포저블
+ */
+@Composable
+private fun HomeContent(
+    expiringFoodList: List<Food>,
+    foodList: List<Food>,
+    onSeeAllClick: () -> Unit
+) {
+    val tabs = listOf("전체") +
+            FoodCategory.values().map { it.displayName }
+
+    var selectedTab by remember { mutableStateOf("전체") }
+
+    val filteredFoodList = remember(foodList, selectedTab) {
+        if (selectedTab == "전체") foodList
+        else foodList.filter {
+            it.category.displayName == selectedTab
+        }
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -62,12 +198,13 @@ fun HomeScreen() {
         item {
             Spacer(modifier = Modifier.height(48.dp))
         }
+
         // 1. 유통기한 임박 식품 섹션
         item {
             ExpiringFoodsSection(
-                expiringCount = 3,
-                foodItems = sampleExpiringFoods,
-                onSeeAllClick = { /* 바로가기 */ }
+                expiringCount = expiringFoodList.size,
+                foodItems = expiringFoodList,
+                onSeeAllClick = onSeeAllClick
             )
         }
 
@@ -75,7 +212,10 @@ fun HomeScreen() {
         item {
             Spacer(modifier = Modifier.height(16.dp))
             MyFoodListSection(
-                foodItems = sampleMyFoodList
+                foodItems = filteredFoodList,
+                tabs = tabs,
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
             )
         }
     }
@@ -91,6 +231,33 @@ fun ExpiringFoodsSection(
     foodItems: List<Food>,
     onSeeAllClick: () -> Unit
 ) {
+    // 빈 리스트일 경우 처리
+    if (foodItems.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFFF9500),
+                            Color(0xFFFF7A00)
+                        )
+                    )
+                )
+                .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "유통기한 임박 식품이 없습니다",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        return
+    }
+
     // 오렌지 그라데이션 배경
     Box(
         modifier = Modifier
@@ -121,7 +288,10 @@ fun ExpiringFoodsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                items(foodItems) { item ->
+                items(
+                    items = foodItems,
+                    key = { it.id } // 성능 최적화를 위한 key 추가
+                ) { item ->
                     ExpiringFoodCard(item = item)
                 }
             }
@@ -235,23 +405,32 @@ fun ExpiringFoodCard(
                     text = item.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = Color(0xFF333333)
+                    color = Color(0xFF333333),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                DDayBadge(dDay = item.dDay)
+                DDayBadge(dDay = item.expiryDate.getDDay())
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 이미지 (실제로는 이미지 로드)
+            // TODO: 이미지 u 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(80.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = item.emoji,
-                    fontSize = 60.sp
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageURL)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.name,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -310,11 +489,11 @@ fun DDayBadge(dDay: Int) {
  */
 @Composable
 fun MyFoodListSection(
-    foodItems: List<Food>
+    foodItems: List<Food>,
+    tabs: List<String>,
+    selectedTab: String,
+    onTabSelected: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf("전체") }
-    val tabs = listOf("전체", "야채류", "육류", "해산물", "유제품")
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,14 +513,18 @@ fun MyFoodListSection(
         CategoryTabs(
             tabs = tabs,
             selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it }
+            onTabSelected = onTabSelected
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 날짜
+        // 날짜 (현재 날짜로 포맷)
+        val currentDate = remember {
+            val formatter = SimpleDateFormat("yy. MM. dd", Locale.getDefault())
+            formatter.format(Date())
+        }
         Text(
-            text = "25. 12. 20",
+            text = currentDate,
             fontSize = 14.sp,
             color = Color(0xFF999999)
         )
@@ -349,11 +532,26 @@ fun MyFoodListSection(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 식재료 리스트
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            foodItems.forEach { item ->
-                FoodListItem(item = item)
+        if (foodItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "식재료가 없습니다",
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
+        } else {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                foodItems.forEach { item ->
+                    FoodListItem(item = item)
+                }
             }
         }
     }
@@ -421,6 +619,7 @@ fun FoodListItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 // 이미지 배경
                 Box(
                     modifier = Modifier
@@ -434,9 +633,11 @@ fun FoodListItem(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = item.emoji,
-                        fontSize = 32.sp
+                    AsyncImage(
+                        model = item.imageURL,
+                        contentDescription = "food image",
+                        modifier = Modifier.size(40.dp), // 이모지 느낌 살짝 작게
+                        contentScale = ContentScale.Fit
                     )
                 }
 
@@ -452,7 +653,7 @@ fun FoodListItem(
                             fontSize = 18.sp,
                             color = Color(0xFF333333)
                         )
-                        DDayBadge(dDay = item.dDay)
+                        DDayBadge(dDay = item.expiryDate.getDDay())
                         if (item.isExpiringSoon) {
                             ExpiringBadge()
                         }
