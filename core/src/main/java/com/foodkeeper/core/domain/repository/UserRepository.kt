@@ -1,4 +1,7 @@
-package com.foodkeeper.core.domain.repository
+package com.foodkeeper.core.data.repository
 
-interface UserRepository{
+import com.foodkeeper.core.data.mapper.external.ProfileDTO
+
+interface UserRepository {
+    suspend fun getMyProfile(): Result<ProfileDTO>
 }

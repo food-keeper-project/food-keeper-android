@@ -4,6 +4,7 @@ import com.foodkeeper.core.data.mapper.external.AuthTokenDTO // 필요시 Domain
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
+    suspend fun refreshToken(): Result<AuthTokenDTO>
     // 1. 로그인 상태 확인 (토큰 존재 여부)
     fun hasToken(): Flow<Boolean>
 

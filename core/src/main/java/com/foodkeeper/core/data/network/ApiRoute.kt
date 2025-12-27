@@ -6,17 +6,29 @@ import kotlinx.serialization.Serializable
 
 
 sealed class ApiRoute {
+    // ✅ 추가: 기본값은 false로 두고, RefreshToken 클래스에서만 true로 재정의합니다.
+    open val isRefreshTokenRequest: Boolean = false
+    open val isLoginRequest: Boolean = false
 
     // ========== Auth APIs ==========
     // 2. Route 정의는 데이터만 전달하는 역할만 수행
     data class KakaoLogin(
         val kakaoAccessToken: String, // 카카오에서 받은 토큰
         val mFcmToken: String?         // FCM 토큰
-    ) : ApiRoute()
+    ) : ApiRoute(){
+        override val isLoginRequest: Boolean = true
+    }
 
     data class RefreshToken(
+        val curAccessToken:String,
         val curRefreshToken:String
-    ) : ApiRoute()
+    ) : ApiRoute(){
+        override val isRefreshTokenRequest: Boolean = true
+    }
+    // ✅ MyProfile 수정: GET 요청이므로 별도의 파라미터가 필요 없습니다.
+    // 인증은 requiresAuth = true를 통해 자동으로 처리됩니다.
+    object MyProfile : ApiRoute()
+
 
     //    data class Logout(val userId: String) : ApiRoute()
     // ========== 경로 정의 ==========
@@ -31,6 +43,7 @@ sealed class ApiRoute {
             // Auth
             is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
+            is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
 //            is Logout -> "/auth/logout"
 
         }
@@ -40,6 +53,7 @@ sealed class ApiRoute {
         get() = when (this) {
             is KakaoLogin -> HttpMethod.Post
             is RefreshToken -> HttpMethod.Post
+            is MyProfile -> HttpMethod.Get
 //            is Logout -> HttpMethod.GET
         }
 
@@ -47,7 +61,7 @@ sealed class ApiRoute {
     val requiresAuth: Boolean
         get() = when (this) {
             is KakaoLogin, is RefreshToken -> false
-            else -> true
+            is MyProfile -> true
         }
 
     // ========== Body 데이터 ==========
@@ -57,22 +71,21 @@ sealed class ApiRoute {
                 "accessToken" to kakaoAccessToken,
                 "fcmToken" to mFcmToken)
             is RefreshToken -> mapOf(
-                "refreshToken" to curRefreshToken
-            )
+                "refreshToken" to curRefreshToken)
+            is MyProfile -> null // ✅ GET 요청은 Body가 없습니다.
             else -> null
         }
 
     // ========== 쿼리 파라미터 ==========
     val queryParameters: Map<String, Any>
         get() = when (this) {
-
             else -> emptyMap()
         }
 
     // ========== 커스텀 헤더 (필요시) ==========
     val headers: Map<String, String>
         get() = when (this) {
-//            is exaple -> mapOf("X-Request-Type" to "create-post")
+           is RefreshToken -> mapOf("Authorization" to "Bearer $curRefreshToken")
             else -> emptyMap()
         }
 

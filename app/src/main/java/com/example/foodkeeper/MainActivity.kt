@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
 import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
+import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
 import com.kakao.sdk.common.util.Utility
@@ -75,7 +76,7 @@ fun FoodKeeperNavHost() {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("main") {
+                    navController.navigate("profile") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -99,6 +100,22 @@ fun FoodKeeperNavHost() {
                 // 나중에 만들 메인 화면 연결
                 // MainScreen()
             }
+        }
+        // 4. 마이페이지
+        composable("profile") {
+            ProfileRoute(
+                onNavigateToHistory = {                    // navController.navigate("history") // 이동할 경로가 정의되면 연결
+                },
+                onNavigateToFavorites = {
+                    // navController.navigate("favorites")
+                },
+                onNavigateToCategory = {
+                    // navController.navigate("category")
+                },
+                onNavigateToRecipes = {
+                    // navController.navigate("recipes")
+                }
+            )
         }
     }
 }

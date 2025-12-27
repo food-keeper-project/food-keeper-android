@@ -2,6 +2,8 @@ package com.foodkeeper.core.di
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.external.DefaultAuthRemoteDataSource
 import com.foodkeeper.core.data.repository.AuthRepositoryImpl
+import com.foodkeeper.core.data.repository.UserRepository
+import com.foodkeeper.core.data.repository.UserRepositoryImpl
 import com.foodkeeper.core.domain.repository.AuthRepository
 import dagger.Binds
 import dagger.Module
@@ -23,5 +25,10 @@ abstract class DataModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 
 }

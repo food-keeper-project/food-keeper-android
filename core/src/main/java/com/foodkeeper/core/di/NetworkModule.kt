@@ -10,12 +10,13 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.engine.cio.CIO
+
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+
 import kotlinx.serialization.json.Json
 import java.security.cert.X509Certificate
 import javax.inject.Singleton
-import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 @Module
@@ -57,6 +58,7 @@ object NetworkModule {
             }
 
             // 여기에 로깅이나 타임아웃 설정을 추가할 수 있습니다.
+
         }
     }
 }

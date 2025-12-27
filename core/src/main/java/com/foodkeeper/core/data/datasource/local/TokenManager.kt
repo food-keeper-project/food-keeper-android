@@ -23,6 +23,7 @@ class TokenManager @Inject constructor(
     }
     // 함수가 아니라 'Flow 프로퍼티'로 정의하는 것이 일반적입니다.
     val accessToken: Flow<String?> = dataStore.data.map { it[ACCESS_TOKEN_KEY] }
+    val refreshToken: Flow<String?> = dataStore.data.map { it[REFRESH_TOKEN_KEY] } // 이 줄이 있는지 확인하세요!
     // 온보딩 상태 읽기
     val hasSeenOnboarding: Flow<Boolean> = dataStore.data.map { it[HAS_SEEN_ONBOARDING_KEY] == true }
 

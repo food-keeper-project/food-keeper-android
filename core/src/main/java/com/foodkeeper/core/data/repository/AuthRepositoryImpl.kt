@@ -1,6 +1,7 @@
 package com.foodkeeper.core.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
@@ -9,8 +10,10 @@ import com.kakao.sdk.user.UserApiClient
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -31,6 +34,31 @@ class AuthRepositoryImpl @Inject constructor(
     // 더미 context.dataStore 대신 주입받은 tokenManager를 사용합니다.
     override fun hasSeenOnboarding(): Flow<Boolean> {
         return tokenManager.hasSeenOnboarding
+    }
+
+    override suspend fun refreshToken(): Result<AuthTokenDTO> {
+        Log.d("AuthRepo", "1. refreshToken 진입") // 이게 찍히는지 확인
+        return runCatching {
+            val oldRefreshToken = tokenManager.refreshToken.first()
+            val oldAccessToken=tokenManager.accessToken.first()
+            Log.d("AuthRepo", "2. 로컬 토큰 읽기 성공") // 이게 안 찍히면 first()에서 멈춘 것
+
+            // ✅ 타임아웃을 걸어서 무한 대기를 방지합니다.
+            val response = authRemoteDataSource.refreshToken(oldAccessToken!!,oldRefreshToken!!).first()
+
+            Log.d("AuthRepo", "3. 서버 응답 성공") // 이게 안 찍히면 서버 통신에서 멈춘 것
+            // ✅ [필수] 여기서 새 토큰을 저장해야 앱이 다음 요청에서 새 토큰을 사용합니다.
+            tokenManager.saveTokens(
+                accessToken = response.accessToken!!,
+                refreshToken = response.refreshToken!!
+            )
+            Log.d("AuthRepo", "4. 새 토큰 저장 완료")
+            // ... 저장 로직
+            response
+        }.onFailure { e ->
+            // ✅ 여기에 로그가 찍히고 있지 않나요?
+            Log.e("AuthRepo", "❌ 재발급 중 에러 발생: ${e.message}")
+        }
     }
 
     // ✅ [로그인 토큰 존재 여부 확인]

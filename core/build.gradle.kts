@@ -30,6 +30,14 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // ✅ Material 3 (UI 구성 필수)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+
+    // ✅ Icons (Person, ArrowRight 아이콘 사용 필수)
+    implementation(libs.androidx.compose.material.icons.extended)
+
     // Coil
     implementation(libs.coil.compose)
 
@@ -42,6 +50,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     // Ktor
+    //implementation(libs.ktor.client.auth) // ✅ 이 줄을 추가하세요
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)

@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 interface AuthRemoteDataSource {
     fun signInWithKakao(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
-
+    fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
 }
 
 class DefaultAuthRemoteDataSource @Inject constructor(
@@ -24,6 +24,15 @@ class DefaultAuthRemoteDataSource @Inject constructor(
             ApiRoute.KakaoLogin(
                 kakaoAccessToken = kakaoToken,
                 mFcmToken = fcmToken
+            )
+        )
+    }
+
+    override fun refreshToken(accessToken:String,refreshToken: String): Flow<AuthTokenDTO> {
+        return apiService.request(
+            ApiRoute.RefreshToken(
+                curAccessToken = accessToken,
+                curRefreshToken =refreshToken
             )
         )
     }

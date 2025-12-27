@@ -23,7 +23,7 @@ data class AuthTokenDTO(
 
 @Serializable
 data class ApiResponse<T>(
-    val result: String,
+    val result: String?=null,
     val data: T? = null,
     val error: ApiError? = null
 )
