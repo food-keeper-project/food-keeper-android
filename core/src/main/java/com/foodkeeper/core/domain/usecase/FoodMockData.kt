@@ -50,6 +50,28 @@ object FoodMockData {
             imageURL = IMAGE_URL,
             expiryDate = daysFromNow(0),
             category = FoodCategory.SEAFOOD
+        ),
+        Food(
+            id = 6,
+            name = "사과1",
+            imageURL = IMAGE_URL,
+            expiryDate = daysFromNow(7),
+            category = FoodCategory.FRUIT
+        ),
+        Food(
+            id = 7,
+            name = "사과2",
+            imageURL = IMAGE_URL,
+            expiryDate = daysFromNow(7),
+            category = FoodCategory.FRUIT
+        ),
+        Food(
+            id = 8,
+            name = "사과3",
+            imageURL = IMAGE_URL,
+            expiryDate = daysFromNow(7),
+            category = FoodCategory.FRUIT
         )
+
     )
 }

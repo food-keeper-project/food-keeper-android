@@ -179,16 +179,12 @@ private fun HomeContent(
     foodList: List<Food>,
     onSeeAllClick: () -> Unit
 ) {
-    val tabs = listOf("전체") +
-            FoodCategory.values().map { it.displayName }
-
+    val tabs = listOf("전체") + FoodCategory.values().map { it.displayName }
     var selectedTab by remember { mutableStateOf("전체") }
 
     val filteredFoodList = remember(foodList, selectedTab) {
         if (selectedTab == "전체") foodList
-        else foodList.filter {
-            it.category.displayName == selectedTab
-        }
+        else foodList.filter { it.category.displayName == selectedTab }
     }
 
     LazyColumn(
@@ -196,7 +192,6 @@ private fun HomeContent(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-
         // 1. 유통기한 임박 식품 섹션
         item {
             ExpiringFoodsSection(
@@ -206,15 +201,81 @@ private fun HomeContent(
             )
         }
 
-        // 2. 나의 식재료 리스트 섹션
+        // 2. 나의 식재료 리스트 타이틀
         item {
             Spacer(modifier = Modifier.height(16.dp))
-            MyFoodListSection(
-                foodItems = filteredFoodList,
-                tabs = tabs,
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "나의 식재료 리스트",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+
+        // ✨ 3. Sticky Header - 카테고리 탭
+        stickyHeader {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5))
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 8.dp)
+            ) {
+                CategoryTabs(
+                    tabs = tabs,
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 날짜
+                Text(
+                    text = Date().toyyMMddString(),
+                    fontSize = 14.sp,
+                    color = Color(0xFF999999)
+                )
+            }
+        }
+
+        // 4. 식재료 리스트
+        if (filteredFoodList.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "식재료가 없습니다",
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        } else {
+            items(
+                items = filteredFoodList,
+                key = { it.id }
+            ) { item ->
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    FoodListItem(item = item)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+
+        // 하단 여백
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -412,7 +473,7 @@ fun ExpiringFoodCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // TODO: 이미지 u 
+            // TODO: 이미지 u
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -613,7 +674,6 @@ fun FoodListItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 // 이미지 배경
                 Box(
                     modifier = Modifier
@@ -630,7 +690,7 @@ fun FoodListItem(
                     AsyncImage(
                         model = item.imageURL,
                         contentDescription = "food image",
-                        modifier = Modifier.size(40.dp), // 이모지 느낌 살짝 작게
+                        modifier = Modifier.size(40.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
