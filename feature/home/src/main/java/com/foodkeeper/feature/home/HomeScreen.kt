@@ -1,5 +1,6 @@
 package com.foodkeeper.feature.home
 
+import android.R.attr.textColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +34,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -191,11 +193,13 @@ private fun HomeContent(
         if (selectedTab == "전체") foodList
         else foodList.filter { it.category.displayName == selectedTab }
     }
-
+    val groupedItems = remember(filteredFoodList) {
+        filteredFoodList.groupBy { it.expiryDate.toyyMMddString() }
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.white)
+            .background(Color.White)
     ) {
         // 1. 유통기한 임박 식품 섹션
         item {
@@ -207,17 +211,17 @@ private fun HomeContent(
 
         // 2. 나의 식재료 리스트 타이틀
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 20.dp)
             ) {
                 Text(
                     text = "나의 식재료 리스트",
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333)
+                    color = AppColors.text
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -228,27 +232,20 @@ private fun HomeContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp)
+                    .background(Color.White)
+
             ) {
                 CategoryTabs(
                     tabs = tabs,
                     selectedTab = selectedTab,
                     onTabSelected = { selectedTab = it }
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // 날짜
-                Text(
-                    text = Date().toyyMMddString(),
-                    fontSize = 14.sp,
-                    color = Color(0xFF999999)
-                )
             }
         }
-
+        // 여백
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+        }
         // 4. 식재료 리스트
         if (filteredFoodList.isEmpty()) {
             item {
@@ -266,13 +263,21 @@ private fun HomeContent(
                 }
             }
         } else {
-            items(
-                items = filteredFoodList,
-                key = { it.id }
-            ) { item ->
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    FoodListItem(item = item)
-                    Spacer(modifier = Modifier.height(12.dp))
+            groupedItems.forEach { (date, foodsInSection) ->
+                item(key = "header_$date") {
+                    DateHeader(date)
+                }
+
+                items(
+                    items = foodsInSection,
+                    key = { it.id }
+                ) { item ->
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
+                        FoodListItem(item = item)
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
         }
@@ -285,7 +290,7 @@ private fun HomeContent(
 }
 
 /**
- * 1. 유통기한 임박 식품 섹션
+ * 유통기한 임박 식품 섹션
  * 상단 오렌지 배경의 카드 리스트
  */
 @Composable
@@ -481,7 +486,7 @@ fun DDayBadgeCompact(dDay: Int) {
 }
 
 /**
- * 2. 유통기한 임박 섹션 헤더
+ * 유통기한 임박 섹션 헤더
  * "유통기한 임박 식품이 현재 N개 있습니다" + 바로가기 버튼
  */
 @Composable
@@ -509,7 +514,7 @@ fun ExpiringFoodHeader(
                 )
                 Text(
                     text = "${count}개",
-                    color = Color(0xFFFFEB3B),
+                    color = AppColors.point,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -525,31 +530,40 @@ fun ExpiringFoodHeader(
 }
 
 /**
- * 4. D-Day 뱃지 컴포넌트
+ * D-Day 뱃지 컴포넌트
  * 재사용 가능 - 7일 이하면 빨강, 아니면 주황
  */
 @Composable
 fun DDayBadge(dDay: Int) {
-    val isExpiring = dDay <= 7
-    val backgroundColor = if (isExpiring) Color(0xFFFF9500) else Color(0xFFFFE0B2)
+    val isExpiring = dDay >= 0
+    val backgroundColor = if (isExpiring) AppColors.main else AppColors.text
     val textColor = if (isExpiring) Color.White else Color(0xFFFF6D00)
 
     Surface(
+        modifier = Modifier.height(18.dp),
         color = backgroundColor,
-        shape = RoundedCornerShape(6.dp)
+        shape = RoundedCornerShape(6.dp),
     ) {
-        Text(
-            text = "D-$dDay",
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(horizontal = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (isExpiring) "D-$dDay" else "유통기한 종료",
+                color = textColor,
+                fontSize = 12.sp,
+                lineHeight = 18.sp, // ⭐ 핵심
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1
+            )
+        }
     }
 }
 
 /**
- * 6. 카테고리 탭 컴포넌트
+ * 카테고리 탭 컴포넌트
  * 재사용 가능한 탭 필터
  */
 @Composable
@@ -559,7 +573,8 @@ fun CategoryTabs(
     onTabSelected: (String) -> Unit
 ) {
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
     ) {
         items(tabs) { tab ->
             val isSelected = tab == selectedTab
@@ -570,17 +585,40 @@ fun CategoryTabs(
                     Text(
                         text = tab,
                         fontSize = 14.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 },
+                border = null,
+                shape = RoundedCornerShape(20.dp),
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFFFF9500),
-                    selectedLabelColor = Color.White,
-                    containerColor = Color(0xFFE0E0E0),
-                    labelColor = Color(0xFF666666)
+                    selectedContainerColor = AppColors.main,
+                    selectedLabelColor = AppColors.white,
+                    containerColor = AppColors.lightGray,
+                    labelColor = AppColors.text
                 )
             )
         }
+    }
+}
+@Composable
+fun DateHeader(date: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = date,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = AppColors.text
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Divider(
+            thickness = 1.dp,
+            color = AppColors.lightGray
+        )
     }
 }
 
@@ -592,16 +630,18 @@ fun CategoryTabs(
 fun FoodListItem(
     item: Food
 ) {
+    val imageShape = RoundedCornerShape(20.dp)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp // ✅ 테두리(그림자) 제거
+        ),
+        shape = RoundedCornerShape(0.dp) // (선택) 완전 평면 느낌
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -611,23 +651,26 @@ fun FoodListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 이미지 배경
+                // 이미지
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(80.dp)
                         .background(
-                            color = if (item.isExpiringSoon)
-                                Color(0xFFFFEB3B)
-                            else
-                                Color(0xFFFF9500),
-                            shape = RoundedCornerShape(12.dp)
+                            color = AppColors.white,
+                            shape = imageShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     AsyncImage(
-                        model = item.imageURL,
-                        contentDescription = "food image",
-                        modifier = Modifier.size(40.dp),
-                        contentScale = ContentScale.Fit
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(item.imageURL)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = item.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(imageShape)
                     )
                 }
 
@@ -640,8 +683,8 @@ fun FoodListItem(
                         Text(
                             text = item.name,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF333333)
+                            fontSize = 16.sp,
+                            color = AppColors.text
                         )
                         DDayBadge(dDay = item.expiryDate.getDDay())
                         if (item.isExpiringSoon) {
@@ -653,22 +696,10 @@ fun FoodListItem(
 
                     Text(
                         text = "${item.category.displayName} • 유통기한 ${item.expiryDate.toyyMMddString()}",
-                        fontSize = 13.sp,
-                        color = Color(0xFF999999)
+                        fontSize = 12.sp,
+                        color = AppColors.lightGray
                     )
                 }
-            }
-
-            // 오른쪽: 검색 버튼
-            IconButton(
-                onClick = { /* 검색 */ },
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "검색",
-                    tint = Color(0xFF666666)
-                )
             }
         }
     }
@@ -680,15 +711,24 @@ fun FoodListItem(
 @Composable
 fun ExpiringBadge() {
     Surface(
-        color = Color(0xFFFFEB3B),
-        shape = RoundedCornerShape(4.dp)
+        modifier = Modifier.height(18.dp),
+        color = AppColors.point,
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Text(
-            text = "유통기한 임박!",
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            color = Color(0xFF795548),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(horizontal = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "유통기한 임박!",
+                modifier = Modifier.padding(horizontal = 6.dp),
+                color = AppColors.text,
+                fontSize = 11.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
