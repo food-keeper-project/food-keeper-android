@@ -34,14 +34,14 @@ object FoodMockData {
             id = 3,
             name = "우유",
             imageURL = IMAGE_URL,
-            expiryDate = daysFromNow(5),
+            expiryDate = daysFromNow(1),
             category = FoodCategory.DAIRY
         ),
         Food(
             id = 4,
             name = "사과",
             imageURL = IMAGE_URL,
-            expiryDate = daysFromNow(7),
+            expiryDate = daysFromNow(2),
             category = FoodCategory.FRUIT
         ),
         Food(
@@ -55,7 +55,7 @@ object FoodMockData {
             id = 6,
             name = "사과1",
             imageURL = IMAGE_URL,
-            expiryDate = daysFromNow(7),
+            expiryDate = daysFromNow(3),
             category = FoodCategory.FRUIT
         ),
         Food(

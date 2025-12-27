@@ -1,6 +1,7 @@
 package com.foodkeeper.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +17,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -42,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +65,7 @@ import coil.request.ImageRequest
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.domain.model.FoodCategory
 import com.foodkeeper.core.ui.base.BaseUiState
+import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.getDDay
 import com.foodkeeper.core.ui.util.toyyMMddString
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -130,7 +137,6 @@ fun HomeScreen(
             HomeContent(
                 expiringFoodList = expiringFoodList,
                 foodList = foodList,
-                onSeeAllClick = { /* 바로가기 */ }
             )
         }
 
@@ -176,8 +182,7 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     expiringFoodList: List<Food>,
-    foodList: List<Food>,
-    onSeeAllClick: () -> Unit
+    foodList: List<Food>
 ) {
     val tabs = listOf("전체") + FoodCategory.values().map { it.displayName }
     var selectedTab by remember { mutableStateOf("전체") }
@@ -190,14 +195,13 @@ private fun HomeContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(AppColors.white)
     ) {
         // 1. 유통기한 임박 식품 섹션
         item {
             ExpiringFoodsSection(
                 expiringCount = expiringFoodList.size,
-                foodItems = expiringFoodList,
-                onSeeAllClick = onSeeAllClick
+                foodItems = expiringFoodList
             )
         }
 
@@ -287,8 +291,7 @@ private fun HomeContent(
 @Composable
 fun ExpiringFoodsSection(
     expiringCount: Int,
-    foodItems: List<Food>,
-    onSeeAllClick: () -> Unit
+    foodItems: List<Food>
 ) {
     // 빈 리스트일 경우 처리
     if (foodItems.isEmpty()) {
@@ -321,59 +324,160 @@ fun ExpiringFoodsSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFFF9500),
-                        Color(0xFFFF7A00)
-                    )
-                )
-            )
-            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+            .background(AppColors.main)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(vertical = 16.dp)
         ) {
-            // 헤더
-            ExpiringFoodHeader(
-                count = expiringCount,
-                onSeeAllClick = onSeeAllClick
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 카드 리스트 (가로 스크롤)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
-            ) {
-                items(
-                    items = foodItems,
-                    key = { it.id } // 성능 최적화를 위한 key 추가
-                ) { item ->
-                    ExpiringFoodCard(item = item)
-                }
+            //헤더
+            Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                ExpiringFoodHeader(count = expiringCount)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 하단 인디케이터
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(48.dp)
-                        .height(4.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.3f),
-                            RoundedCornerShape(2.dp)
-                        )
-                )
+            // ✨ 2줄 동시 스크롤 리스트
+            TwoRowSyncedList(foodItems = foodItems)
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+/**
+ * 2줄로 홀짝 배치되는 리스트
+ * 첫째 줄: 0, 2, 4, 6...
+ * 둘째 줄: 1, 3, 5, 7...
+ */
+@Composable
+fun TwoRowSyncedList(foodItems: List<Food>) {
+    val firstRowItems = foodItems.filterIndexed { index, _ -> index % 2 == 0 }
+    val secondRowItems = foodItems.filterIndexed { index, _ -> index % 2 == 1 }
+
+    val firstLazyListState = rememberLazyListState()
+    val secondLazyListState = rememberLazyListState()
+
+    // ✨ 스크롤 동기화 로직
+    LaunchedEffect(firstLazyListState.isScrollInProgress) {
+        if (firstLazyListState.isScrollInProgress) {
+            snapshotFlow { firstLazyListState.firstVisibleItemIndex to firstLazyListState.firstVisibleItemScrollOffset }
+                .collect { (index, offset) ->
+                    secondLazyListState.scrollToItem(index, offset)
+                }
+        }
+    }
+
+    LaunchedEffect(secondLazyListState.isScrollInProgress) {
+        if (secondLazyListState.isScrollInProgress) {
+            snapshotFlow { secondLazyListState.firstVisibleItemIndex to secondLazyListState.firstVisibleItemScrollOffset }
+                .collect { (index, offset) ->
+                    firstLazyListState.scrollToItem(index, offset)
+                }
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        // 첫째 줄
+        LazyRow(
+            state = firstLazyListState,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(firstRowItems) { item ->
+                ExpiringFoodCardCompact(item = item)
+            }
+        }
+
+        // 둘째 줄
+        LazyRow(
+            state = secondLazyListState,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(secondRowItems) { item ->
+                ExpiringFoodCardCompact(item = item)
             }
         }
     }
+}
+/**
+ * 컴팩트한 식품 카드 (2줄 배치용)
+ * 이미지와 이름, D-Day를 가로로 배치
+ */
+@Composable
+fun ExpiringFoodCardCompact(
+    item: Food
+) {
+    Surface(
+        modifier = Modifier
+            .wrapContentWidth()  // ✨ 너비 자동 조절
+            .height(37.dp),
+        shape = RoundedCornerShape(40.dp),  // 더 둥근 모서리
+        color = Color.White,
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 6.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 이미지
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(
+                        color = AppColors.white,
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageURL)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            // 이름
+            Text(
+                text = item.name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color(0xFF333333),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            // D-Day
+            DDayBadgeCompact(dDay = item.expiryDate.getDDay())
+        }
+    }
+}
+
+
+/**
+ * 컴팩트 D-Day 뱃지
+ */
+@Composable
+fun DDayBadgeCompact(dDay: Int) {
+    val backgroundColor = when {
+        dDay <= 3 -> Color(0xFFFF5252) // 빨강
+        dDay <= 7 -> Color(0xFFFF9500) // 주황
+        else -> Color(0xFFFFE0B2)       // 연한 주황
+    }
+    val textColor = if (dDay <= 7) Color.White else Color(0xFFFF6D00)
+
+    Text(
+        text = "D-$dDay",
+        modifier = Modifier.padding(end = 4.dp),
+        color = backgroundColor,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 /**
@@ -382,8 +486,7 @@ fun ExpiringFoodsSection(
  */
 @Composable
 fun ExpiringFoodHeader(
-    count: Int,
-    onSeeAllClick: () -> Unit
+    count: Int
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -418,104 +521,6 @@ fun ExpiringFoodHeader(
                 )
             }
         }
-
-        TextButton(onClick = onSeeAllClick) {
-            Text(
-                text = "바로가기",
-                color = Color.White,
-                fontSize = 14.sp
-            )
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-/**
- * 3. 유통기한 임박 식품 카드
- * 재사용 가능한 카드 컴포넌트
- */
-@Composable
-fun ExpiringFoodCard(
-    item: Food
-) {
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .wrapContentHeight(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // 헤더: 이름 + D-Day
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = item.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color(0xFF333333),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                DDayBadge(dDay = item.expiryDate.getDDay())
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // TODO: 이미지 u
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(item.imageURL)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = item.name,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 레시피 추천 버튼
-            Button(
-                onClick = { /* 레시피 추천 */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF9500)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "레시피 추천",
-                    fontSize = 13.sp
-                )
-            }
-        }
     }
 }
 
@@ -540,75 +545,6 @@ fun DDayBadge(dDay: Int) {
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold
         )
-    }
-}
-
-/**
- * 5. 나의 식재료 리스트 섹션
- */
-@Composable
-fun MyFoodListSection(
-    foodItems: List<Food>,
-    tabs: List<String>,
-    selectedTab: String,
-    onTabSelected: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        // 제목
-        Text(
-            text = "나의 식재료 리스트",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF333333)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 카테고리 탭
-        CategoryTabs(
-            tabs = tabs,
-            selectedTab = selectedTab,
-            onTabSelected = onTabSelected
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 날짜 (현재 날짜로 포맷)
-        Text(
-            text = Date().toyyMMddString(),
-            fontSize = 14.sp,
-            color = Color(0xFF999999)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 식재료 리스트
-        if (foodItems.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "식재료가 없습니다",
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-            }
-        } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                foodItems.forEach { item ->
-                    FoodListItem(item = item)
-                }
-            }
-        }
     }
 }
 
