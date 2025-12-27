@@ -60,6 +60,7 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.domain.model.FoodCategory
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.getDDay
+import com.foodkeeper.core.ui.util.toyyMMddString
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -519,12 +520,8 @@ fun MyFoodListSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         // 날짜 (현재 날짜로 포맷)
-        val currentDate = remember {
-            val formatter = SimpleDateFormat("yy. MM. dd", Locale.getDefault())
-            formatter.format(Date())
-        }
         Text(
-            text = currentDate,
+            text = Date().toyyMMddString(),
             fontSize = 14.sp,
             color = Color(0xFF999999)
         )
@@ -662,7 +659,7 @@ fun FoodListItem(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "${item.category} • 유통기한 ${item.expiryDate}",
+                        text = "${item.category.displayName} • 유통기한 ${item.expiryDate.toyyMMddString()}",
                         fontSize = 13.sp,
                         color = Color(0xFF999999)
                     )
