@@ -24,7 +24,9 @@ googleServices = "4.4.2"
 kakao = "2.20.1"
 runtime = "1.10.0"
 foundation = "1.10.0"  # 카카오 SDK 최신 버전 (변경될 수 있음)
-material3 = "1.4.0"  # 카카오 SDK 최신 버전 (변경될 수 있음)
+material3 = "1.4.0"
+jetbrainsKotlinJvm = "2.0.21"
+foundationLayout = "1.10.0"  # 카카오 SDK 최신 버전 (변경될 수 있음)
 
 
 [libraries]
@@ -99,6 +101,7 @@ kakao-sdk-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kak
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -108,3 +111,4 @@ kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" } # Kap
 
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }

@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.foodkeeper.core.domain.model.Food
@@ -196,9 +196,6 @@ private fun HomeContent(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        item {
-            Spacer(modifier = Modifier.height(48.dp))
-        }
 
         // 1. 유통기한 임박 식품 섹션
         item {

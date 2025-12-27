@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="17" />
+    <bytecodeTargetLevel target="17">
+      <module name="FoodKeeper.feature.dynamicfeature" target="21" />
+      <module name="FoodKeeper.feature.foodKeeperMain" target="21" />
+      <module name="FoodKeeper.feature.main" target="21" />
+      <module name="FoodKeeper.feature.mylibrary" target="21" />
+      <module name="FoodKeeper.feature.root" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>

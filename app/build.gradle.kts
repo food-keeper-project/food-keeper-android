@@ -111,4 +111,5 @@ dependencies {
     implementation(project(":feature:kakao-login"))
     implementation(project(":feature:home"))
     implementation(project(":feature:splash"))
+    implementation(project(":feature:foodKeeper-Main"))
 }

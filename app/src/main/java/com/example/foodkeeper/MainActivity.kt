@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +20,8 @@ import androidx.navigation.compose.rememberNavController
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
 import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
+import com.example.foodkeeper_main.MainScaffoldScreen
+import com.example.foodkeeper_main.MainTab
 import com.foodkeeper.feature.home.HomeScreen
 import com.foodkeeper.feature.home.HomeViewModel
 import com.foodkeeper.feature.splash.OnboardingScreen
@@ -102,9 +108,20 @@ fun FoodKeeperNavHost() {
 
         // 3. 메인 화면 (임시)
         composable("main") {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                // 나중에 만들 메인 화면 연결
-                // MainScreen()
+            var currentTab by rememberSaveable { mutableStateOf(MainTab.Home) }
+
+            MainScaffoldScreen(
+                currentTab = currentTab,
+                onTabSelected = { tab ->
+                    currentTab = tab
+                }
+            ) {
+                when (currentTab) {
+                    MainTab.Home -> HomeScreen() //홈
+                    MainTab.Search -> HomeScreen() //식자재 추가
+                    MainTab.Record -> HomeScreen() // AI 레시피
+                    MainTab.MyPage -> HomeScreen() // 마이페이지
+                }
             }
         }
     }
