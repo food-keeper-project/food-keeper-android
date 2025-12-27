@@ -9,26 +9,27 @@ sealed class ApiRoute {
     // ✅ 추가: 기본값은 false로 두고, RefreshToken 클래스에서만 true로 재정의합니다.
     open val isRefreshTokenRequest: Boolean = false
     open val isLoginRequest: Boolean = false
-
+    // 기본값을 true로 설정하고, 인증이 필요 없는 경우에만 false로 오버라이드
+    open val requiresAuth: Boolean = true
     // ========== Auth APIs ==========
     // 2. Route 정의는 데이터만 전달하는 역할만 수행
     data class KakaoLogin(
         val kakaoAccessToken: String, // 카카오에서 받은 토큰
         val mFcmToken: String?         // FCM 토큰
     ) : ApiRoute(){
-        override val isLoginRequest: Boolean = true
+        override val requiresAuth: Boolean = true
     }
 
     data class RefreshToken(
         val curAccessToken:String,
         val curRefreshToken:String
     ) : ApiRoute(){
-        override val isRefreshTokenRequest: Boolean = true
+        override val requiresAuth: Boolean = true
     }
     // ✅ MyProfile 수정: GET 요청이므로 별도의 파라미터가 필요 없습니다.
     // 인증은 requiresAuth = true를 통해 자동으로 처리됩니다.
     object MyProfile : ApiRoute()
-
+    object Logout: ApiRoute()
 
     //    data class Logout(val userId: String) : ApiRoute()
     // ========== 경로 정의 ==========
@@ -44,6 +45,7 @@ sealed class ApiRoute {
             is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
+            is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
 //            is Logout -> "/auth/logout"
 
         }
@@ -54,15 +56,16 @@ sealed class ApiRoute {
             is KakaoLogin -> HttpMethod.Post
             is RefreshToken -> HttpMethod.Post
             is MyProfile -> HttpMethod.Get
+            is Logout -> HttpMethod.Delete
 //            is Logout -> HttpMethod.GET
         }
 
     // ========== 인증 필요 여부 ==========
-    val requiresAuth: Boolean
-        get() = when (this) {
-            is KakaoLogin, is RefreshToken -> false
-            is MyProfile -> true
-        }
+//    val requiresAuth: Boolean
+//        get() = when (this) {
+//            is KakaoLogin, is RefreshToken -> false
+//            is MyProfile -> true
+//        }
 
     // ========== Body 데이터 ==========
     val body: Any?
@@ -72,7 +75,6 @@ sealed class ApiRoute {
                 "fcmToken" to mFcmToken)
             is RefreshToken -> mapOf(
                 "refreshToken" to curRefreshToken)
-            is MyProfile -> null // ✅ GET 요청은 Body가 없습니다.
             else -> null
         }
 

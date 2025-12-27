@@ -35,6 +35,23 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    // ✅ 로그아웃 구현
+    override suspend fun logout(): Result<String> {
+        return try {
+            // 1. 서버 로그아웃 요청
+            val response = userRemoteDataSource.logOut().first()
+
+            // 2. 로그아웃 성공 시(또는 실패와 상관없이) 메모리 캐시 비우기
+            clearCache()
+
+            Result.success(response)
+        } catch (e: Exception) {
+            // 서버 통신에 실패하더라도 로컬 캐시는 비워주는 것이 안전합니다.
+            clearCache()
+            Result.failure(e)
+        }
+    }
+
     // 로그아웃 시 캐시를 비워줘야 다음 로그인 때 이전 사용자 정보가 안 보입니다.
     fun clearCache() {
         cachedProfile = null

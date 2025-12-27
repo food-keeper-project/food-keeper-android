@@ -115,7 +115,7 @@ class FoodApiService @Inject constructor(
             // 만약 ApiRoute 내부에서 이미 처리가 되어있다면 그대로 사용
             route.headers.forEach { (key, value) -> header(key, value) }
             // ✅ 3. 일반 요청(not Refresh)이면서 토큰이 존재하는 경우 Authorization 헤더 강제 주입
-            if (!route.isRefreshTokenRequest && !route.isLoginRequest) {
+            if (!route.requiresAuth) {
                 header("Authorization", "Bearer $accessToken")
                 Log.d("FoodApiService", "Header 주입 완료: Bearer $accessToken")
             }

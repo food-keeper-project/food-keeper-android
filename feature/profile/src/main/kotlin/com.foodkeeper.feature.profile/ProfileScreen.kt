@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,19 +29,24 @@ import com.foodkeeper.core.data.mapper.external.ProfileDTO
 @Composable
 fun ProfileRoute(
     onNavigateToHistory: () -> Unit,
-    onNavigateToFavorites: () -> Unit,
-    onNavigateToCategory: () -> Unit,
-    onNavigateToRecipes: () -> Unit,
+    onLogoutSuccess: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
+
     // ViewModel에서 ProfileDTO? 타입을 구독
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
+    // ✅ 로그아웃 성공 관찰 (SharedFlow 구독)
+    LaunchedEffect(Unit) {
+        viewModel.logoutSuccess.collect { success ->
+            if (success) {
+                onLogoutSuccess() // MainActivity나 상위 NavHost에서 처리하도록 알림
+            }
+        }
+    }
     ProfileScreen(
         profile = profile,
         onHistoryClick = onNavigateToHistory,
-        onFavoritesClick = onNavigateToFavorites,
-        onCategoryClick = onNavigateToCategory,
-        onRecipesClick = onNavigateToRecipes
+        onLogoutClick = { viewModel.logout() }
     )
 }
 
@@ -48,9 +54,7 @@ fun ProfileRoute(
 internal fun ProfileScreen(
     profile: ProfileDTO?,
     onHistoryClick: () -> Unit,
-    onFavoritesClick: () -> Unit,
-    onCategoryClick: () -> Unit,
-    onRecipesClick: () -> Unit
+    onLogoutClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -103,10 +107,7 @@ internal fun ProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            item { ProfileMenuItem("히스토리", onHistoryClick) }
-            item { ProfileMenuItem("즐겨찾기", onFavoritesClick) }
-            item { ProfileMenuItem("관심 카테고리 설정", onCategoryClick) }
-            item { ProfileMenuItem("나의 레시피", onRecipesClick) }
+            item { ProfileMenuItem("나의 식재료 히스토리", onHistoryClick) }
 
             item {
                 Spacer(modifier = Modifier.height(30.dp))
@@ -114,8 +115,7 @@ internal fun ProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            item { ProfileMenuItem("알림 설정") { /* 알림 설정 이동 */ } }
-            item { ProfileMenuItem("로그아웃") { /* ViewModel 로그아웃 호출 */ } }
+            item { ProfileMenuItem("로그아웃") {  onLogoutClick() } }
         }
     }
 }

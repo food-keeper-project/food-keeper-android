@@ -106,14 +106,10 @@ fun FoodKeeperNavHost() {
             ProfileRoute(
                 onNavigateToHistory = {                    // navController.navigate("history") // 이동할 경로가 정의되면 연결
                 },
-                onNavigateToFavorites = {
-                    // navController.navigate("favorites")
-                },
-                onNavigateToCategory = {
-                    // navController.navigate("category")
-                },
-                onNavigateToRecipes = {
-                    // navController.navigate("recipes")
+                onLogoutSuccess = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
