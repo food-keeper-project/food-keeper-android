@@ -1,4 +1,6 @@
 package com.foodkeeper.feature.airecipe
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +22,7 @@ data class AiRecipeUiState(
 )
 @HiltViewModel
 class AiRecipeDetailViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle // ✅ 1. 생성자에 추가
     // private val getAiRecipeUseCase: GetAiRecipeUseCase (나중에 추가)
 ) : ViewModel() {
 
@@ -27,9 +30,20 @@ class AiRecipeDetailViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        generateRecipe() // 초기 진입 시 레시피 생성
-    }
+        // ✅ 네비게이션에서 넘어온 recipeId가 있는지 확인
+        val recipeId: String? = savedStateHandle["recipeId"]
+        Log.d("AiRecipeDetailViewModel", "recipeId: $recipeId")
 
+        generateRecipe()
+    }
+    fun loadSavedRecipe(id: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            // TODO: UseCase를 통해 ID에 해당하는 레시피 정보를 DB/서버에서 가져옴
+            // 예시: val recipe = getAiRecipeDetailUseCase(id)
+            _uiState.update { it.copy(isLoading = false, title = "불러온 레시피...") }
+        }
+    }
     fun generateRecipe() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
