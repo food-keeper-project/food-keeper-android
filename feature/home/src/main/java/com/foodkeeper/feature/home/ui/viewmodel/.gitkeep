@@ -1,1 +1,0 @@
-com.foodkeeper.feature.home.HomeViewModel.kt. UI 상태(State)를 관리하고, core 모듈의 UseCase를 호출하여 데이터를 가져옵니다.
