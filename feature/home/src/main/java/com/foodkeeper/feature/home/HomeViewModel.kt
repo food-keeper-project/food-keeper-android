@@ -9,8 +9,10 @@ import com.foodkeeper.core.domain.usecase.FoodUseCase
 import com.foodkeeper.core.ui.base.BaseUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -41,6 +43,10 @@ class HomeViewModel @Inject constructor(
 
     private val _selectedFood = MutableStateFlow<Food?>(null)
     val selectedFood: StateFlow<Food?> = _selectedFood.asStateFlow()
+
+    // 토스트 메시지를 위한 일회성 이벤트 Flow
+    private val _toastMessage = MutableSharedFlow<String>()
+    val toastMessage = _toastMessage.asSharedFlow()
 
     // --------------------
     // 화면 진입
@@ -76,10 +82,37 @@ class HomeViewModel @Inject constructor(
     // --------------------
 
     fun onFoodItemClick(food: Food) {
-        _selectedFood.value = food
+        viewModelScope.launch {
+            _selectedFood.value = food
+        }
     }
 
     fun onDismissDialog() {
-        _selectedFood.value = null
+        viewModelScope.launch {
+            _selectedFood.value = null
+        }
+    }
+
+    fun onConsumptionFood(food: Food) {
+        viewModelScope.launch {
+            foodUseCase.ConsumptionFood(food)
+                .catch {
+                    _uiState.value = BaseUiState.ErrorState(it.message)
+                    _toastMessage.emit("다시 시도해 주세요.")
+                }
+                .collect { success ->
+                    if (success) {
+                        _selectedFood.value = null
+                        _uiState.value = BaseUiState.Processing
+                        onScreenEnter()
+                        _toastMessage.emit("${food.name}을(를) 소비했습니다.")
+                        _uiState.value = BaseUiState.Content
+                    } else {
+                        _toastMessage.emit("다시 시도해 주세요.")
+                    }
+
+                }
+
+        }
     }
 }

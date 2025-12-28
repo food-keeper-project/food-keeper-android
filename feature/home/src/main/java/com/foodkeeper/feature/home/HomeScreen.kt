@@ -1,6 +1,9 @@
 package com.foodkeeper.feature.home
 
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,98 +50,117 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    // --------------------
-    // State 수집
-    // --------------------
+    val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsState()
     val expiringFoodList by viewModel.expiringFoodList.collectAsState()
     val foodCategorys by viewModel.foodCategories.collectAsState()
     val foodList by viewModel.foodList.collectAsState()
     val selectedFood by viewModel.selectedFood.collectAsState()
 
-    // --------------------
-    // 화면 진입
-    // --------------------
     LaunchedEffect(Unit) {
         viewModel.onScreenEnter()
+        viewModel.toastMessage.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
-    // --------------------
-    // UI 분기
-    // --------------------
-    when (uiState) {
-        is BaseUiState.Init -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("초기화 중...")
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // --------------------
+        // 메인 UI
+        // --------------------
+        when (uiState) {
+            is BaseUiState.Init -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("초기화 중...")
+                }
+            }
+
+            is BaseUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFFF9500))
+                }
+            }
+
+            is BaseUiState.Content,
+            is BaseUiState.Processing -> {
+                HomeContent(
+                    expiringFoodList = expiringFoodList,
+                    foodCategorys = foodCategorys,
+                    foodList = foodList,
+                    onFoodItemClick = { food ->
+                        viewModel.onFoodItemClick(food)
+                    }
+                )
+            }
+
+            is BaseUiState.ErrorState -> {
+                val error = uiState as BaseUiState.ErrorState
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "오류가 발생했습니다",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = error.message ?: "알 수 없는 오류",
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                        Button(onClick = { viewModel.onScreenEnter() }) {
+                            Text("다시 시도")
+                        }
+                    }
+                }
             }
         }
 
-        is BaseUiState.Loading -> {
+        // --------------------
+        // Processing 오버레이
+        // --------------------
+        if (uiState is BaseUiState.Processing) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .clickable(
+                        enabled = true,
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /* 아무 것도 안 함 */ },
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Color(0xFFFF9500))
             }
         }
 
-        is BaseUiState.Content -> {
-            HomeContent(
-                expiringFoodList = expiringFoodList,
-                foodCategorys = foodCategorys,
-                foodList = foodList,
-                onFoodItemClick = { food ->
-                    viewModel.onFoodItemClick(food)
-                }
-            )
-        }
-
-        is BaseUiState.ErrorState -> {
-            val error = uiState as BaseUiState.ErrorState
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "오류가 발생했습니다",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = error.message ?: "알 수 없는 오류",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                    Button(
-                        onClick = { viewModel.onScreenEnter() }
-                    ) {
-                        Text("다시 시도")
-                    }
-                }
-            }
-        }
     }
 
     // --------------------
-    // 식재료 상세 다이얼로그
+    // 다이얼로그
     // --------------------
     selectedFood?.let { food ->
         FoodDetailDialog(
             food = food,
-            onDismiss = {
-                viewModel.onDismissDialog()
-            }
+            onDismiss = viewModel::onDismissDialog,
+            onConsumption = viewModel::onConsumptionFood
         )
     }
 }
-
 
 @Composable
 private fun HomeContent(

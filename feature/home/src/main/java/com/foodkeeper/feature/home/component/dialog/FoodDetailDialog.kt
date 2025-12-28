@@ -54,7 +54,8 @@ import com.foodkeeper.core.ui.util.toyyMMddWithDay
 @Composable
 fun FoodDetailDialog(
     food: Food,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit, // 팝업 닫기
+    onConsumption: (Food) -> Unit //식재료 소비
 ) {
     val imageShape = RoundedCornerShape(20.dp)
     Dialog(
@@ -198,7 +199,7 @@ fun FoodDetailDialog(
                 Spacer(modifier = Modifier.height(20.dp))
                 // ✨ 소비 완료 버튼
                 Button(
-                    onClick = { /* 소비 완료 처리 */ },
+                    onClick = { onConsumption(food) },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .width(105.dp)
