@@ -1,6 +1,7 @@
 package com.foodkeeper.feature.home.component.allFoodsSection
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,11 +40,13 @@ import com.foodkeeper.feature.home.component.badges.ExpiringBadge
  */
 @Composable
 fun FoodListItem(
-    item: Food
+    item: Food,
+    onClick: () -> Unit = {}
 ) {
     val imageShape = RoundedCornerShape(20.dp)
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp // ✅ 테두리(그림자) 제거
@@ -61,7 +64,6 @@ fun FoodListItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 이미지 배경
                 // 이미지
                 Box(
                     modifier = Modifier

@@ -35,10 +35,9 @@ import com.foodkeeper.core.ui.util.toyyMMddString
 import com.foodkeeper.feature.home.component.allFoodsSection.CategoryTabs
 import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
 import com.foodkeeper.feature.home.component.allFoodsSection.FoodListItem
+import com.foodkeeper.feature.home.component.dialog.FoodDetailDialog
 import com.foodkeeper.feature.home.component.expiringFoodsSection.ExpiringFoodsSection
 import kotlinx.coroutines.flow.MutableSharedFlow
-
-
 /**
  * 메인 홈 화면
  * 유통기한 임박 식품 + 나의 식재료 리스트
@@ -47,38 +46,27 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    // ViewModel Input 생성
-    val screenEnterFlow = remember {
-        MutableSharedFlow<Unit>(replay = 1).apply {
-            tryEmit(Unit) // 초기 화면 진입 이벤트
-        }
-    }
+    // --------------------
+    // State 수집
+    // --------------------
+    val uiState by viewModel.uiState.collectAsState()
+    val expiringFoodList by viewModel.expiringFoodList.collectAsState()
+    val foodCategorys by viewModel.foodCategories.collectAsState()
+    val foodList by viewModel.foodList.collectAsState()
+    val selectedFood by viewModel.selectedFood.collectAsState()
 
-    // ViewModel Transform 호출
-    val output = remember {
-        viewModel.transform(
-            HomeViewModel.Input(
-                screenEnter = screenEnterFlow
-            )
-        )
-    }
-
-    // Output State 수집
-    val uiState by output.uiState.collectAsState()
-    val expiringFoodList by output.expiringFoodList.collectAsState()
-    val foodCategorys by output.foodCategorys.collectAsState()
-    val foodList by output.foodList.collectAsState()
-
-
-    // LaunchedEffect로 화면 진입 이벤트 발생
+    // --------------------
+    // 화면 진입
+    // --------------------
     LaunchedEffect(Unit) {
-        screenEnterFlow.emit(Unit)
+        viewModel.onScreenEnter()
     }
 
-    // UI State에 따른 화면 분기
+    // --------------------
+    // UI 분기
+    // --------------------
     when (uiState) {
         is BaseUiState.Init -> {
-            // 초기 상태
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -88,28 +76,26 @@ fun HomeScreen(
         }
 
         is BaseUiState.Loading -> {
-            // 로딩 상태
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    color = Color(0xFFFF9500)
-                )
+                CircularProgressIndicator(color = Color(0xFFFF9500))
             }
         }
 
         is BaseUiState.Content -> {
-            // 컨텐츠 표시
             HomeContent(
                 expiringFoodList = expiringFoodList,
                 foodCategorys = foodCategorys,
                 foodList = foodList,
+                onFoodItemClick = { food ->
+                    viewModel.onFoodItemClick(food)
+                }
             )
         }
 
         is BaseUiState.ErrorState -> {
-            // 에러 상태
             val error = uiState as BaseUiState.ErrorState
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -130,10 +116,7 @@ fun HomeScreen(
                         color = Color.Gray
                     )
                     Button(
-                        onClick = {
-                            // 재시도
-                            screenEnterFlow.tryEmit(Unit)
-                        }
+                        onClick = { viewModel.onScreenEnter() }
                     ) {
                         Text("다시 시도")
                     }
@@ -141,17 +124,27 @@ fun HomeScreen(
             }
         }
     }
+
+    // --------------------
+    // 식재료 상세 다이얼로그
+    // --------------------
+    selectedFood?.let { food ->
+        FoodDetailDialog(
+            food = food,
+            onDismiss = {
+                viewModel.onDismissDialog()
+            }
+        )
+    }
 }
 
-/**
- * 홈 화면 컨텐츠
- * 실제 데이터를 표시하는 컴포저블
- */
+
 @Composable
 private fun HomeContent(
     expiringFoodList: List<Food>,
     foodCategorys: List<String>,
-    foodList: List<Food>
+    foodList: List<Food>,
+    onFoodItemClick: (Food) -> Unit
 ) {
     val tabs = listOf("전체") + foodCategorys
     var selectedTab by remember { mutableStateOf("전체") }
@@ -160,15 +153,18 @@ private fun HomeContent(
         if (selectedTab == "전체") foodList
         else foodList.filter { it.category == selectedTab }
     }
+
     val groupedItems = remember(filteredFoodList) {
         filteredFoodList.groupBy { it.createdAt.toyyMMddString() }
     }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 1. 유통기한 임박 식품 섹션
+
+        // 1. 유통기한 임박 식품
         item {
             ExpiringFoodsSection(
                 expiringCount = expiringFoodList.size,
@@ -176,7 +172,7 @@ private fun HomeContent(
             )
         }
 
-        // 2. 나의 식재료 리스트 타이틀
+        // 2. 타이틀
         item {
             Spacer(modifier = Modifier.height(30.dp))
             Column(
@@ -194,13 +190,12 @@ private fun HomeContent(
             }
         }
 
-        // ✨ 3. Sticky Header - 카테고리 탭
+        // 3. 카테고리 탭 (Sticky)
         stickyHeader {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-
             ) {
                 CategoryTabs(
                     tabs = tabs,
@@ -209,10 +204,9 @@ private fun HomeContent(
                 )
             }
         }
-        // 여백
-        item {
-            Spacer(modifier = Modifier.height(4.dp))
-        }
+
+        item { Spacer(modifier = Modifier.height(4.dp)) }
+
         // 4. 식재료 리스트
         if (filteredFoodList.isEmpty()) {
             item {
@@ -237,22 +231,24 @@ private fun HomeContent(
 
                 items(
                     items = foodsInSection,
-                    key = { it.id }
+                    key = { "${it.id}_${it.createdAt.time}" }
                 ) { item ->
                     Column(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
-                        FoodListItem(item = item)
+                        FoodListItem(
+                            item = item,
+                            onClick = {
+                                onFoodItemClick(item)
+                            }
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }
         }
 
-        // 하단 여백
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 

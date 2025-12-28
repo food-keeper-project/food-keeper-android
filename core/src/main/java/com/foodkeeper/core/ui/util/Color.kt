@@ -10,4 +10,5 @@ object AppColors {
     val grayText = Color(0xFFA2A2A2)  // 회색 텍스트 컬러
     val white = Color(0xFFFBFBFB)      // 흰색
     val lightGray = Color(0xFFEAEAEA)  // 밝은 회색
+    val dartGray = Color(0xFF8C8C8C)  // 밝은 회색
 }

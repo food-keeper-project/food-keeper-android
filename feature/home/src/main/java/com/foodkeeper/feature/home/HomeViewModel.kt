@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,61 +23,63 @@ class HomeViewModel @Inject constructor(
     private val foodUseCase: FoodUseCase
 ) : ViewModel() {
 
-    fun transform(input: Input): Output {
+    // --------------------
+    // UI State
+    // --------------------
 
-        // ----- Output Streams -----
-        val uiState = MutableStateFlow<BaseUiState>(BaseUiState.Init)
-        val expiringFoodList = MutableStateFlow<List<Food>>(emptyList())
-        val foodCategories = MutableStateFlow<List<String>>(emptyList())
-        val foodList = MutableStateFlow<List<Food>>(emptyList())
+    private val _uiState = MutableStateFlow<BaseUiState>(BaseUiState.Init)
+    val uiState: StateFlow<BaseUiState> = _uiState.asStateFlow()
 
+    private val _expiringFoodList = MutableStateFlow<List<Food>>(emptyList())
+    val expiringFoodList: StateFlow<List<Food>> = _expiringFoodList.asStateFlow()
 
-        // ----- Input: 화면 진입 -----
-        input.screenEnter
-            .onEach { uiState.value = BaseUiState.Loading }
-            .flatMapLatest {
-                combine(
-                    foodUseCase.getFoodList(),
-                    foodUseCase.getExpiringSoonFoodList(),
-                    foodUseCase.getFoodCategoryList() // 추가된 UseCase 호출
-                ) { allFoods, expiringFoods, categories ->
-                    // 데이터를 묶어서 하단으로 전달
-                    Triple(allFoods, expiringFoods, categories)
+    private val _foodCategories = MutableStateFlow<List<String>>(emptyList())
+    val foodCategories: StateFlow<List<String>> = _foodCategories.asStateFlow()
+
+    private val _foodList = MutableStateFlow<List<Food>>(emptyList())
+    val foodList: StateFlow<List<Food>> = _foodList.asStateFlow()
+
+    private val _selectedFood = MutableStateFlow<Food?>(null)
+    val selectedFood: StateFlow<Food?> = _selectedFood.asStateFlow()
+
+    // --------------------
+    // 화면 진입
+    // --------------------
+
+    fun onScreenEnter() {
+        viewModelScope.launch {
+            _uiState.value = BaseUiState.Loading
+
+            combine(
+                foodUseCase.getFoodList(),
+                foodUseCase.getExpiringSoonFoodList(),
+                foodUseCase.getFoodCategoryList()
+            ) { allFoods, expiringFoods, categories ->
+                Triple(allFoods, expiringFoods, categories)
+            }
+                .catch { e ->
+                    _uiState.value = BaseUiState.ErrorState(
+                        message = e.message ?: "데이터 로딩 실패"
+                    )
                 }
-            }
-            .onEach { (allFoods, expiringFoods, categories) ->
-                foodList.value = allFoods
-                expiringFoodList.value = expiringFoods
-                foodCategories.value = categories // ✨ 카테고리 데이터 업데이트
-                uiState.value = BaseUiState.Content
-            }
-            .catch { e ->
-                uiState.value = BaseUiState.ErrorState(
-                    message = e.message ?: "데이터 로딩 실패"
-                )
-            }
-            .launchIn(viewModelScope)
-
-        return Output(
-            uiState = uiState.asStateFlow(),
-            expiringFoodList = expiringFoodList.asStateFlow(),
-            foodCategorys = foodCategories.asStateFlow(),
-            foodList = foodList.asStateFlow(),
-
-        )
+                .collect { (allFoods, expiringFoods, categories) ->
+                    _foodList.value = allFoods
+                    _expiringFoodList.value = expiringFoods
+                    _foodCategories.value = categories
+                    _uiState.value = BaseUiState.Content
+                }
+        }
     }
 
-    // -------- Input / Output --------
+    // --------------------
+    // 사용자 액션
+    // --------------------
 
-    data class Input(
-        val screenEnter: Flow<Unit>,
-    )
+    fun onFoodItemClick(food: Food) {
+        _selectedFood.value = food
+    }
 
-    data class Output(
-        val uiState: StateFlow<BaseUiState>,
-        val expiringFoodList: StateFlow<List<Food>>,
-        val foodCategorys: StateFlow<List<String>>,
-        val foodList: StateFlow<List<Food>>,
-
-    )
+    fun onDismissDialog() {
+        _selectedFood.value = null
+    }
 }

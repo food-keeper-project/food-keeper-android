@@ -22,6 +22,7 @@ object FoodMockData {
             imageURL = IMAGE_URL,
             storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(2),
+            memo = "엄청길게쓸게요!!!엄청길게쓸게요!려고했는데 이거 잘쓰지는건가 모르겠슝엄청길게쓸게요!!!엄청길게쓸게요!려고했는데 이거 잘쓰지는건가 모르겠슝엄청길게쓸게요!!!엄청길게쓸게요!려고했는데 이거 잘쓰지는건가 모르겠슝",
             category = "야채류"
         ),
         Food(
