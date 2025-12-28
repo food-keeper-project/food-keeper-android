@@ -29,7 +29,7 @@ fun ExpiringBadge() {
         Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(horizontal = 6.dp),
+                .padding(horizontal = 9.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(

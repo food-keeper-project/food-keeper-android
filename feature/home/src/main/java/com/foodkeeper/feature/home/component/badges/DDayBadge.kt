@@ -29,7 +29,7 @@ fun DDayBadge(dDay: Int) {
     Surface(
         modifier = Modifier.height(18.dp),
         color = backgroundColor,
-        shape = RoundedCornerShape(6.dp),
+        shape = RoundedCornerShape(4.dp),
     ) {
         Box(
             modifier = Modifier
@@ -41,7 +41,7 @@ fun DDayBadge(dDay: Int) {
                 text = if (isExpiring) "D-$dDay" else "유통기한 종료",
                 color = textColor,
                 style = AppFonts.size12Caption1,
-                lineHeight = 18.sp, // ⭐ 핵심
+                lineHeight = 18.sp,
                 maxLines = 1
             )
         }

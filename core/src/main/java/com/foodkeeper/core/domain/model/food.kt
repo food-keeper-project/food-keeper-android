@@ -17,12 +17,16 @@ enum class FoodCategory(val displayName: String) {
     }
 }
 
-
+enum class StorageMethod(val displayName: String) {
+    FREEZER("냉장"),
+    ROOM_TEMP("실온"),
+    REFRIGERATED("냉장")
+}
 data class Food(
     val id: Int, //고유 ID
     val name: String, //식품명
     val imageURL: String, //이미지 URL
+    val storageMethod: StorageMethod, // 보관방식
     val expiryDate: Date, //유통기한 날짜
     val category: FoodCategory,
-    val isExpiringSoon: Boolean = false //유통기한 임박 여부???
 )

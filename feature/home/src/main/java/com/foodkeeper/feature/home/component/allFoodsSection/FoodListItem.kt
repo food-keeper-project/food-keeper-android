@@ -97,18 +97,34 @@ fun FoodListItem(
                             color = AppColors.text
                         )
                         DDayBadge(dDay = item.expiryDate.getDDay())
-                        if (item.isExpiringSoon) {
+                        // 7일 미만일 경우 유통기한 임박 뱃지 표시
+                        if (item.expiryDate.getDDay() <= 7) {
                             ExpiringBadge()
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = "${item.category.displayName} • 유통기한 ${item.expiryDate.toyyMMddString()}",
-                        style = AppFonts.size12Caption1,
-                        color = AppColors.lightGray
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = item.category.displayName,
+                            style = AppFonts.size12Caption1,
+                            color = AppColors.grayText
+                        )
+
+                        // 텍스트 사이의 구분점(Bullet)을 넣으면 더 깔끔합니다.
+                        Text(
+                            text = " • ",
+                            style = AppFonts.size12Caption1,
+                            color = AppColors.grayText
+                        )
+
+                        Text(
+                            text = "유통기한 ${item.expiryDate.toyyMMddString()}",
+                            style = AppFonts.size12Caption1,
+                            color = AppColors.text
+                        )
+                    }
                 }
             }
         }
