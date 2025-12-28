@@ -1,10 +1,9 @@
 package com.example.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
+import AiRecipeDetailScreen
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,12 +13,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
-import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
-import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint // Hilt를 사용하기 위한 어노테이션
@@ -76,7 +73,7 @@ fun FoodKeeperNavHost() {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("profile") {
+                    navController.navigate("ai_recipe_detail") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -113,5 +110,10 @@ fun FoodKeeperNavHost() {
                 }
             )
         }
+        // 5. AI레시피 상세화면
+        composable("ai_recipe_detail"){
+            AiRecipeDetailScreen()
+        }
     }
 }
+

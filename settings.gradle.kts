@@ -33,4 +33,5 @@ include(":feature:home")
 include(":feature:kakao-login")
 include(":feature:splash")
 include(":feature:profile")
+include(":feature:ai-recipe")
  

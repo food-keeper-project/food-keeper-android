@@ -111,4 +111,5 @@ dependencies {
     implementation(project(":feature:kakao-login"))
     implementation(project(":feature:splash"))
     implementation(project(":feature:profile"))
+    implementation(project(":feature:ai-recipe"))
 }
