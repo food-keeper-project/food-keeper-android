@@ -1,13 +1,17 @@
 package com.example.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,30 +28,56 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint // Hilt를 사용하기 위한 어노테이션
 class MainActivity : ComponentActivity() {
+    // NavController를 handleIntent에서도 접근할 수 있도록 늦은 초기화
+    private lateinit var navController: NavHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             FoodKeeperTheme {
+                navController = rememberNavController() // NavController 생성
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 메인 진입점에서 내비게이션 함수 호출
-                    FoodKeeperNavHost()
+                    FoodKeeperNavHost(navController)
+                }
+
+                // 앱이 처음 켜질 때 알림 인텐트가 있는지 확인
+                LaunchedEffect(Unit) {
+                    handleIntent(intent)
                 }
             }
         }
     }
+    // ✅ 앱이 켜져 있는 상태에서 알람을 누르면 이 함수가 실행됩니다!
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // 새로운 인텐트로 교체
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val target = intent?.getStringExtra("navigate_to")
+        if (target == "home") {
+            // 💡 여기서 NavController를 이용해 화면을 전환합니다.
+            // 이미 홈이면 아무것도 안 하거나, 홈 탭으로 강제 이동시킵니다.
+            Log.d("MainActivity", "알람 클릭으로 홈 이동 처리")
+            // "main" 경로로 이동하고, 스택에 쌓인 이전 화면들을 정리
+            navController.navigate("main") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 }
+
 /**
 * 앱 전체의 화면 흐름을 관리하는 함수
 */
 @Composable
-fun FoodKeeperNavHost() {
-    val navController = rememberNavController()
-
+fun FoodKeeperNavHost(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = "splash" // 앱 시작 시 스플래시를 먼저 띄움
