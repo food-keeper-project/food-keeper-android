@@ -112,7 +112,6 @@ fun FoodListItem(
                             color = AppColors.grayText
                         )
 
-                        // 텍스트 사이의 구분점(Bullet)을 넣으면 더 깔끔합니다.
                         Text(
                             text = " • ",
                             style = AppFonts.size12Caption1,
