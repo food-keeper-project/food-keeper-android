@@ -53,17 +53,6 @@ fun MainTopBar(
             )
         },
 
-        // 🔥 오른쪽 액션
-        actions = {
-            IconButton(onClick = { /* 프로필 클릭 */ }) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "프로필",
-                    tint = mMain
-                )
-            }
-        },
-
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.White,
             titleContentColor = mMain
