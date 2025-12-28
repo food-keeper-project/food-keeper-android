@@ -95,7 +95,7 @@ fun FoodKeeperNavHost() {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("profile") {
+                    navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -125,9 +125,23 @@ fun FoodKeeperNavHost() {
             ) {
                 when (currentTab) {
                     MainTab.Home -> HomeScreen() //홈
-                    MainTab.Search -> HomeScreen() //식자재 추가
-                    MainTab.Record -> HomeScreen() // AI 레시피
-                    MainTab.MyPage -> HomeScreen() // 마이페이지
+                    MainTab.Search -> {}//식자재 추가
+                    MainTab.Recipe -> AiRecipeHistoryScreen(
+                        onRecipeClick = { recipeId ->
+                            // ✅ 클릭 시 ID를 경로에 담아 이동
+                            navController.navigate("ai_recipe_detail/$recipeId")
+                        },
+                        onBackClick = { navController.popBackStack() }
+                    )
+                    MainTab.MyPage -> ProfileRoute(
+                        onNavigateToHistory = {                    // navController.navigate("history") // 이동할 경로가 정의되면 연결
+                        },
+                        onLogoutSuccess = {
+                            navController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    ) // 마이페이지
                 }
             }
         }
