@@ -161,7 +161,7 @@ private fun HomeContent(
         else foodList.filter { it.category == selectedTab }
     }
     val groupedItems = remember(filteredFoodList) {
-        filteredFoodList.groupBy { it.expiryDate.toyyMMddString() }
+        filteredFoodList.groupBy { it.createdAt.toyyMMddString() }
     }
     LazyColumn(
         modifier = Modifier

@@ -28,7 +28,9 @@ data class Food(
     val imageURL: String, //이미지 URL
     val storageMethod: StorageMethod, // 보관방식
     val expiryDate: Date, //유통기한 날짜
-    val category: String, //카테고리
     val memo: String = "", // 메모
+    val createdAt: Date = Date(),  //종료일
+    val category: String, //카테고리
+
     val expiryAlarm: Int = 0, // 알람일
 )
