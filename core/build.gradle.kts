@@ -31,12 +31,13 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     // ✅ Material 3 (UI 구성 필수)
+    implementation(platform(libs.androidx.compose.bom))
+    
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
-
-    // ✅ Icons (Person, ArrowRight 아이콘 사용 필수)
-    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.runtime)
 
     // Coil
     implementation(libs.coil.compose)

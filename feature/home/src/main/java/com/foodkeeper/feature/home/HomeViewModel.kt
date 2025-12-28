@@ -1,0 +1,85 @@
+package com.foodkeeper.feature.home
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.foodkeeper.core.domain.model.Food
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import com.foodkeeper.core.domain.usecase.FoodUseCase
+import com.foodkeeper.core.ui.base.BaseUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val foodUseCase: FoodUseCase
+) : ViewModel() {
+
+    // --------------------
+    // UI State
+    // --------------------
+
+    private val _uiState = MutableStateFlow<BaseUiState>(BaseUiState.Init)
+    val uiState: StateFlow<BaseUiState> = _uiState.asStateFlow()
+
+    private val _expiringFoodList = MutableStateFlow<List<Food>>(emptyList())
+    val expiringFoodList: StateFlow<List<Food>> = _expiringFoodList.asStateFlow()
+
+    private val _foodCategories = MutableStateFlow<List<String>>(emptyList())
+    val foodCategories: StateFlow<List<String>> = _foodCategories.asStateFlow()
+
+    private val _foodList = MutableStateFlow<List<Food>>(emptyList())
+    val foodList: StateFlow<List<Food>> = _foodList.asStateFlow()
+
+    private val _selectedFood = MutableStateFlow<Food?>(null)
+    val selectedFood: StateFlow<Food?> = _selectedFood.asStateFlow()
+
+    // --------------------
+    // 화면 진입
+    // --------------------
+
+    fun onScreenEnter() {
+        viewModelScope.launch {
+            _uiState.value = BaseUiState.Loading
+
+            combine(
+                foodUseCase.getFoodList(),
+                foodUseCase.getExpiringSoonFoodList(),
+                foodUseCase.getFoodCategoryList()
+            ) { allFoods, expiringFoods, categories ->
+                Triple(allFoods, expiringFoods, categories)
+            }
+                .catch { e ->
+                    _uiState.value = BaseUiState.ErrorState(
+                        message = e.message ?: "데이터 로딩 실패"
+                    )
+                }
+                .collect { (allFoods, expiringFoods, categories) ->
+                    _foodList.value = allFoods
+                    _expiringFoodList.value = expiringFoods
+                    _foodCategories.value = categories
+                    _uiState.value = BaseUiState.Content
+                }
+        }
+    }
+
+    // --------------------
+    // 사용자 액션
+    // --------------------
+
+    fun onFoodItemClick(food: Food) {
+        _selectedFood.value = food
+    }
+
+    fun onDismissDialog() {
+        _selectedFood.value = null
+    }
+}

@@ -109,6 +109,8 @@ dependencies {
     // ----------------------------------------------------------------
     // 기존에 있던 다른 모듈 의존성
     implementation(project(":feature:kakao-login"))
+    implementation(project(":feature:home"))
     implementation(project(":feature:splash"))
+    implementation(project(":feature:foodKeeper-Main"))
     implementation(project(":feature:profile"))
 }

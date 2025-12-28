@@ -7,12 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.foodkeeper.feature.kakaologin"
+    namespace = "com.foodkeeper.feature.foodKeeperMain"
 }
 dependencies {
     // 이 모듈은 Domain 계층의 규칙을 사용해야 하므로 :core 모듈을 implementation 합니다.
     implementation(project(":core"))
-
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
