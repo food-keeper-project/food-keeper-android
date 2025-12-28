@@ -10,22 +10,18 @@ sealed class ApiRoute {
     open val isRefreshTokenRequest: Boolean = false
     open val isLoginRequest: Boolean = false
     // 기본값을 true로 설정하고, 인증이 필요 없는 경우에만 false로 오버라이드
-    open val requiresAuth: Boolean = true
+    //open val requiresAuth: Boolean = true
     // ========== Auth APIs ==========
     // 2. Route 정의는 데이터만 전달하는 역할만 수행
     data class KakaoLogin(
         val kakaoAccessToken: String, // 카카오에서 받은 토큰
         val mFcmToken: String?         // FCM 토큰
-    ) : ApiRoute(){
-        override val requiresAuth: Boolean = true
-    }
+    ) : ApiRoute()
 
     data class RefreshToken(
         val curAccessToken:String,
         val curRefreshToken:String
-    ) : ApiRoute(){
-        override val requiresAuth: Boolean = true
-    }
+    ) : ApiRoute()
     // ✅ MyProfile 수정: GET 요청이므로 별도의 파라미터가 필요 없습니다.
     // 인증은 requiresAuth = true를 통해 자동으로 처리됩니다.
     object MyProfile : ApiRoute()
@@ -61,11 +57,11 @@ sealed class ApiRoute {
         }
 
     // ========== 인증 필요 여부 ==========
-//    val requiresAuth: Boolean
-//        get() = when (this) {
-//            is KakaoLogin, is RefreshToken -> false
-//            is MyProfile -> true
-//        }
+    val requiresAuth: Boolean
+        get() = when (this) {
+            is KakaoLogin, is RefreshToken -> false
+            else->true
+        }
 
     // ========== Body 데이터 ==========
     val body: Any?

@@ -17,6 +17,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodKeeper">
+        <service
+            android:name="com.foodkeeper.core.notification.FoodKeeperMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- ... MainActivity 설정 ... -->
         <activity
