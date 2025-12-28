@@ -26,8 +26,10 @@ class HomeViewModel @Inject constructor(
 
         // ----- Output Streams -----
         val uiState = MutableStateFlow<BaseUiState>(BaseUiState.Init)
-        val foodList = MutableStateFlow<List<Food>>(emptyList())
         val expiringFoodList = MutableStateFlow<List<Food>>(emptyList())
+        val foodCategories = MutableStateFlow<List<String>>(emptyList())
+        val foodList = MutableStateFlow<List<Food>>(emptyList())
+
 
         // ----- Input: 화면 진입 -----
         input.screenEnter
@@ -35,14 +37,17 @@ class HomeViewModel @Inject constructor(
             .flatMapLatest {
                 combine(
                     foodUseCase.getFoodList(),
-                    foodUseCase.getExpiringSoonFoodList()
-                ) { allFoods, expiringFoods ->
-                    allFoods to expiringFoods
+                    foodUseCase.getExpiringSoonFoodList(),
+                    foodUseCase.getFoodCategoryList() // 추가된 UseCase 호출
+                ) { allFoods, expiringFoods, categories ->
+                    // 데이터를 묶어서 하단으로 전달
+                    Triple(allFoods, expiringFoods, categories)
                 }
             }
-            .onEach { (allFoods, expiringFoods) ->
+            .onEach { (allFoods, expiringFoods, categories) ->
                 foodList.value = allFoods
                 expiringFoodList.value = expiringFoods
+                foodCategories.value = categories // ✨ 카테고리 데이터 업데이트
                 uiState.value = BaseUiState.Content
             }
             .catch { e ->
@@ -54,8 +59,10 @@ class HomeViewModel @Inject constructor(
 
         return Output(
             uiState = uiState.asStateFlow(),
+            expiringFoodList = expiringFoodList.asStateFlow(),
+            foodCategorys = foodCategories.asStateFlow(),
             foodList = foodList.asStateFlow(),
-            expiringFoodList = expiringFoodList.asStateFlow()
+
         )
     }
 
@@ -67,7 +74,9 @@ class HomeViewModel @Inject constructor(
 
     data class Output(
         val uiState: StateFlow<BaseUiState>,
+        val expiringFoodList: StateFlow<List<Food>>,
+        val foodCategorys: StateFlow<List<String>>,
         val foodList: StateFlow<List<Food>>,
-        val expiringFoodList: StateFlow<List<Food>>
+
     )
 }

@@ -1,7 +1,7 @@
 package com.foodkeeper.core.domain.usecase
 
 import com.foodkeeper.core.domain.model.Food
-import com.foodkeeper.core.domain.model.FoodCategory
+import com.foodkeeper.core.domain.model.StorageMethod
 import java.util.Calendar
 import java.util.Date
 
@@ -20,57 +20,65 @@ object FoodMockData {
             id = 1,
             name = "양파",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(2),
-            category = FoodCategory.VEGETABLE
+            category = "야채류"
         ),
         Food(
             id = 2,
             name = "소고기",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(1),
-            category = FoodCategory.MEAT
+            category = "육류"
         ),
         Food(
             id = 3,
             name = "우유",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(1),
-            category = FoodCategory.DAIRY
+            category = "유제품"
         ),
         Food(
             id = 4,
             name = "사과",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(2),
-            category = FoodCategory.FRUIT
+            category = "과일류"
         ),
         Food(
             id = 5,
             name = "고등어",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(0),
-            category = FoodCategory.SEAFOOD
+            category = "육류"
         ),
         Food(
             id = 6,
             name = "사과1",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(3),
-            category = FoodCategory.FRUIT
+            category = "육류"
         ),
         Food(
             id = 7,
             name = "사과2",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(7),
-            category = FoodCategory.FRUIT
+            category = "육류"
         ),
         Food(
             id = 8,
             name = "사과3",
             imageURL = IMAGE_URL,
+            storageMethod = StorageMethod.FREEZER,
             expiryDate = daysFromNow(7),
-            category = FoodCategory.FRUIT
+            category = "육류"
         )
 
     )

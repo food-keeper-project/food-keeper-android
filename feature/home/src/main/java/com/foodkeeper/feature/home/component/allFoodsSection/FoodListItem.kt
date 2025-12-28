@@ -107,7 +107,7 @@ fun FoodListItem(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = item.category.displayName,
+                            text = item.category,
                             style = AppFonts.size12Caption1,
                             color = AppColors.grayText
                         )

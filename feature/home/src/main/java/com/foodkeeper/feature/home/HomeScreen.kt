@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foodkeeper.core.domain.model.Food
-import com.foodkeeper.core.domain.model.FoodCategory
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.toyyMMddString
@@ -66,8 +65,10 @@ fun HomeScreen(
 
     // Output State 수집
     val uiState by output.uiState.collectAsState()
-    val foodList by output.foodList.collectAsState()
     val expiringFoodList by output.expiringFoodList.collectAsState()
+    val foodCategorys by output.foodCategorys.collectAsState()
+    val foodList by output.foodList.collectAsState()
+
 
     // LaunchedEffect로 화면 진입 이벤트 발생
     LaunchedEffect(Unit) {
@@ -102,6 +103,7 @@ fun HomeScreen(
             // 컨텐츠 표시
             HomeContent(
                 expiringFoodList = expiringFoodList,
+                foodCategorys = foodCategorys,
                 foodList = foodList,
             )
         }
@@ -148,14 +150,15 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     expiringFoodList: List<Food>,
+    foodCategorys: List<String>,
     foodList: List<Food>
 ) {
-    val tabs = listOf("전체") + FoodCategory.values().map { it.displayName }
+    val tabs = listOf("전체") + foodCategorys
     var selectedTab by remember { mutableStateOf("전체") }
 
     val filteredFoodList = remember(foodList, selectedTab) {
         if (selectedTab == "전체") foodList
-        else foodList.filter { it.category.displayName == selectedTab }
+        else foodList.filter { it.category == selectedTab }
     }
     val groupedItems = remember(filteredFoodList) {
         filteredFoodList.groupBy { it.expiryDate.toyyMMddString() }
