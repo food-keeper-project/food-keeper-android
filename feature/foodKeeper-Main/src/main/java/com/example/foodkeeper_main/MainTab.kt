@@ -19,7 +19,7 @@ enum class MainTab(
         label = "식재료 추가",
         iconRes = R.drawable.cart_plus
     ),
-    Record(
+    Recipe(
         route = "recipe",
         label = "AI 레시피",
         iconRes = R.drawable.chef_hat

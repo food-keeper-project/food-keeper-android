@@ -16,6 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.core.ui.util.AppFonts
+import com.foodkeeper.core.ui.util.AppString
 
 @Composable
 fun SplashScreen(
@@ -39,14 +42,13 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(AppColors.main),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "푸드키퍼",
-            fontSize = 44.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF4CAF50) // 푸드키퍼의 메인 브랜드 컬러
+            text = AppString.appName,
+            style = AppFonts.size50Title0,
+            color = AppColors.white
         )
     }
 }
