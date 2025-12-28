@@ -9,17 +9,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.foodkeeper.feature.kakaologin.LoginScreen      // 모듈 이름 'kakao-login'에 맞게 수정
-import com.foodkeeper.feature.kakaologin.LoginViewModel   // 모듈 이름 'kakao-login'에 맞게 수정
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme     // 패키지 이름에 맞게 수정
+import com.foodkeeper.feature.airecipe.AiRecipeDetailScreen
+import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
 import com.foodkeeper.feature.home.HomeScreen
@@ -27,22 +32,29 @@ import com.foodkeeper.feature.home.HomeViewModel
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
-import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint // Hilt를 사용하기 위한 어노테이션
 class MainActivity : ComponentActivity() {
+    // NavController를 handleIntent에서도 접근할 수 있도록 늦은 초기화
+    private lateinit var navController: NavHostController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             FoodKeeperTheme {
+                navController = rememberNavController() // NavController 생성
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 메인 진입점에서 내비게이션 함수 호출
                     FoodKeeperNavHost()
+                }
+
+                // 앱이 처음 켜질 때 알림 인텐트가 있는지 확인
+                LaunchedEffect(Unit) {
                 }
             }
         }
@@ -83,7 +95,7 @@ fun FoodKeeperNavHost() {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("main") {
+                    navController.navigate("profile") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -129,6 +141,26 @@ fun FoodKeeperNavHost() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+        // 1. 히스토리(목록) 화면
+        composable("ai_recipe_history") {        AiRecipeHistoryScreen(
+            onRecipeClick = { recipeId ->
+                // ✅ 클릭 시 ID를 경로에 담아 이동
+                navController.navigate("ai_recipe_detail/$recipeId")
+            },
+            onBackClick = { navController.popBackStack() }
+        )
+        }
+
+        // 2. 디테일(상세) 화면
+        composable(
+            route = "ai_recipe_detail/{recipeId}", // ✅ 인자를 받는 경로
+            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+        ) {
+            AiRecipeDetailScreen(
+                onBackClick = { navController.popBackStack() },
+                // 필요한 다른 콜백들...
             )
         }
     }
