@@ -44,6 +44,9 @@ class HomeViewModel @Inject constructor(
     private val _selectedFood = MutableStateFlow<Food?>(null)
     val selectedFood: StateFlow<Food?> = _selectedFood.asStateFlow()
 
+    private val _selectedRecipeRecommend = MutableStateFlow<List<Food>?>(null)
+    val selectedRecipeRecommend: StateFlow<List<Food>?> = _selectedRecipeRecommend.asStateFlow()
+
     // 토스트 메시지를 위한 일회성 이벤트 Flow
     private val _toastMessage = MutableSharedFlow<String>()
     val toastMessage = _toastMessage.asSharedFlow()
@@ -90,6 +93,7 @@ class HomeViewModel @Inject constructor(
     fun onDismissDialog() {
         viewModelScope.launch {
             _selectedFood.value = null
+            _selectedRecipeRecommend.value = null
         }
     }
 
@@ -113,6 +117,11 @@ class HomeViewModel @Inject constructor(
 
                 }
 
+        }
+    }
+    fun onRecipeRecommendClick(foodList: List<Food>) {
+        viewModelScope.launch {
+            _selectedRecipeRecommend.value = foodList
         }
     }
 }

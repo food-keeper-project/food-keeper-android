@@ -124,10 +124,19 @@ fun FoodKeeperNavHost() {
                 }
             ) {
                 when (currentTab) {
-                    MainTab.Home -> HomeScreen() //홈
-                    MainTab.Search -> HomeScreen() //식자재 추가
-                    MainTab.Record -> HomeScreen() // AI 레시피
-                    MainTab.MyPage -> HomeScreen() // 마이페이지
+                    MainTab.Home -> HomeScreen(
+                        onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
+
+                    ) //홈
+                    MainTab.Search -> HomeScreen(
+                        onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
+                    ) //식자재 추가
+                    MainTab.Record -> HomeScreen(
+                        onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
+                    ) // AI 레시피
+                    MainTab.MyPage -> HomeScreen(
+                        onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
+                    ) // 마이페이지
                 }
             }
         }

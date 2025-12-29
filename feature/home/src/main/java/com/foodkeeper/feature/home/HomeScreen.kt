@@ -40,6 +40,7 @@ import com.foodkeeper.feature.home.component.allFoodsSection.CategoryTabs
 import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
 import com.foodkeeper.feature.home.component.allFoodsSection.FoodListItem
 import com.foodkeeper.feature.home.component.dialog.FoodDetailDialog
+import com.foodkeeper.feature.home.component.dialog.RecipeRecommendationDialog
 import com.foodkeeper.feature.home.component.expiringFoodsSection.ExpiringFoodsSection
 import kotlinx.coroutines.flow.MutableSharedFlow
 /**
@@ -48,7 +49,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  */
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    onRecipeRecommendFoods: (List<Food>) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -57,6 +59,7 @@ fun HomeScreen(
     val foodCategorys by viewModel.foodCategories.collectAsState()
     val foodList by viewModel.foodList.collectAsState()
     val selectedFood by viewModel.selectedFood.collectAsState()
+    val selectedRecipeRecommend by viewModel.selectedRecipeRecommend.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.onScreenEnter()
@@ -96,7 +99,8 @@ fun HomeScreen(
                     foodCategorys = foodCategorys,
                     foodList = foodList,
                     onFoodItemClick = { food ->
-                        viewModel.onFoodItemClick(food)
+//                        viewModel.onFoodItemClick(food)
+                        viewModel.onRecipeRecommendClick(food)
                     }
                 )
             }
@@ -160,6 +164,16 @@ fun HomeScreen(
             onConsumption = viewModel::onConsumptionFood
         )
     }
+    selectedRecipeRecommend?.let { foodList ->
+        RecipeRecommendationDialog(
+            foodList,
+            onDismiss = {},
+            onGenerateRecipe = { selectFoods ->
+                onRecipeRecommendFoods(selectFoods)
+                viewModel.onDismissDialog()
+            }
+        )
+    }
 }
 
 @Composable
@@ -167,7 +181,8 @@ private fun HomeContent(
     expiringFoodList: List<Food>,
     foodCategorys: List<String>,
     foodList: List<Food>,
-    onFoodItemClick: (Food) -> Unit
+//    onFoodItemClick: (Food) -> Unit
+    onFoodItemClick: (List<Food>) -> Unit
 ) {
     val tabs = listOf("전체") + foodCategorys
     var selectedTab by remember { mutableStateOf("전체") }
@@ -262,7 +277,8 @@ private fun HomeContent(
                         FoodListItem(
                             item = item,
                             onClick = {
-                                onFoodItemClick(item)
+//                                onFoodItemClick(item)
+                                onFoodItemClick(foodList)
                             }
                         )
                         Spacer(modifier = Modifier.height(12.dp))

@@ -48,7 +48,7 @@ class DefaultFoodUseCase @Inject constructor(
     override fun ConsumptionFood(food: Food): Flow<Boolean> {
         return flow {
             delay(500)
-            emit(false)
+            emit(true)
         }
     }
 }
