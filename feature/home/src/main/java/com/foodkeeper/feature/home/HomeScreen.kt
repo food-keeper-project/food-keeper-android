@@ -99,8 +99,7 @@ fun HomeScreen(
                     foodCategorys = foodCategorys,
                     foodList = foodList,
                     onFoodItemClick = { food ->
-//                        viewModel.onFoodItemClick(food)
-                        viewModel.onRecipeRecommendClick(food)
+                        viewModel.onFoodItemClick(food)
                     }
                 )
             }
@@ -182,7 +181,7 @@ private fun HomeContent(
     foodCategorys: List<String>,
     foodList: List<Food>,
 //    onFoodItemClick: (Food) -> Unit
-    onFoodItemClick: (List<Food>) -> Unit
+    onFoodItemClick: (Food) -> Unit
 ) {
     val tabs = listOf("전체") + foodCategorys
     var selectedTab by remember { mutableStateOf("전체") }
@@ -277,8 +276,7 @@ private fun HomeContent(
                         FoodListItem(
                             item = item,
                             onClick = {
-//                                onFoodItemClick(item)
-                                onFoodItemClick(foodList)
+                                onFoodItemClick(item)
                             }
                         )
                         Spacer(modifier = Modifier.height(12.dp))

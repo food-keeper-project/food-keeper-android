@@ -27,6 +27,9 @@ sealed class ApiRoute {
     object MyProfile : ApiRoute()
     object Logout: ApiRoute()
 
+    // ========== 식자재 관련 정의 ==========
+
+
     //    data class Logout(val userId: String) : ApiRoute()
     // ========== 경로 정의 ==========
     val baseURL: String
