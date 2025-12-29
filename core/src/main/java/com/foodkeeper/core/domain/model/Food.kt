@@ -23,7 +23,7 @@ enum class StorageMethod(val displayName: String) {
     REFRIGERATED("냉장")
 }
 data class Food(
-    val id: Int, //고유 ID
+    val id: Long, //고유 ID
     val name: String, //식품명
     val imageURL: String, //이미지 URL
     val storageMethod: StorageMethod, // 보관방식
@@ -31,6 +31,6 @@ data class Food(
     val memo: String = "", // 메모
     val createdAt: Date = Date(),  //종료일
     val category: String, //카테고리
-
+    val categoryModel: List<Category>, //카테고리
     val expiryAlarm: Int = 0, // 알람일
 )

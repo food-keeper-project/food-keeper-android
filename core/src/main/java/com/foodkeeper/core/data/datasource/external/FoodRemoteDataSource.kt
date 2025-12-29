@@ -11,4 +11,14 @@ import javax.inject.Singleton
 class FoodRemoteDataSource @Inject constructor(
     private val apiService: FoodApiService
 ) {
+    // 내 프로필 정보 조회
+    fun getMyProfile(): Flow<ProfileDTO> {
+        return apiService.request(ApiRoute.MyProfile)
+    }
+    // ✅ 로그아웃 추가
+    fun logOut(): Flow<String> {
+        // FoodApiService.request<T>가 내부적으로 ApiResponse<T>를 파싱해서
+        // data(T)만 내보내도록 구현되어 있다면 아래와 같이 작성합니다.
+        return apiService.request(ApiRoute.Logout)
+    }
 }

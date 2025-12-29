@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit
 
 private const val EXPIRING_SOON_DAYS = 3
 
+private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+private val DATE_TIME_FORMAT =
+    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+
 //Date → "yy. MM. dd" 형식 문자열 변환
 fun Date.toyyMMddString(): String {
     val formatter = SimpleDateFormat("yy.MM.dd", Locale.getDefault())
@@ -31,4 +35,14 @@ fun Date.isExpiringSoon(): Boolean {
 fun Date.getDDay(from: Date = Date()): Int {
     val diffMillis = this.time - from.time
     return TimeUnit.MILLISECONDS.toDays(diffMillis).toInt()
+}
+//네트워크 결과값 String -> Date로 변환
+fun String.parseServerDate(): Date {
+    return runCatching {
+        DATE_FORMAT.parse(this)
+    }.getOrNull()
+        ?: runCatching {
+            DATE_TIME_FORMAT.parse(this)
+        }.getOrNull()
+        ?: Date()
 }
