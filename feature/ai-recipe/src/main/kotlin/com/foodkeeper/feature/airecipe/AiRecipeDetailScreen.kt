@@ -1,28 +1,42 @@
 package com.foodkeeper.feature.airecipe // 이 줄이 반드시 맨 위에 있어야 합니다.
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.core.ui.util.AppFonts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @androidx.compose.runtime.Composable
@@ -51,16 +65,85 @@ fun AiRecipeDetailScreen(
                             contentDescription = "뒤로가기"
                         )
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
+        },
+        // ✅ 1. 버튼을 bottomBar 영역으로 이동합니다.
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp), // 하단바 여백
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            ) {
+                // 저장하기 버튼
+                Button(
+
+                    onClick = { viewModel.saveRecipe()
+                              uiState.isSaved.value=!uiState.isSaved.value
+                              },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (uiState.isSaved.value) AppColors.point else AppColors.light5Gray,
+                        contentColor = if (uiState.isSaved.value) AppColors.white else AppColors.light3Gray
+                    )
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center){
+                        Text(
+                            text = "레시피 저장하기",
+                            style = AppFonts.size16Body1,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        if (uiState.isSaved.value){
+                            Image(
+                                painter = painterResource(id = R.drawable.filled_heart),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        else{
+                            Image(
+                                painter = painterResource(id = R.drawable.empty_heart),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                // 다시 생성하기 버튼
+                Button(
+                    onClick = { viewModel.generateRecipe() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.main,
+                        contentColor = AppColors.white
+                    )
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center){
+                        Text(
+                            text = "다시 생성하기",
+                            style = AppFonts.size16Body1,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+
+                        Image(
+                            painter = painterResource(id = R.drawable.refresh_icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
         }
     ) { padding ->
         androidx.compose.foundation.lazy.LazyColumn(
             modifier = androidx.compose.ui.Modifier
-                .fillMaxSize()
+
                 .padding(padding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
@@ -81,19 +164,33 @@ fun AiRecipeDetailScreen(
             // 2. 제목 & 3. 한줄 설명
             item {
                 androidx.compose.foundation.layout.Column {
-                    androidx.compose.material3.Text(text = uiState.title, style = androidx.compose.material3.MaterialTheme.typography.headlineMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    androidx.compose.material3.Text(text = uiState.description, style = androidx.compose.material3.MaterialTheme.typography.bodyLarge, color = androidx.compose.ui.graphics.Color.Gray)
+                    Row{
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.detail_cook), // 본인 폴더명에 맞게 수정
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = AppColors.main
+                        )
+                        Text(text = uiState.title, style = AppFonts.size22Title2,color=AppColors.text)
+
+                    }
+
+                   Text(text = uiState.description, style = AppFonts.size14Body2, color = AppColors.text)
                 }
             }
 
             // 4. 예상 소요 시간
             item {
-                androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    androidx.compose.material3.Icon(Icons.Default.Timer, contentDescription = null)
-                    androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.width(
-                        4.dp
-                    ))
-                    androidx.compose.material3.Text(text = "요리 예상 소요시간: ${uiState.cookingTime}")
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.history_timer), // 본인 폴더명에 맞게 수정
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = AppColors.text
+                    )
+                    Text(text = "요리 예상 소요시간: ",color= AppColors.text, style = AppFonts.size12Caption1)
+                    Text(text = uiState.cookingTime, color = AppColors.main)
                 }
             }
 
@@ -143,28 +240,8 @@ fun AiRecipeDetailScreen(
                 )
             }
 
-            // 7. 하단 버튼 (저장하기, 다시 생성하기)
-            item {
-                androidx.compose.foundation.layout.Row(
-                    modifier = androidx.compose.ui.Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
-                ) {
-                    androidx.compose.material3.OutlinedButton(
-                        onClick = { viewModel.generateRecipe() },
-                        modifier = androidx.compose.ui.Modifier.weight(1f)
-                    ) {
-                        androidx.compose.material3.Text("다시 생성")
-                    }
-                    androidx.compose.material3.Button(
-                        onClick = { viewModel.saveRecipe() },
-                        modifier = androidx.compose.ui.Modifier.weight(1f)
-                    ) {
-                        androidx.compose.material3.Text("레시피 저장")
-                    }
-                }
-            }
+
         }
+
     }
 }

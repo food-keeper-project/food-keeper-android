@@ -44,7 +44,7 @@ fun CategoryTabs(
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = AppColors.main,
                     selectedLabelColor = AppColors.white,
-                    containerColor = AppColors.lightGray,
+                    containerColor = AppColors.light3Gray,
                     labelColor = AppColors.text
                 )
             )

@@ -50,8 +50,8 @@ fun MainBottomBar(
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = AppColors.main,
                     selectedTextColor = AppColors.main,
-                    unselectedIconColor = AppColors.lightGray,
-                    unselectedTextColor = AppColors.lightGray,
+                    unselectedIconColor = AppColors.light3Gray,
+                    unselectedTextColor = AppColors.light3Gray,
                     indicatorColor = Color.Transparent
                 )
             )

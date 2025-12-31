@@ -18,9 +18,16 @@ object AppFonts {
     )
 
     // Title 시리즈
+    val size50Title0=TextStyle(
+        fontFamily = NanumSquareNeo,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 50.sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.02).em
+    )
     val size26Title1 = TextStyle(
         fontFamily = NanumSquareNeo,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.ExtraBold,
         fontSize = 26.sp,
         lineHeight = 42.sp,
         letterSpacing = (-0.02).em
