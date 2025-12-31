@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
+import com.foodkeeper.core.ui.util.AppColors
 
 @Composable
 fun ProfileRoute(
@@ -56,68 +57,63 @@ internal fun ProfileScreen(
     onHistoryClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("마이페이지", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-            )
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 20.dp)
-        ) {
-            // 1. 프로필 정보 섹션
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Coil AsyncImage 사용
-                    AsyncImage(
-                        model = profile?.imageUrl,
-                        contentDescription = "프로필 이미지",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray),
-                        contentScale = ContentScale.Crop,
-                        // R.drawable.ic_default_profile가 없다면 프로젝트에 맞는 리소스로 교체 필요
-                        //error = painterResource(id =),
-                        //placeholder = painterResource(id = com.foodkeeper.core.designsystem.R.drawable.ic_default_profile)
-                    )
+    // 핑크색 기운을 없애고 흰색 배경을 강제하기 위해 Surface로 감쌉니다.
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = AppColors.white// ✅ 전체 배경 흰색
+    ){
+        Scaffold(
+            containerColor = AppColors.white,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("마이페이지", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 20.dp)
+            ) {
+                // 1. 프로필 정보 섹션
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Coil AsyncImage 사용
+                        AsyncImage(
+                            model = profile?.imageUrl,
+                            contentDescription = "프로필 이미지",
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(Color.LightGray),
+                            contentScale = ContentScale.Crop,
+                            // R.drawable.ic_default_profile가 없다면 프로젝트에 맞는 리소스로 교체 필요
+                            //error = painterResource(id =),
+                            //placeholder = painterResource(id = com.foodkeeper.core.designsystem.R.drawable.ic_default_profile)
+                        )
 
-                    Spacer(modifier = Modifier.width(20.dp))
+                        Spacer(modifier = Modifier.width(20.dp))
 
-                    Text(
-                        text = profile?.nickname?.ifEmpty { "사용자님" } ?: "로그인이 필요합니다",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Text(
+                            text = profile?.nickname?.ifEmpty { "사용자님" } ?: "로그인이 필요합니다",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
-                Spacer(modifier = Modifier.height(40.dp))
+
+
+                item { ProfileMenuItem("로그아웃") {  onLogoutClick() } }
             }
-
-            // 2. 메뉴 리스트 섹션
-            item {
-                Text(text = "활동 정보", fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item { ProfileMenuItem("나의 식재료 히스토리", onHistoryClick) }
-
-            item {
-                Spacer(modifier = Modifier.height(30.dp))
-                Text(text = "설정", fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item { ProfileMenuItem("로그아웃") {  onLogoutClick() } }
         }
     }
+
 }
 
 @Composable

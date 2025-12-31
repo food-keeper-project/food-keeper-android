@@ -48,7 +48,12 @@ class AiRecipeHistoryViewModel @Inject constructor(
             val dummyRecipes = listOf(
                 AiRecipeItemState("1", "", "김치 치즈 볶음밥", "매콤 고소한 환상의 맛"),
                 AiRecipeItemState("2", "", "된장 찌개", "구수한 고향의 맛"),
-                AiRecipeItemState("3", "", "계란말이", "아이들이 좋아하는 영양 반찬")
+                AiRecipeItemState("3", "", "계란말이", "아이들이 좋아하는 영양 반찬"),
+                        AiRecipeItemState("4", "", "계란말이", "아이들이 좋아하는 영양 반찬"),
+            AiRecipeItemState("5", "", "계란말이", "아이들이 좋아하는 영양 반찬"),
+            AiRecipeItemState("6", "", "계란말이", "아이들이 좋아하는 영양 반찬"),
+            AiRecipeItemState("7", "", "계란말이", "아이들이 좋아하는 영양 반찬"),
+            AiRecipeItemState("8", "", "계란말이", "아이들이 좋아하는 영양 반찬")
             )
 
             _uiState.update {
