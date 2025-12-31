@@ -36,7 +36,7 @@ fun DateHeader(date: String) {
 
         Divider(
             thickness = 1.dp,
-            color = AppColors.lightGray
+            color = AppColors.light3Gray
         )
     }
 }

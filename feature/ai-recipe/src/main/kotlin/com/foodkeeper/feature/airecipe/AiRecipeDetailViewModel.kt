@@ -1,5 +1,7 @@
 package com.foodkeeper.feature.airecipe
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +20,8 @@ data class AiRecipeUiState(
     val cookingTime: String = "",
     val ingredients: List<Pair<String, String>> = emptyList(),
     val steps: List<String> = emptyList(),
-    val isIngredientsExpanded: Boolean = false
+    val isIngredientsExpanded: Boolean = false,
+    var isSaved: MutableState<Boolean> = mutableStateOf(false)
 )
 @HiltViewModel
 class AiRecipeDetailViewModel @Inject constructor(
@@ -49,7 +52,6 @@ class AiRecipeDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             // TODO: UseCase를 통해 AI 레시피 데이터 받아오기
             // 임시 더미 데이터 주입
-            delay(1500)
             _uiState.update {
                 it.copy(
                     isLoading = false,

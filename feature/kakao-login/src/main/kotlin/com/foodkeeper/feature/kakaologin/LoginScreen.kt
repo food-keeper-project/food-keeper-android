@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,6 +54,7 @@ fun LoginScreen(
     val context = LocalContext.current
     Box(
         modifier = Modifier.fillMaxSize(),
+
         contentAlignment = Alignment.Center){
         if (uiState is LoginUiState.Loading) {
             // 로딩 상태일 때 화면 중앙에 원형 프로그레스 바를 표시합니다.
@@ -63,10 +65,16 @@ fun LoginScreen(
                     .fillMaxSize()
                     .background(AppColors.white) // 배경색 (이미지와 유사한 연한 회색/흰색)
                     .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                Image(
+                    painter = painterResource(id = R.drawable.app_icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(160.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
                 // 상단 여백 (로고를 약간 위쪽에 배치)
-                Spacer(modifier = Modifier.weight(1.5f))
 
                 // 2. 푸드키퍼 타이틀
                 Text(
@@ -74,10 +82,7 @@ fun LoginScreen(
                     style = AppFonts.size50Title0,
                     color = AppColors.main
                 )
-
-                // 로고와 버튼 사이의 간격 조정
-                Spacer(modifier = Modifier.weight(1.2f))
-
+                Spacer(modifier = Modifier.height(100.dp))
 
                 // 로딩 상태가 아닐 때 카카오 로그인 버튼을 표시합니다.
                 // 3. 카카오로 시작하기 버튼
@@ -113,9 +118,6 @@ fun LoginScreen(
                 }
 
 
-
-                // 하단 여백
-                Spacer(modifier = Modifier.weight(0.8f))
             }
         }
 
@@ -133,7 +135,7 @@ fun LoginScreen(
             }
             is LoginUiState.Success -> {
                 // 로그인 성공 시 Toast 메시지 표시 및 다음 화면으로 이동 준비
-                Toast.makeText(context, "로그인 성공! 토큰: ${state.token}", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(context, "로그인 성공! 토큰: ${state.token}", Toast.LENGTH_SHORT).show()
                 // TODO: 여기서 내비게이션 라이브러리를 사용해 홈 화면 등으로 이동하는 코드를 작성합니다.
                 // 예: navigator.navigateToHome()
                 // 3. 성공 시점에 콜백 호출!
@@ -172,7 +174,12 @@ private fun KakaoLoginButton(onClick: () -> Unit) {
             .padding(horizontal = 32.dp)
             .clickable(onClick = onClick) // 클릭 이벤트를 Box에 연결
     ) {
-
+        Image(
+            painter = painterResource(id = R.drawable.app_icon),
+            contentDescription = null,
+            modifier = Modifier.size(160.dp)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
         Image(
             painterResource(R.drawable.kakao_login_medium_narrow),
             // 파일 이름에 맞춰 수정
