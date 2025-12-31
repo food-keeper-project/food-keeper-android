@@ -2,9 +2,11 @@ package com.foodkeeper.core.di
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.external.DefaultAuthRemoteDataSource
 import com.foodkeeper.core.data.repository.AuthRepositoryImpl
+import com.foodkeeper.core.data.repository.FoodRepositoryImpl
 import com.foodkeeper.core.data.repository.UserRepository
 import com.foodkeeper.core.data.repository.UserRepositoryImpl
 import com.foodkeeper.core.domain.repository.AuthRepository
+import com.foodkeeper.core.domain.repository.FoodRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,5 +32,11 @@ abstract class DataModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFoodRepository(
+        foodRepositoryImpl: FoodRepositoryImpl
+    ): FoodRepository
 
 }

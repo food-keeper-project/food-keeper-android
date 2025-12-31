@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FoodListDTO(
     @SerialName("content")
-    val content: String,
+    val content: List<FoodDTO>,
     @SerialName("hasNext")
     val hasNext: Long?
 )

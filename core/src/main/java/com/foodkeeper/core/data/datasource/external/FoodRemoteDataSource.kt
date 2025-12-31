@@ -1,6 +1,11 @@
 package com.foodkeeper.core.data.datasource.external
 
+import com.foodkeeper.core.data.mapper.external.CategoryDTO
+import com.foodkeeper.core.data.mapper.external.FoodDTO
+import com.foodkeeper.core.data.mapper.external.FoodListDTO
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
+import com.foodkeeper.core.data.mapper.external.ResultDTO
+import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.data.network.ApiRoute
 import com.foodkeeper.core.data.network.FoodApiService
 import kotlinx.coroutines.flow.Flow
@@ -11,14 +16,37 @@ import javax.inject.Singleton
 class FoodRemoteDataSource @Inject constructor(
     private val apiService: FoodApiService
 ) {
-    // 내 프로필 정보 조회
-    fun getMyProfile(): Flow<ProfileDTO> {
-        return apiService.request(ApiRoute.MyProfile)
+    // 전체 식재료 조회
+    fun requestFoodList(limit: Int, categoryId: Long?, cursor: Long?): Flow<FoodListDTO> {
+        return apiService.request(
+            ApiRoute.AllFoodList(
+                limit = limit,
+                categoryId = categoryId,
+                cursor = cursor
+            )
+        )
     }
-    // ✅ 로그아웃 추가
-    fun logOut(): Flow<String> {
-        // FoodApiService.request<T>가 내부적으로 ApiResponse<T>를 파싱해서
-        // data(T)만 내보내도록 구현되어 있다면 아래와 같이 작성합니다.
-        return apiService.request(ApiRoute.Logout)
+    // 유통기한 임박 식재료 조회
+    fun requestImminentFoodList(): Flow<List<FoodDTO>> {
+        return apiService.request(
+            ApiRoute.ImminentFoodList
+        )
     }
+    //식재료 추가
+    fun requestAddFood(request: FoodCreateRequestDTO, imageBytes: ByteArray?): Flow<ResultDTO> {
+        return apiService.request(
+            ApiRoute.AddFood(
+                request = request,
+                imageBytes = imageBytes
+            )
+        )
+    }
+
+    //전체 카테고리 리스트 조회 (추후 카테고리 파일로 분리 예정 바쁘다 ㅜㅠㅠ)
+    fun requestCategorieList(): Flow<List<CategoryDTO>> {
+        return apiService.request(
+            ApiRoute.Categories
+        )
+    }
+
 }

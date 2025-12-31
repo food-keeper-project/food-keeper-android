@@ -1,4 +1,4 @@
-package com.example.foodkeeper.di
+package com.foodkeeper.core.di
 
 import com.foodkeeper.core.domain.usecase.DefaultFoodUseCase
 import com.foodkeeper.core.domain.usecase.FoodUseCase

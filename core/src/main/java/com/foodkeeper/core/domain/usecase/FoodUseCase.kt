@@ -1,6 +1,8 @@
 package com.foodkeeper.core.domain.usecase
 
+import com.foodkeeper.core.data.repository.UserRepository
 import com.foodkeeper.core.domain.model.Food
+import com.foodkeeper.core.domain.repository.FoodRepository
 import com.foodkeeper.core.ui.util.isExpiringSoon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -23,25 +25,23 @@ interface FoodUseCase {
 }
 
 class DefaultFoodUseCase @Inject constructor(
-    // 나중에 여기에 FoodRepository 주입
+    private val foodRepository: FoodRepository
 ) : FoodUseCase {
     //전체 식자재 리스트 조회
-    override fun getFoodList(): Flow<List<Food>> = flow {
-        delay(500)
-
-        emit(
-            FoodMockData.foodList
-        )
+    override fun getFoodList(): Flow<List<Food>> {
+        return foodRepository.getFoodList(50, null, null)
     }
     //유통기한 임박 식자재 리스트 조회
-
     override fun getExpiringSoonFoodList(): Flow<List<Food>> {
-        return getFoodList()
+        return foodRepository.getImminentFoodList()
 
     }
     //카테고리 리스트 조회
     override fun getFoodCategoryList(): Flow<List<String>> {
-        return flowOf(listOf("야채류", "육류", "해산물", "과일류"))
+        val categorys = foodRepository.getCategorieList().map {
+            it.map { it.name }
+        }
+        return categorys
 
     }
 

@@ -104,7 +104,9 @@ class FoodApiService @Inject constructor(
             val tokenManager = tokenManagerProvider.get()
             val accessToken=tokenManager.accessToken.first()
             method = route.method
-            contentType(ContentType.Application.Json)
+            if (!route.multiPartRequest) {
+                contentType(ContentType.Application.Json)
+            }
 
             // 쿼리 및 바디 설정
             route.body?.let { setBody(it) }

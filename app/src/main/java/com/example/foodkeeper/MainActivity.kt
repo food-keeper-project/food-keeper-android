@@ -95,7 +95,7 @@ fun FoodKeeperNavHost() {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("main") {
+                    navController.navigate("login") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }

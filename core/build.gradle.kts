@@ -21,6 +21,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.generativeai)
     kapt(libs.hilt.compiler)
 
     // Room

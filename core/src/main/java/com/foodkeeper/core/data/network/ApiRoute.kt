@@ -1,14 +1,23 @@
 package com.foodkeeper.core.data.network
 
+import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
+import io.ktor.client.request.forms.FormBuilder
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod // Ktor의 HttpMethod 사용
 import kotlinx.serialization.Serializable
-
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 
 sealed class ApiRoute {
     // ✅ 추가: 기본값은 false로 두고, RefreshToken 클래스에서만 true로 재정의합니다.
     open val isRefreshTokenRequest: Boolean = false
     open val isLoginRequest: Boolean = false
+
     // 기본값을 true로 설정하고, 인증이 필요 없는 경우에만 false로 오버라이드
     //open val requiresAuth: Boolean = true
     // ========== Auth APIs ==========
@@ -28,7 +37,18 @@ sealed class ApiRoute {
     object Logout: ApiRoute()
 
     // ========== 식자재 관련 정의 ==========
-
+    data class AllFoodList(
+        val categoryId: Long?,
+        val cursor: Long?,
+        val limit: Int?
+    ) : ApiRoute()
+    object ImminentFoodList: ApiRoute()
+    data class AddFood(
+        val request: FoodCreateRequestDTO,
+        val imageBytes: ByteArray?,              // 이미지 선택 안 하면 null
+    ) : ApiRoute()
+    // ========== 카테고리 관련 정의 ==========
+    object Categories: ApiRoute()
 
     //    data class Logout(val userId: String) : ApiRoute()
     // ========== 경로 정의 ==========
@@ -45,6 +65,16 @@ sealed class ApiRoute {
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
+
+            // Food
+            is AllFoodList -> "api/v1/foods"
+            is ImminentFoodList -> "api/v1/foods/imminent"
+            is AddFood -> "api/v1/foods"
+
+            // Categorie
+            is Categories -> "api/v1/categories"
+
+//            is KakaoLogin -> "/auth/kakao"
 //            is Logout -> "/auth/logout"
 
         }
@@ -54,8 +84,9 @@ sealed class ApiRoute {
         get() = when (this) {
             is KakaoLogin -> HttpMethod.Post
             is RefreshToken -> HttpMethod.Post
-            is MyProfile -> HttpMethod.Get
             is Logout -> HttpMethod.Delete
+            is AddFood -> HttpMethod.Post
+            else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }
 
@@ -63,7 +94,14 @@ sealed class ApiRoute {
     val requiresAuth: Boolean
         get() = when (this) {
             is KakaoLogin, is RefreshToken -> false
-            else->true
+            else -> true
+        }
+
+    // ========== MultiPartRequest 여부 ==========
+    val multiPartRequest: Boolean
+        get() = when (this) {
+            is AddFood -> true
+            else -> false
         }
 
     // ========== Body 데이터 ==========
@@ -74,12 +112,21 @@ sealed class ApiRoute {
                 "fcmToken" to mFcmToken)
             is RefreshToken -> mapOf(
                 "refreshToken" to curRefreshToken)
+            is AddFood -> buildAddFoodMultipart(
+                request = request,
+                imageBytes = imageBytes,
+                imageFileName = request.expiryDate
+            )
             else -> null
         }
-
     // ========== 쿼리 파라미터 ==========
     val queryParameters: Map<String, Any>
         get() = when (this) {
+            is AllFoodList -> buildMap {
+                categoryId?.let { put("categoryId", it) }
+                cursor?.let { put("cursor", it) }
+                limit?.let { put("limit", it) }
+            }
             else -> emptyMap()
         }
 
@@ -96,4 +143,56 @@ sealed class ApiRoute {
 //            is exaple -> 60_000L // 파일 업로드 등 시간이 오래 걸리는 작업
             else -> null // 기본값 사용
         }
+}
+
+
+// ========== 이미지 파일 JSON 변환 함수 ==========
+private fun appendImagePart(
+    builder: FormBuilder,
+    imageBytes: ByteArray,
+    fileName: String
+) {
+    builder.append(
+        "image",
+        imageBytes,
+        Headers.build {
+            append(HttpHeaders.ContentType, "image/jpeg")
+            append(
+                HttpHeaders.ContentDisposition,
+                "filename=\"$fileName\""
+            )
+        }
+    )
+}
+
+private fun buildAddFoodMultipart(
+    request: FoodCreateRequestDTO,
+    imageBytes: ByteArray?,
+    imageFileName: String
+): MultiPartFormDataContent {
+    return MultiPartFormDataContent(
+        formData {
+
+            // ✅ request JSON
+            append(
+                "request",
+                Json.encodeToString(request),
+                Headers.build {
+                    append(
+                        HttpHeaders.ContentType,
+                        ContentType.Application.Json.toString()
+                    )
+                }
+            )
+
+            // ✅ image (선택)
+            imageBytes?.let {
+                appendImagePart(
+                    builder = this,
+                    imageBytes = it,
+                    fileName = imageFileName
+                )
+            }
+        }
+    )
 }
