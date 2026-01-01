@@ -3,6 +3,7 @@ package com.foodkeeper.core.ui.util
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
 // Date 공통 유틸 정리
@@ -45,4 +46,13 @@ fun String.parseServerDate(): Date {
             DATE_TIME_FORMAT.parse(this)
         }.getOrNull()
         ?: Date()
+}
+
+fun Date.toIsoUtcString(): String {
+    val formatter = SimpleDateFormat(
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        Locale.US
+    )
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(this)
 }

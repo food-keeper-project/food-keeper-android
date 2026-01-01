@@ -1,28 +1,36 @@
 package com.example.add_food
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.PhotoCameraBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,6 +38,8 @@ import coil.compose.AsyncImage
 import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.ExpiryAlarm
 import com.foodkeeper.core.domain.model.StorageMethod
+import com.foodkeeper.core.ui.base.BaseUiState
+import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
@@ -39,43 +49,41 @@ import java.util.*
 @Composable
 fun AddFoodScreen(
     viewModel: AddFoodViewModel = hiltViewModel(),
-    onBackClick: () -> Unit = {},
-    onFoodAdded: () -> Unit = {}
+    onBackClick: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
+    val uiState by viewModel.uiState.collectAsState()
     val foodInput by viewModel.foodInput.collectAsState()
     val categories by viewModel.foodCategories.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
 
-    // 갤러리 런처
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         viewModel.updateFoodImage(uri)
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.onScreenEnter()
+        viewModel.toastMessage.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Scaffold(
+        containerColor = AppColors.white,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "직접 등록하기",
-                        style = AppFonts.size22Title2
-                    )
-                },
+            CenterAlignedTopAppBar(
+                title = { Text(text = "직접 등록하기", style = AppFonts.size22Title2) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "뒤로가기"
-                        )
+                        Icon(imageVector = Icons.Default.ArrowBackIosNew, contentDescription = "뒤로가기")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         }
     ) { padding ->
@@ -84,53 +92,71 @@ fun AddFoodScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(16.dp)
+                // 빈 배경 클릭 시 키보드 닫기
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { focusManager.clearFocus() },
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 식재료명
-            FoodNameField(
-                value = foodInput.name,
-                onValueChange = { if (it.length <= 10) viewModel.updateFoodName(it) }
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { // 24dp 대신 8dp 적용
+                FoodNameField(
+                    value = foodInput.name,
+                    onValueChange = { if (it.length <= 10) viewModel.updateFoodName(it) }
+                )
+                // 여기서 별도의 Spacer를 추가하지 않아도 spacedBy(8.dp)가 작동합니다.
+                ImageUploadSection(
+                    imageUri = foodInput.imageUri,
+                    onUploadClick = {
+                        focusManager.clearFocus()
+                        galleryLauncher.launch("image/*")
+                    }
+                )
+            }
 
-            // 사진
-            ImageUploadSection(
-                imageUri = foodInput.imageUri,
-                onUploadClick = {
-                    galleryLauncher.launch("image/*")
-                }
-            )
-
-            // 카테고리 (단일 선택)
+            // 3. 카테고리 (포커스 해제)
             CategorySection(
                 selected = foodInput.categorys.firstOrNull(),
                 categoryList = categories,
-                onSelect = viewModel::updateCategory
+                onSelect = {
+                    focusManager.clearFocus()
+                    viewModel.updateCategory(it)
+                }
             )
 
-            // 보관 방식
+            // 4. 보관 방식 (포커스 해제)
             StorageSection(
                 selected = foodInput.storageMethod,
                 StorageMethodList = StorageMethod.values().toList(),
-                onSelect = viewModel::updateStorageMethod
+                onSelect = {
+                    focusManager.clearFocus()
+                    viewModel.updateStorageMethod(it)
+                }
             )
 
-            // 유통기한
+            // 5. 유통기한 (포커스 해제)
             ExpiryDateSection(
                 date = foodInput.expiryDate,
-                onCalendarClick = { showDatePicker = true }
+                onCalendarClick = {
+                    focusManager.clearFocus()
+                    showDatePicker = true
+                }
             )
 
-            // 알림
+            // 6. 알림 (포커스 해제)
             AlarmSection(
                 selected = foodInput.expiryAlarm,
-                onClick = { showBottomSheet = true }
+                onClick = {
+                    focusManager.clearFocus()
+                    showBottomSheet = true
+                }
             )
 
-            // 메모
+            // 7. 메모 (포커싱 가능)
             MemoSection(
                 value = foodInput.memo,
-                onValueChange = viewModel::updateMemo
+                onValueChange = { if (it.length <= 100) viewModel.updateMemo(it) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -138,29 +164,50 @@ fun AddFoodScreen(
             // 하단 버튼
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.Center // 중앙 정렬
+//                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick = { /* 품목 즐겨찾기 등록 */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF9500)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("품목 즐겨찾기 등록")
-                }
+//                Button(
+//                    onClick = { focusManager.clearFocus() },
+//                    modifier = Modifier.weight(1f),
+//                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.main),
+//                    shape = RoundedCornerShape(8.dp)
+//                ) {
+//                    Text("품목 즐겨찾기 등록")
+//                }
 
                 Button(
-                    onClick = onFoodAdded,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF9500)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
+                    onClick = {
+                        focusManager.clearFocus()
+                        viewModel.submitFood()
+                    },
+                    modifier = Modifier
+                        .width(200.dp)  // 가로 길이
+                        .height(56.dp), // 세로 길이
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.main),
+                    shape = RoundedCornerShape(26.dp)
                 ) {
-                    Text("식재료 등록")
+                    Text("식재료 등록", style = AppFonts.size16Body1B)
                 }
+            }
+        }
+
+        // --------------------
+        // Processing 오버레이
+        // --------------------
+        if (uiState is BaseUiState.Processing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .clickable(
+                        enabled = true,
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /* 아무 것도 안 함 */ },
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFFFF9500))
             }
         }
 
@@ -192,39 +239,40 @@ fun AddFoodScreen(
 }
 
 // ========================================
+// 텍스트 입력 필드 스타일 (식재료명, 메모 전용)
+// ========================================
+@Composable
+fun foodFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = AppColors.point,
+    unfocusedBorderColor = AppColors.main,
+    cursorColor = AppColors.point
+)
+
+// ========================================
 // 식재료명 입력 필드
 // ========================================
 @Composable
-fun FoodNameField(
-    value: String,
-    onValueChange: (String) -> Unit
-) {
+fun FoodNameField(value: String, onValueChange: (String) -> Unit) {
     Column {
-        Text(
-            text = "식재료명",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        Text(text = "식재료명", style = AppFonts.size16Body1B, color = AppColors.text)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text("이름을 입력하세요") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFF9500),
-                unfocusedBorderColor = Color(0xFFFF9500)
-            ),
-            shape = RoundedCornerShape(8.dp)
+            colors = foodFieldColors(),
+            shape = RoundedCornerShape(8.dp),
+            singleLine = true
         )
         Text(
             text = "${value.length}/10",
-            fontSize = 12.sp,
+            style = AppFonts.size14Body2,
             color = Color.Gray,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp)
+                .fillMaxWidth() // 가로 전체를 채워야 우측 정렬 기준이 생깁니다.
+                .padding(top = 4.dp),
+            textAlign = TextAlign.End // ⭐ 텍스트를 오른쪽 끝으로 정렬
         )
     }
 }
@@ -240,51 +288,61 @@ fun ImageUploadSection(
     Column {
         Text(
             text = "사진",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            // ⭐ 핵심: Row 내부의 요소들을 바닥(Bottom)으로 정렬합니다.
+            verticalAlignment = Alignment.Bottom
         ) {
-            // 이미지 미리보기
+            val imageShape = RoundedCornerShape(8.dp)
+
+            // 이미지 미리보기 (높이 90dp)
             Box(
                 modifier = Modifier
-                    .size(120.dp, 150.dp)
-                    .border(2.dp, Color(0xFFFF9500), RoundedCornerShape(8.dp))
-                    .background(Color.White, RoundedCornerShape(8.dp)),
+                    .size(190.dp, 90.dp)
+                    .border(1.dp, AppColors.main, imageShape)
+                    .background(Color.White, imageShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageUri != null) {
                     AsyncImage(
                         model = imageUri,
                         contentDescription = "선택된 이미지",
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(imageShape),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.CameraAlt,
+                        imageVector = Icons.Default.PhotoCameraBack,
                         contentDescription = "카메라",
-                        tint = Color(0xFFFF9500),
+                        tint = AppColors.main,
                         modifier = Modifier.size(48.dp)
                     )
                 }
             }
 
-            // 업로드 버튼
+            // 업로드 버튼 (높이 30dp -> 이미지 박스 바닥에 붙음)
             Button(
                 onClick = onUploadClick,
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(48.dp),
+                    .width(74.dp)
+                    .height(30.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF9500)
+                    containerColor = AppColors.main
                 ),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("업로드")
+                Text(
+                    "업로드",
+                    style = AppFonts.size14Body2,
+                    color = Color.White
+                )
             }
         }
     }
@@ -303,9 +361,8 @@ fun CategorySection(
     Column {
         Text(
             text = "카테고리",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -352,13 +409,16 @@ fun CategoryChip(
         onClick = onClick,
         modifier = modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFFFF9500) else Color.White,
+            containerColor = if (isSelected) AppColors.main else AppColors.white,
             contentColor = if (isSelected) Color.White else Color.Black
         ),
         shape = RoundedCornerShape(8.dp),
-        border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isSelected) AppColors.main else Color(0xFFE0E0E0) // 선택 안 됐을 때의 선 색상 (예: 연한 회색)
+        )
     ) {
-        Text(text, fontSize = 14.sp)
+        Text(text, style = AppFonts.size14Body2)
     }
 }
 
@@ -375,9 +435,8 @@ fun StorageSection(
     Column {
         Text(
             text = "보관 방식",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
@@ -400,55 +459,40 @@ fun StorageSection(
 // 유통기한 섹션
 // ========================================
 @Composable
-fun ExpiryDateSection(
-    date: Date?,
-    onCalendarClick: () -> Unit
-) {
-    val text = date?.let {
-        SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(it)
-    } ?: ""
+fun ExpiryDateSection(date: Date?, onCalendarClick: () -> Unit) {
+    val text = date?.let { SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(it) } ?: "날짜를 선택하세요"
+    val textColor = if (date != null) Color.Black else Color.Gray
 
     Column {
         Text(
             text = "유통 기한",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
-
         Spacer(modifier = Modifier.height(8.dp))
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = text,              // ✅ String
-                onValueChange = {},
-                modifier = Modifier.weight(1f),
-                placeholder = {
-                    Text("날짜를 선택하세요") // ✅ Composable
-                },
-                readOnly = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF9500),
-                    unfocusedBorderColor = Color(0xFFFF9500)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            )
+            // TextField 대신 Box를 사용하여 포커싱 원천 차단
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(46.dp)
+                    .border(1.dp, AppColors.main, RoundedCornerShape(8.dp))
+                    .clickable { onCalendarClick() }
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(text = text, color = textColor, style = AppFonts.size16Body1)
+            }
 
             IconButton(
                 onClick = onCalendarClick,
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(Color(0xFFFF9500), RoundedCornerShape(8.dp))
+                modifier = Modifier.size(46.dp).background(AppColors.main, RoundedCornerShape(8.dp))
             ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarToday,
-                    contentDescription = "달력",
-                    tint = Color.White
-                )
+                Icon(imageVector = Icons.Default.CalendarToday, contentDescription = "달력", tint = Color.White)
             }
         }
     }
@@ -458,74 +502,46 @@ fun ExpiryDateSection(
 // 알림 일시 섹션
 // ========================================
 @Composable
-fun AlarmSection(
-    selected: ExpiryAlarm?,
-    onClick: () -> Unit
-) {
+fun AlarmSection(selected: ExpiryAlarm?, onClick: () -> Unit) {
     Column {
-        Text(
-            text = "알림 일시",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+        Text(text = "알림 일시",
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
         Spacer(modifier = Modifier.height(8.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .border(2.dp, Color(0xFFFF9500), RoundedCornerShape(8.dp))
-                .clickable(onClick = onClick)
+                .border(1.dp, AppColors.main, RoundedCornerShape(8.dp))
+                .clickable { onClick() }
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = selected?.displayName ?: "알림 선택",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "선택",
-                    tint = Color.Gray
-                )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = selected?.displayName ?: "알림 선택", style = AppFonts.size16Body1, color = Color.Black)
+                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = "선택", tint = Color.Gray)
             }
         }
     }
 }
-
 // ========================================
 // 메모 섹션
 // ========================================
 @Composable
-fun MemoSection(
-    value: String,
-    onValueChange: (String) -> Unit
-) {
+fun MemoSection(value: String, onValueChange: (String) -> Unit) {
     Column {
-        Text(
-            text = "메모",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+        Text(text = "메모",
+            style = AppFonts.size16Body1B,
+            color = AppColors.text
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
+            modifier = Modifier.fillMaxWidth().height(150.dp),
             placeholder = { Text("메모를 입력하세요") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFF9500),
-                unfocusedBorderColor = Color(0xFFFF9500)
-            ),
+            colors = foodFieldColors(),
             shape = RoundedCornerShape(8.dp)
         )
     }

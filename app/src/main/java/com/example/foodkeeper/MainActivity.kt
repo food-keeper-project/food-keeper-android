@@ -189,7 +189,9 @@ fun FoodKeeperNavHost(navController: NavHostController) {
         }
         // ✨ 4. 식재료 추가 화면 (새로 추가)
         composable("addFood") {
-            AddFoodScreen()
+            AddFoodScreen(
+                onBackClick = { navController.popBackStack() },
+            )
         }
     }
 }

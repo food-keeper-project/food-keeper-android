@@ -2,6 +2,7 @@ package com.foodkeeper.core.domain.model
 
 import android.net.Uri
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
+import com.foodkeeper.core.ui.util.toIsoUtcString
 import java.util.Date
 
 data class AddFoodInput(
@@ -19,8 +20,8 @@ fun AddFoodInput.toRequest(): FoodCreateRequestDTO {
     return FoodCreateRequestDTO(
         name = name,
         categoryIds = categorys.map { it.id },
-        storageMethod = storageMethod?.name ?: StorageMethod.REFRIGERATED.name,
-        expiryDate = expiryDate?.toString() ?: "",
+        storageMethod = storageMethod?.displayName ?: StorageMethod.REFRIGERATED.displayName,
+        expiryDate = expiryDate?.toIsoUtcString() ?: "",
         expiryAlarm = expiryAlarm?.daysBefore ?: ExpiryAlarm.THREE_DAYS.daysBefore,
         memo = memo
     )
