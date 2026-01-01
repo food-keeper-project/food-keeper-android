@@ -157,7 +157,7 @@ fun RecipeRecommendationDialog(
                         .height(40.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.main,
-                        disabledContainerColor = AppColors.lightGray
+                        disabledContainerColor = AppColors.light3Gray
                     ),
                     shape = RoundedCornerShape(23.dp),
                     enabled = selectedFoodIds.isNotEmpty(),
@@ -264,12 +264,12 @@ fun RecipeFoodItem(
             modifier = Modifier
                 .size(18.dp)
                 .background(
-                    color = if (isSelected) AppColors.main else AppColors.lightGray,
+                    color = if (isSelected) AppColors.main else AppColors.light3Gray,
                     shape = RoundedCornerShape(4.dp)
                 )
                 .border(
                     width = 2.dp,
-                    color = if (isSelected) AppColors.main else AppColors.lightGray,
+                    color = if (isSelected) AppColors.main else AppColors.light3Gray,
                     shape = RoundedCornerShape(4.dp)
                 ),
             contentAlignment = Alignment.Center

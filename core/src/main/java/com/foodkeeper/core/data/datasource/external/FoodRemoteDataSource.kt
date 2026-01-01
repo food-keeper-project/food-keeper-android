@@ -41,12 +41,4 @@ class FoodRemoteDataSource @Inject constructor(
             )
         )
     }
-
-    //전체 카테고리 리스트 조회 (추후 카테고리 파일로 분리 예정 바쁘다 ㅜㅠㅠ)
-    fun requestCategorieList(): Flow<List<CategoryDTO>> {
-        return apiService.request(
-            ApiRoute.Categories
-        )
-    }
-
 }

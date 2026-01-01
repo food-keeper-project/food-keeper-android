@@ -175,7 +175,8 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
         ) {
             AiRecipeDetailScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                // 필요한 다른 콜백들...
             )
         }
     }

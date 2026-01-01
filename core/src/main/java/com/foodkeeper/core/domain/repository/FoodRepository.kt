@@ -25,8 +25,4 @@ interface FoodRepository {
         request: FoodCreateRequestDTO,
         imageBytes: ByteArray?
     ): Flow<RequestResult>
-
-    /** 전체 카테고리 리스트 조회 */
-    fun getCategorieList(): Flow<List<Category>>
-
 }
