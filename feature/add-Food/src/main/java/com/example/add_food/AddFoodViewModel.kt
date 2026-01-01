@@ -147,9 +147,7 @@ class AddFoodViewModel @Inject constructor(
                     _toastMessage.emit("식재료 추가 실패")
                 }
                 .collect { success ->
-                    if (success) {
-                        _toastMessage.emit("식재료가 추가되었습니다")
-                    }
+                    _toastMessage.emit("식재료가 추가되었습니다")
                 }
         }
     }
