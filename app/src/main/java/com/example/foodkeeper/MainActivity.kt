@@ -102,7 +102,7 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("profile") {
+                    navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
@@ -139,7 +139,6 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                         }
                     )
                     MainTab.MyPage -> ProfileRoute(
-                        onNavigateToHistory = {},
                         onLogoutSuccess = {
                             navController.navigate("login") {
                                 popUpTo(0) { inclusive = true }
@@ -152,7 +151,6 @@ fun FoodKeeperNavHost(navController: NavHostController) {
 
         composable("profile") {
             ProfileRoute(
-                onNavigateToHistory = {},
                 onLogoutSuccess = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
