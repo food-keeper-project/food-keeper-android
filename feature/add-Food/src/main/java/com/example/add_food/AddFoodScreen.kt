@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.foodkeeper.core.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -353,10 +355,10 @@ fun ImageUploadSection(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.PhotoCameraBack,
+                        painter = painterResource(id = R.drawable.camera), // 본인 폴더명에 맞게 수정
                         contentDescription = "카메라",
                         tint = AppColors.main,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
