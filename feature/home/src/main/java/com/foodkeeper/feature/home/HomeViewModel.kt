@@ -60,7 +60,6 @@ class HomeViewModel @Inject constructor(
     fun onScreenEnter() {
         viewModelScope.launch {
             _uiState.value = BaseUiState.Loading
-
             combine(
                 foodUseCase.getFoodList(),
                 foodUseCase.getExpiringSoonFoodList(),

@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ImminentFoodListResponseDTO(
-    @SerialName("foodResponseList")
+    @SerialName("foods")
     val content: List<FoodDTO>,
 )

@@ -27,7 +27,7 @@ data class FoodDTO(
     val memo: String,
     @SerialName("createdAt")
     val createdAt: String,       // "2025-12-29T14:33:52.752Z"
-    @SerialName("categoryIds")
+    @SerialName("categories")
     val categoryIds: List<CategoryDTO>
 )
 
