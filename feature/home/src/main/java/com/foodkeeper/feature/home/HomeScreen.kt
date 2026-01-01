@@ -12,10 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.core.ui.util.AppFonts
 import com.foodkeeper.core.ui.util.toyyMMddString
 import com.foodkeeper.feature.home.component.allFoodsSection.CategoryTabs
 import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
@@ -102,6 +108,24 @@ fun HomeScreen(
                         viewModel.onFoodItemClick(food)
                     }
                 )
+                FloatingActionButton(
+                    onClick = {
+                        viewModel.onRecipeRecommendClick(foodList)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 30.dp, bottom = 30.dp)
+                        .size(60.dp),
+                    shape = CircleShape,
+                    containerColor = AppColors.main,
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = "AI",
+                        style = AppFonts.size22Title2,
+                        color = AppColors.white
+                    )
+                }
             }
 
             is BaseUiState.ErrorState -> {
@@ -166,7 +190,7 @@ fun HomeScreen(
     selectedRecipeRecommend?.let { foodList ->
         RecipeRecommendationDialog(
             foodList,
-            onDismiss = {},
+            onDismiss = viewModel::onDismissDialog,
             onGenerateRecipe = { selectFoods ->
                 onRecipeRecommendFoods(selectFoods)
                 viewModel.onDismissDialog()

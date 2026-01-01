@@ -3,6 +3,7 @@ package com.foodkeeper.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.domain.model.Food
+import com.foodkeeper.core.domain.usecase.CategoryUseCase
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import com.foodkeeper.core.domain.usecase.FoodUseCase
@@ -22,7 +23,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val foodUseCase: FoodUseCase
+    private val foodUseCase: FoodUseCase,
+    private val categoryUseCase: CategoryUseCase
 ) : ViewModel() {
 
     // --------------------
@@ -62,7 +64,7 @@ class HomeViewModel @Inject constructor(
             combine(
                 foodUseCase.getFoodList(),
                 foodUseCase.getExpiringSoonFoodList(),
-                foodUseCase.getFoodCategoryList()
+                categoryUseCase.getFoodCategoryList()
             ) { allFoods, expiringFoods, categories ->
                 Triple(allFoods, expiringFoods, categories)
             }

@@ -18,8 +18,6 @@ interface FoodUseCase {
     //유통기한 임박 식품 목록 조회
 
     fun getExpiringSoonFoodList(): Flow<List<Food>>
-     //카테고리 리스트 조회
-    fun getFoodCategoryList(): Flow<List<String>>
     //식품 소비 요청
     fun ConsumptionFood(food: Food): Flow<Boolean>
 }
@@ -36,15 +34,7 @@ class DefaultFoodUseCase @Inject constructor(
         return foodRepository.getImminentFoodList()
 
     }
-    //카테고리 리스트 조회
-    override fun getFoodCategoryList(): Flow<List<String>> {
-        val categorys = foodRepository.getCategorieList().map {
-            it.map { it.name }
-        }
-        return categorys
-
-    }
-
+    //식재료 소비처리
     override fun ConsumptionFood(food: Food): Flow<Boolean> {
         return flow {
             delay(500)

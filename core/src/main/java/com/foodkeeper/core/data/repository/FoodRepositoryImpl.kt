@@ -48,12 +48,4 @@ class FoodRepositoryImpl @Inject constructor(
             .requestAddFood(request, imageBytes)
             .map { it.toRequestResult() }
     }
-
-    override fun getCategorieList(): Flow<List<Category>> {
-        return remoteDataSource
-            .requestCategorieList()
-            .map { dto ->
-                dto.map { it.toCategory()}
-            }
-    }
 }

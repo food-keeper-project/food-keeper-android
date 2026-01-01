@@ -24,11 +24,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -96,12 +98,35 @@ fun RecipeRecommendationDialog(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                // ✨ 헤더: 제목
-                Text(
-                    text = "레시피 추천",
-                    style = AppFonts.size19Title3,
-                    color = AppColors.text,
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    // ✨ 타이틀 (정중앙)
+                    Text(
+                        text = "레시피 추천",
+                        style = AppFonts.size19Title3,
+                        color = AppColors.text,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Start
+                    )
+
+                    // ✨ 닫기 버튼 (오른쪽)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "닫기",
+                            tint = AppColors.text
+                        )
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(8.dp))
 
