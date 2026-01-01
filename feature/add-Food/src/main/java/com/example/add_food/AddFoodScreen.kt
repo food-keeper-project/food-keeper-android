@@ -313,7 +313,7 @@ fun FoodNameField(value: String, onValueChange: (String) -> Unit) {
 }
 
 // ========================================
-// 이미지 업로드 섹션
+// 사진 업로드 섹션
 // ========================================
 @Composable
 fun ImageUploadSection(
@@ -627,11 +627,22 @@ fun AlarmPickerBottomSheet(
     onSelect: (ExpiryAlarm) -> Unit
 ) {
     val alarms = ExpiryAlarm.values().toList()
+    val context = LocalContext.current
+    val view = LocalView.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
+        DisposableEffect(Unit) {
+            val window = (context as? Activity)?.window
+            if (window != null) {
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.hide(WindowInsetsCompat.Type.navigationBars())
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+            onDispose { }
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()

@@ -103,7 +103,7 @@ fun FoodListItem(
                         )
                         DDayBadge(dDay = item.expiryDate.getDDay())
                         // 7일 미만일 경우 유통기한 임박 뱃지 표시
-                        if (item.expiryDate.getDDay() <= 7) {
+                        if (item.expiryDate.getDDay() >= 0 && item.expiryDate.getDDay() <= 7) {
                             ExpiringBadge()
                         }
                     }
