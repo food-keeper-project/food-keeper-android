@@ -44,9 +44,8 @@ class DefaultFoodUseCase @Inject constructor(
     }
     //식재료 소비처리
     override fun ConsumptionFood(food: Food): Flow<Boolean> {
-        return flow {
-            delay(500)
-            emit(true)
+        return foodRepository.consumptionFood(food.id).map { requestResult ->
+            requestResult.result
         }
     }
 

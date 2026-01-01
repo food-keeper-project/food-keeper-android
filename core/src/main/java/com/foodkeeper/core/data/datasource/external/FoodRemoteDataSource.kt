@@ -42,4 +42,13 @@ class FoodRemoteDataSource @Inject constructor(
             )
         )
     }
+
+    fun requestConsumptionFood(foodId: Long): Flow<ResultDTO> {
+        return apiService.request(
+            ApiRoute.ConsumptionFood(
+                foodId = foodId
+            )
+        )
+    }
+
 }

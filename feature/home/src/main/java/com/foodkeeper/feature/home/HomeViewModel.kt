@@ -102,7 +102,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             foodUseCase.ConsumptionFood(food)
                 .catch {
-                    _uiState.value = BaseUiState.ErrorState(it.message)
                     _toastMessage.emit("다시 시도해 주세요.")
                 }
                 .collect { success ->
@@ -115,7 +114,6 @@ class HomeViewModel @Inject constructor(
                     } else {
                         _toastMessage.emit("다시 시도해 주세요.")
                     }
-
                 }
 
         }

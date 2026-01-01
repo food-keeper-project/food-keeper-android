@@ -47,6 +47,9 @@ sealed class ApiRoute {
         val request: FoodCreateRequestDTO,
         val imageBytes: ByteArray?,              // 이미지 선택 안 하면 null
     ) : ApiRoute()
+    data class ConsumptionFood(
+        val foodId: Long
+    ) : ApiRoute()
     // ========== 카테고리 관련 정의 ==========
     object Categories: ApiRoute()
 
@@ -70,7 +73,7 @@ sealed class ApiRoute {
             is AllFoodList -> "api/v1/foods"
             is ImminentFoodList -> "api/v1/foods/imminent"
             is AddFood -> "api/v1/foods"
-
+            is ConsumptionFood -> "api/v1/foods"
             // Categorie
             is Categories -> "api/v1/categories"
 
@@ -86,6 +89,8 @@ sealed class ApiRoute {
             is RefreshToken -> HttpMethod.Post
             is Logout -> HttpMethod.Delete
             is AddFood -> HttpMethod.Post
+            is ConsumptionFood -> HttpMethod.Delete
+
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }
@@ -127,6 +132,7 @@ sealed class ApiRoute {
                 cursor?.let { put("cursor", it) }
                 limit?.let { put("limit", it) }
             }
+            is ConsumptionFood -> mapOf("foodId" to foodId)
             else -> emptyMap()
         }
 
