@@ -54,6 +54,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.foodkeeper.core.R
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
@@ -256,6 +257,7 @@ fun RecipeFoodItem(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(food.imageURL)
                         .crossfade(true)
+                        .error(R.drawable.foodplaceholder)
                         .build(),
                     contentDescription = food.name,
                     contentScale = ContentScale.Crop,

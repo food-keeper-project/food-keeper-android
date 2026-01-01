@@ -14,8 +14,8 @@ enum class MainTab(
         label = "홈",
         iconRes = R.drawable.home
     ),
-    Search(
-        route = "add",
+    AddFood(
+        route = "addFood",
         label = "식재료 추가",
         iconRes = R.drawable.cart_plus
     ),

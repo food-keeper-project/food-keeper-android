@@ -1,5 +1,6 @@
 package com.foodkeeper.core.domain.usecase
 
+import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.domain.repository.CategoryRepository
 import com.foodkeeper.core.domain.repository.FoodRepository
@@ -12,6 +13,7 @@ import javax.inject.Inject
 interface CategoryUseCase {
     //카테고리 리스트 조회
     fun getFoodCategoryList(): Flow<List<String>>
+    fun getDetailFoodCategoryList(): Flow<List<Category>>
 }
 
 class DefaultCategoryUseCase @Inject constructor(
@@ -23,6 +25,12 @@ class DefaultCategoryUseCase @Inject constructor(
         val categorys = CategoryRepository.getCategorieList().map {
             it.map { it.name }
         }
+        return categorys
+    }
+
+    //카테고리 리스트 조회
+    override fun getDetailFoodCategoryList(): Flow<List<Category>> {
+        val categorys = CategoryRepository.getCategorieList().map { it }
         return categorys
     }
 

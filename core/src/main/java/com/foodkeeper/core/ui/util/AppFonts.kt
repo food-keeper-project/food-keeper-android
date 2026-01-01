@@ -58,6 +58,14 @@ object AppFonts {
         letterSpacing = (-0.02).em
     )
 
+    val size16Body1B = TextStyle(
+        fontFamily = NanumSquareNeo,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = (-0.02).em
+    )
+
     val size14Body2 = TextStyle(
         fontFamily = NanumSquareNeo,
         fontWeight = FontWeight.Normal,

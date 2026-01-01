@@ -25,4 +25,9 @@ interface FoodRepository {
         request: FoodCreateRequestDTO,
         imageBytes: ByteArray?
     ): Flow<RequestResult>
+
+    /** 식재료 소비처리 */
+    fun consumptionFood(
+        foodId: Long
+    ): Flow<RequestResult>
 }

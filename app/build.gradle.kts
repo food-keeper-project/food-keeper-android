@@ -114,4 +114,5 @@ dependencies {
     implementation(project(":feature:foodKeeper-Main"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:ai-recipe"))
+    implementation(project(":feature:add-Food"))
 }

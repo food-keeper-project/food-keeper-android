@@ -2,9 +2,10 @@ package com.foodkeeper.core.data.datasource.external
 
 import com.foodkeeper.core.data.mapper.external.CategoryDTO
 import com.foodkeeper.core.data.mapper.external.FoodDTO
-import com.foodkeeper.core.data.mapper.external.FoodListDTO
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
 import com.foodkeeper.core.data.mapper.external.ResultDTO
+import com.foodkeeper.core.data.mapper.external.respone.AllFoodListResponseDTO
+import com.foodkeeper.core.data.mapper.external.respone.ImminentFoodListResponseDTO
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.data.network.ApiRoute
 import com.foodkeeper.core.data.network.FoodApiService
@@ -17,7 +18,7 @@ class FoodRemoteDataSource @Inject constructor(
     private val apiService: FoodApiService
 ) {
     // 전체 식재료 조회
-    fun requestFoodList(limit: Int, categoryId: Long?, cursor: Long?): Flow<FoodListDTO> {
+    fun requestFoodList(limit: Int, categoryId: Long?, cursor: Long?): Flow<AllFoodListResponseDTO> {
         return apiService.request(
             ApiRoute.AllFoodList(
                 limit = limit,
@@ -27,7 +28,7 @@ class FoodRemoteDataSource @Inject constructor(
         )
     }
     // 유통기한 임박 식재료 조회
-    fun requestImminentFoodList(): Flow<List<FoodDTO>> {
+    fun requestImminentFoodList(): Flow<ImminentFoodListResponseDTO> {
         return apiService.request(
             ApiRoute.ImminentFoodList
         )
@@ -41,4 +42,13 @@ class FoodRemoteDataSource @Inject constructor(
             )
         )
     }
+
+    fun requestConsumptionFood(foodId: Long): Flow<ResultDTO> {
+        return apiService.request(
+            ApiRoute.ConsumptionFood(
+                foodId = foodId
+            )
+        )
+    }
+
 }

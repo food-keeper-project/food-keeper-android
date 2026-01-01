@@ -35,8 +35,8 @@ class FoodRepositoryImpl @Inject constructor(
     override fun getImminentFoodList(): Flow<List<Food>> {
         return remoteDataSource
             .requestImminentFoodList()
-            .map { dto ->
-                dto.map { it.toFood() }
+            .map { result ->
+                result.content.map { it.toFood() }
             }
     }
 
@@ -46,6 +46,14 @@ class FoodRepositoryImpl @Inject constructor(
     ): Flow<RequestResult> {
         return remoteDataSource
             .requestAddFood(request, imageBytes)
+            .map { it.toRequestResult() }
+    }
+
+    override fun consumptionFood(
+        foodId: Long
+    ): Flow<RequestResult> {
+        return remoteDataSource
+            .requestConsumptionFood(foodId)
             .map { it.toRequestResult() }
     }
 }

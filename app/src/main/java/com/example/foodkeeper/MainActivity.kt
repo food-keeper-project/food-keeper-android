@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.add_food.AddFoodScreen
 import com.foodkeeper.feature.kakaologin.LoginScreen
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme
 import com.foodkeeper.feature.airecipe.AiRecipeDetailScreen
@@ -128,14 +129,21 @@ fun FoodKeeperNavHost(navController: NavHostController) {
 
             MainScaffoldScreen(
                 currentTab = currentTab,
-                onTabSelected = { tab -> currentTab = tab }
+                onTabSelected = { tab ->
+                    // ✨ Search 탭 클릭 시 다른 화면으로 이동
+                    if (tab == MainTab.AddFood) {
+                        navController.navigate("addFood")
+                        return@MainScaffoldScreen  // 탭 변경 없이 종료
+                    }
+                    currentTab = tab
+                }
             ) {
                 when (currentTab) {
                     MainTab.Home -> HomeScreen(
                         onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
 
                     ) //홈
-                    MainTab.Search -> {}
+                    MainTab.AddFood -> {}
                     MainTab.Recipe -> AiRecipeHistoryScreen(
                         onRecipeClick = { recipeId ->
                             navController.navigate("ai_recipe_detail/$recipeId")
@@ -201,6 +209,12 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             AiRecipeDetailScreen(
                 onBackClick = { navController.popBackStack() },
                 // 필요한 다른 콜백들...
+            )
+        }
+        // ✨ 4. 식재료 추가 화면 (새로 추가)
+        composable("addFood") {
+            AddFoodScreen(
+                onBackClick = { navController.popBackStack() },
             )
         }
     }
