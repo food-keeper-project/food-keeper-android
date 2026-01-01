@@ -1,5 +1,7 @@
 package com.foodkeeper.core.di
 
+import com.foodkeeper.core.domain.usecase.CategoryUseCase
+import com.foodkeeper.core.domain.usecase.DefaultCategoryUseCase
 import com.foodkeeper.core.domain.usecase.DefaultFoodUseCase
 import com.foodkeeper.core.domain.usecase.FoodUseCase
 import dagger.Binds
@@ -17,4 +19,10 @@ abstract class FoodUseCaseModule {
     abstract fun bindFoodUseCase(
         impl: DefaultFoodUseCase
     ): FoodUseCase
+
+    @Binds
+    @Singleton
+    abstract fun bindCategoryUseCase(
+        impl: DefaultCategoryUseCase
+    ): CategoryUseCase
 }
