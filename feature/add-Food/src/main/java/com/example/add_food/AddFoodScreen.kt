@@ -1,5 +1,6 @@
 package com.example.add_food
 
+import android.app.Activity
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,10 +30,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.foodkeeper.core.domain.model.Category
@@ -42,6 +47,7 @@ import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -53,6 +59,7 @@ fun AddFoodScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+    val view = LocalView.current // 시스템 UI 제어용
 
     val uiState by viewModel.uiState.collectAsState()
     val foodInput by viewModel.foodInput.collectAsState()
@@ -65,11 +72,39 @@ fun AddFoodScreen(
     ) { uri: Uri? ->
         viewModel.updateFoodImage(uri)
     }
+    // --------------------
+    // 시스템 하단바 숨기기 설정
+    // --------------------
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        if (window != null) {
+            val controller = WindowCompat.getInsetsController(window, view)
+            // 하단바(Navigation Bars) 숨기기
+            controller.hide(WindowInsetsCompat.Type.navigationBars())
+            // 사용자가 화면 끝을 쓸어올릴 때만 잠깐 나타나도록 설정 (선택 사항)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
 
+        onDispose {
+            // 화면을 나갈 때 다시 나타나게 설정
+            val window = (context as? Activity)?.window
+            if (window != null) {
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.show(WindowInsetsCompat.Type.navigationBars())
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         viewModel.onScreenEnter()
-        viewModel.toastMessage.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        launch {
+            viewModel.toastMessage.collect { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+        launch {
+            viewModel.dissmissEvent.collect { success ->
+                onBackClick()
+            }
         }
     }
 

@@ -51,6 +51,9 @@ class AddFoodViewModel @Inject constructor(
     private val _toastMessage = MutableSharedFlow<String>()
     val toastMessage = _toastMessage.asSharedFlow()
 
+    private val _dissmissEvent = MutableSharedFlow<Boolean>()
+    val dissmissEvent = _dissmissEvent.asSharedFlow()
+
     // --------------------
     // 화면 진입
     // --------------------
@@ -148,6 +151,7 @@ class AddFoodViewModel @Inject constructor(
                 }
                 .collect { success ->
                     _toastMessage.emit("식재료가 추가되었습니다")
+                    _dissmissEvent.emit(success)
                 }
         }
     }
