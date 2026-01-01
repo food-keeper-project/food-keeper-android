@@ -23,7 +23,8 @@ firebaseBom = "33.1.2"
 googleServices = "4.4.2"
 kakao = "2.20.1"
 material3 = "1.4.0"
-generativeai = "0.9.0"  # 카카오 SDK 최신 버전 (변경될 수 있음)
+generativeai = "0.9.0"
+jetbrainsKotlinJvm = "2.0.21"  # 카카오 SDK 최신 버전 (변경될 수 있음)
 
 
 [libraries]
@@ -107,3 +108,4 @@ kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" } # Kap
 
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
