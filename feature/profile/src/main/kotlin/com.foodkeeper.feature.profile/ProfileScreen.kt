@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun ProfileRoute(
     onLogoutSuccess: () -> Unit,
+    onWithdrawalClick: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -46,7 +47,7 @@ fun ProfileRoute(
         profile = profile,
         onLogoutClick = { viewModel.logout() },
         onTermsClick = { /* 이용약관 이동 로직 */ },
-        onWithdrawalClick = { /* 회원탈퇴 로직 */ }
+        onWithdrawalClick = onWithdrawalClick
     )
 }
 

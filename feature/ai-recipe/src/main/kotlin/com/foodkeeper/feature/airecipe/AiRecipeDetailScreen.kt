@@ -53,8 +53,8 @@ fun AiRecipeDetailScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "AI 추천 레시피",
-                        style = MaterialTheme.typography.titleMedium,
+                        text = "회원탈퇴",
+                        style = AppFonts.size22Title2,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -142,8 +142,7 @@ fun AiRecipeDetailScreen(
         }
     ) { padding ->
         androidx.compose.foundation.lazy.LazyColumn(
-            modifier = androidx.compose.ui.Modifier
-
+            modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)

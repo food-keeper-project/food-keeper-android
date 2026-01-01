@@ -35,6 +35,7 @@ sealed class ApiRoute {
     // 인증은 requiresAuth = true를 통해 자동으로 처리됩니다.
     object MyProfile : ApiRoute()
     object Logout: ApiRoute()
+    object WithdrawAccount: ApiRoute()
 
     // ========== 식자재 관련 정의 ==========
     data class AllFoodList(
@@ -63,8 +64,11 @@ sealed class ApiRoute {
             // Auth
             is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
-            is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
+            is WithdrawAccount -> "api/v1/auth/withdraw" // 회원탈퇴 api
+
+            // User
+            is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
 
             // Food
             is AllFoodList -> "api/v1/foods"
@@ -73,10 +77,6 @@ sealed class ApiRoute {
 
             // Categorie
             is Categories -> "api/v1/categories"
-
-//            is KakaoLogin -> "/auth/kakao"
-//            is Logout -> "/auth/logout"
-
         }
 
     // ========== HTTP 메서드 정의 ==========

@@ -9,6 +9,9 @@ import javax.inject.Inject
 interface AuthRemoteDataSource {
     fun signInWithKakao(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
     fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
+    fun withdrawAccount(): Flow<String>
+    // ✅ 로그아웃 추가
+    fun logOut(): Flow<String>
 }
 
 class DefaultAuthRemoteDataSource @Inject constructor(
@@ -35,6 +38,16 @@ class DefaultAuthRemoteDataSource @Inject constructor(
                 curRefreshToken =refreshToken
             )
         )
+    }
+
+    override fun withdrawAccount(): Flow<String> {
+        return apiService.request(ApiRoute.WithdrawAccount)
+    }
+
+    override fun logOut(): Flow<String> {
+            // FoodApiService.request<T>가 내부적으로 ApiResponse<T>를 파싱해서
+            // data(T)만 내보내도록 구현되어 있다면 아래와 같이 작성합니다.
+            return apiService.request(ApiRoute.Logout)
     }
 
 }
