@@ -1,9 +1,14 @@
 package com.foodkeeper.core.domain.usecase
 
+import android.content.Context
+import android.net.Uri
 import com.foodkeeper.core.data.repository.UserRepository
+import com.foodkeeper.core.domain.model.AddFoodInput
 import com.foodkeeper.core.domain.model.Food
+import com.foodkeeper.core.domain.model.toRequest
 import com.foodkeeper.core.domain.repository.FoodRepository
 import com.foodkeeper.core.ui.util.isExpiringSoon
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -20,10 +25,13 @@ interface FoodUseCase {
     fun getExpiringSoonFoodList(): Flow<List<Food>>
     //식품 소비 요청
     fun ConsumptionFood(food: Food): Flow<Boolean>
+
+    fun addFood(food: AddFoodInput): Flow<Boolean>
 }
 
 class DefaultFoodUseCase @Inject constructor(
-    private val foodRepository: FoodRepository
+    private val foodRepository: FoodRepository,
+    @ApplicationContext private val context: Context
 ) : FoodUseCase {
     //전체 식자재 리스트 조회
     override fun getFoodList(): Flow<List<Food>> {
@@ -41,4 +49,17 @@ class DefaultFoodUseCase @Inject constructor(
             emit(true)
         }
     }
+
+    //식재료 추가
+    override fun addFood(food: AddFoodInput): Flow<Boolean> {
+        val imageBytes = food.imageUri?.toByteArray(context)
+        return foodRepository.addFood(food.toRequest(), imageBytes).map { requestResult ->
+            requestResult.result
+        }
+    }
+}
+fun Uri.toByteArray(context: Context): ByteArray {
+    return context.contentResolver.openInputStream(this)?.use { input ->
+        input.readBytes()
+    } ?: throw IllegalArgumentException("이미지 변환 실패")
 }

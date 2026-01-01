@@ -1,6 +1,5 @@
 package com.example.add_food
 
-import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,35 +21,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.foodkeeper.core.domain.model.Category
+import com.foodkeeper.core.domain.model.ExpiryAlarm
+import com.foodkeeper.core.domain.model.StorageMethod
+import com.foodkeeper.core.ui.util.AppFonts
+import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFoodScreen(
+    viewModel: AddFoodViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
     onFoodAdded: () -> Unit = {}
 ) {
-    // State
-    var foodName by remember { mutableStateOf("") }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedCategory by remember { mutableStateOf("야채류") }
-    var selectedStorage by remember { mutableStateOf("냉장") }
-    var expiryDate by remember { mutableStateOf("") }
-    var selectedAlarm by remember { mutableStateOf("3일 전") }
-    var memo by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+    val foodInput by viewModel.foodInput.collectAsState()
+    val categories by viewModel.foodCategories.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
-    var showAlarmPicker by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     // 갤러리 런처
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        viewModel.updateFoodImage(uri)
     }
 
     Scaffold(
@@ -59,8 +62,7 @@ fun AddFoodScreen(
                 title = {
                     Text(
                         text = "직접 등록하기",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        style = AppFonts.size22Title2
                     )
                 },
                 navigationIcon = {
@@ -82,51 +84,53 @@ fun AddFoodScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // 식재료명
             FoodNameField(
-                value = foodName,
-                onValueChange = { if (it.length <= 10) foodName = it }
+                value = foodInput.name,
+                onValueChange = { if (it.length <= 10) viewModel.updateFoodName(it) }
             )
 
             // 사진
             ImageUploadSection(
-                imageUri = selectedImageUri,
+                imageUri = foodInput.imageUri,
                 onUploadClick = {
                     galleryLauncher.launch("image/*")
                 }
             )
 
-            // 카테고리
+            // 카테고리 (단일 선택)
             CategorySection(
-                selected = selectedCategory,
-                onSelect = { selectedCategory = it }
+                selected = foodInput.categorys.firstOrNull(),
+                categoryList = categories,
+                onSelect = viewModel::updateCategory
             )
 
             // 보관 방식
             StorageSection(
-                selected = selectedStorage,
-                onSelect = { selectedStorage = it }
+                selected = foodInput.storageMethod,
+                StorageMethodList = StorageMethod.values().toList(),
+                onSelect = viewModel::updateStorageMethod
             )
 
-            // 유통 기한
+            // 유통기한
             ExpiryDateSection(
-                date = expiryDate,
+                date = foodInput.expiryDate,
                 onCalendarClick = { showDatePicker = true }
             )
 
-            // 알림 일시
+            // 알림
             AlarmSection(
-                selected = selectedAlarm,
-                onClick = { showAlarmPicker = true }
+                selected = foodInput.expiryAlarm,
+                onClick = { showBottomSheet = true }
             )
 
             // 메모
             MemoSection(
-                value = memo,
-                onValueChange = { memo = it }
+                value = foodInput.memo,
+                onValueChange = viewModel::updateMemo
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -164,23 +168,26 @@ fun AddFoodScreen(
         if (showDatePicker) {
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
-                onDateSelected = { date ->
-                    expiryDate = date
+                onDateSelected = {
+                    viewModel.updateExpiryDate(it)
                     showDatePicker = false
                 }
             )
         }
 
         // Alarm Picker Dialog
-        if (showAlarmPicker) {
+        if (showBottomSheet) {
             AlarmPickerBottomSheet(
-                selected = selectedAlarm,
-                onDismiss = { showAlarmPicker = false },
-                onSelect = { alarm ->
-                    selectedAlarm = alarm
+                selected = foodInput.expiryAlarm,
+                onDismiss = { showBottomSheet = false },
+                onSelect = {
+                    viewModel.updateExpiryAlarm(it)
+                    showBottomSheet = false
                 }
             )
         }
+
+
     }
 }
 
@@ -288,10 +295,10 @@ fun ImageUploadSection(
 // ========================================
 @Composable
 fun CategorySection(
-    selected: String,
-    onSelect: (String) -> Unit
+    selected: Category?,
+    categoryList: List<Category>,
+    onSelect: (Category) -> Unit
 ) {
-    val categories = listOf("야채류", "육류", "해산물", "유제품", "과일류", "기타")
 
     Column {
         Text(
@@ -306,9 +313,9 @@ fun CategorySection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            categories.take(3).forEach { category ->
+            categoryList.take(3).forEach { category ->
                 CategoryChip(
-                    text = category,
+                    text = category.name,
                     isSelected = selected == category,
                     onClick = { onSelect(category) },
                     modifier = Modifier.weight(1f)
@@ -322,9 +329,9 @@ fun CategorySection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            categories.drop(3).forEach { category ->
+            categoryList.drop(3).forEach { category ->
                 CategoryChip(
-                    text = category,
+                    text = category.name,
                     isSelected = selected == category,
                     onClick = { onSelect(category) },
                     modifier = Modifier.weight(1f)
@@ -360,10 +367,10 @@ fun CategoryChip(
 // ========================================
 @Composable
 fun StorageSection(
-    selected: String,
-    onSelect: (String) -> Unit
+    selected: StorageMethod?,
+    StorageMethodList: List<StorageMethod>,
+    onSelect: (StorageMethod) -> Unit
 ) {
-    val storages = listOf("실온", "냉장", "냉동")
 
     Column {
         Text(
@@ -377,9 +384,9 @@ fun StorageSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            storages.forEach { storage ->
+            StorageMethodList.forEach { storage ->
                 CategoryChip(
-                    text = storage,
+                    text = storage.displayName,
                     isSelected = selected == storage,
                     onClick = { onSelect(storage) },
                     modifier = Modifier.weight(1f)
@@ -394,9 +401,13 @@ fun StorageSection(
 // ========================================
 @Composable
 fun ExpiryDateSection(
-    date: String,
+    date: Date?,
     onCalendarClick: () -> Unit
 ) {
+    val text = date?.let {
+        SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(it)
+    } ?: ""
+
     Column {
         Text(
             text = "유통 기한",
@@ -404,17 +415,21 @@ fun ExpiryDateSection(
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = date,
+                value = text,              // ✅ String
                 onValueChange = {},
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("YYYY/MM/DD") },
+                placeholder = {
+                    Text("날짜를 선택하세요") // ✅ Composable
+                },
                 readOnly = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFFF9500),
@@ -444,7 +459,7 @@ fun ExpiryDateSection(
 // ========================================
 @Composable
 fun AlarmSection(
-    selected: String,
+    selected: ExpiryAlarm?,
     onClick: () -> Unit
 ) {
     Column {
@@ -470,7 +485,7 @@ fun AlarmSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = selected,
+                    text = selected?.displayName ?: "알림 선택",
                     fontSize = 16.sp,
                     color = Color.Black
                 )
@@ -523,7 +538,7 @@ fun MemoSection(
 @Composable
 fun DatePickerDialog(
     onDismissRequest: () -> Unit,
-    onDateSelected: (String) -> Unit
+    onDateSelected: (Date) -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
 
@@ -533,8 +548,8 @@ fun DatePickerDialog(
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let { millis ->
                     val date = Date(millis)
-                    val format = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-                    onDateSelected(format.format(date))
+//                    val format = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                    onDateSelected(date)
                 }
             }) {
                 Text("확인")
@@ -556,41 +571,26 @@ fun DatePickerDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerBottomSheet(
-    selected: String,
+    selected: ExpiryAlarm?,
     onDismiss: () -> Unit,
-    onSelect: (String) -> Unit
+    onSelect: (ExpiryAlarm) -> Unit
 ) {
-    val alarms = listOf(
-        "당일 알림",
-        "하루 전 알림",
-        "2일 전 알림",
-        "3일 전 알림",
-        "1주일 전 알림",
-        "2주일 전 알림"
-    )
+    val alarms = ExpiryAlarm.values().toList()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
         ) {
-            // 상단 핸들바
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .background(Color.LightGray, RoundedCornerShape(2.dp))
-                )
-            }
+            Text(
+                text = "알림 설정",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
 
             alarms.forEach { alarm ->
                 Surface(
@@ -609,11 +609,11 @@ fun AlarmPickerBottomSheet(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 16.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = alarm,
+                            text = alarm.displayName,
                             fontSize = 16.sp,
                             color = Color.Black
                         )
