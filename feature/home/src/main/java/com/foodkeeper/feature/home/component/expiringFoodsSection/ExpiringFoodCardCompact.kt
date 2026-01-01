@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.foodkeeper.core.R
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
@@ -66,6 +67,7 @@ fun ExpiringFoodCardCompact(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(item.imageURL)
                         .crossfade(true)
+                        .error(R.drawable.foodplaceholder)
                         .build(),
                     contentDescription = item.name,
                     contentScale = ContentScale.Crop,
