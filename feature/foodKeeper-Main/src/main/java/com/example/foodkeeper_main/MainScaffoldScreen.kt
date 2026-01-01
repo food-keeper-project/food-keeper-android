@@ -32,10 +32,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.foodkeeper.core.ui.util.AppColors
 
 @Composable
 fun MainScaffoldScreen(
     currentTab: MainTab,
+    containerColor: Color = AppColors.white,
     onTabSelected: (MainTab) -> Unit,
     content: @Composable () -> Unit // 🔥 화면은 외부에서 주입
 ) {

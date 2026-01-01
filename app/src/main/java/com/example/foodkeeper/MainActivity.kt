@@ -1,5 +1,6 @@
 package com.example.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
+import WithdrawalRoute
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -79,6 +80,7 @@ fun FoodKeeperNavHost(navController: NavHostController) {
         navController = navController,
         startDestination = "splash"
     ) {
+        //온보딩 화면
         composable("onboarding") {
             OnboardingScreen(
                 onNavigateToLogin = {
@@ -89,7 +91,7 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                 }
             )
         }
-
+        //스플래쉬 화면
         composable("splash") {
             SplashScreen(
                 onNavigateToOnboarding = {
@@ -103,13 +105,14 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate("profile") {
+                    navController.navigate("main") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
             )
         }
-
+        
+        //로그인 화면
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -147,28 +150,49 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                         }
                     )
                     MainTab.MyPage -> ProfileRoute(
-                        onNavigateToHistory = {},
                         onLogoutSuccess = {
                             navController.navigate("login") {
                                 popUpTo(0) { inclusive = true }
                             }
+                        },
+                        onWithdrawalClick = {
+                            // ✅ 회원탈퇴 스크린으로 이동
+                            navController.navigate("withdrawal")
                         }
                     )
                 }
             }
         }
-
+        //프로필 화면
         composable("profile") {
             ProfileRoute(
-                onNavigateToHistory = {},
                 onLogoutSuccess = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onWithdrawalClick = {
+                    // ✅ 회원탈퇴 스크린으로 이동
+                    navController.navigate("withdrawal")
+                }
+            )
+        }
+        //회원탈퇴 화면
+        composable("withdrawal") {
+            // ✅ 회원탈퇴 전용 Route 호출
+            WithdrawalRoute(
+                onBackClick = {
+                    navController.popBackStack() // 뒤로가기
+                },
+                onWithdrawalSuccess = {
+                    // ✅ 탈퇴 성공 시 로그인 화면으로 이동
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
-
+        //레시피 목록 화면
         composable("ai_recipe_history") {
             AiRecipeHistoryScreen(
                 onRecipeClick = { recipeId ->
@@ -177,7 +201,7 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             )
         }
 
-        // 2. 디테일(상세) 화면
+        // 레시피 디테일(상세) 화면
         composable(
             route = "ai_recipe_detail/{recipeId}",
             arguments = listOf(navArgument("recipeId") { type = NavType.StringType })

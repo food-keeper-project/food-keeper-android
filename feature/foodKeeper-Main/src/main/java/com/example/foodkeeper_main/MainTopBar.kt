@@ -1,5 +1,6 @@
 package com.example.foodkeeper_main
-
+// 이 줄을 추가하세요
+import com.foodkeeper.feature.foodKeeperMain.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,12 +32,10 @@ fun MainTopBar(
     TopAppBar(
         // 🔥 왼쪽 로고
         navigationIcon = {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "로고",
-                tint = mMain,
-                modifier = Modifier
-                    .size(28.dp)
+            Image(
+                painter = painterResource(id = R.drawable.app_icon),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
                     .padding(start = 12.dp)
             )
         },
@@ -51,7 +50,7 @@ fun MainTopBar(
         },
 
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White,
+            containerColor = AppColors.white,
             titleContentColor = mMain
         )
     )

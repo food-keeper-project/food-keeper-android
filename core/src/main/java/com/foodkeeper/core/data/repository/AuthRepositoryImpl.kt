@@ -10,10 +10,13 @@ import com.kakao.sdk.user.UserApiClient
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
+import java.util.ResourceBundle.clearCache
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -102,14 +105,42 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     // ✅ [로그아웃]
-    override suspend fun logout(): Result<Unit> = suspendCoroutine { continuation ->
-        UserApiClient.instance.logout { error ->
-            if (error != null) continuation.resume(Result.failure(error))
-            else {
-                // 카카오 로그아웃 성공 시 로컬 토큰도 함께 비워주는 것이 정석입니다.
-                // tokenManager.clearAll() // 만약 clear 기능이 있다면 추가하세요.
-                continuation.resume(Result.success(Unit))
+    override suspend fun logout(): Result<Unit> {
+        return try {
+            // 1. 카카오 로그아웃 수행 (콜백을 suspend로 변환)
+            suspendCoroutine{ continuation ->
+                UserApiClient.instance.logout { error ->
+                    if (error != null) continuation.resumeWith(Result.failure(error))
+                    else continuation.resumeWith(Result.success(Unit))
+                }
             }
+
+            // 2. 카카오 로그아웃 성공 시 로컬 토큰 비우기 (suspend 함수 호출 가능)
+            tokenManager.clearTokens()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
+
+
+    override suspend fun withdrawAccount(): Flow<String> {
+        return authRemoteDataSource.withdrawAccount()
+            .onEach { result ->
+                // ✅ Flow를 통해 들어온 서버 응답이 성공인지 확인
+                // (서버가 성공 시 "SUCCESS" 같은 문자열을 보낸다고 가정)
+                if (result == "SUCCESS") {
+                    Log.d("AuthRepo", "회원탈퇴 성공: 로컬 토큰 삭제")
+                    tokenManager.clearTokens()
+                    clearCache()
+                }
+            }
+            .catch { e ->
+                // ✅ 여기서 예외 처리를 하여 스트림이 끊기지 않게 하거나 로그를 남깁니다.
+                Log.e("AuthRepo", "회원탈퇴 Flow 에러: ${e.message}")
+                throw e // ViewModel에서 catch할 수 있게 던져줌
+            }
+    }
+
 }
