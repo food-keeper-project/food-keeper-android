@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 fun FoodKeeperNavHost(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "addFood"
+        startDestination = "splash"
     ) {
         composable("onboarding") {
             OnboardingScreen(

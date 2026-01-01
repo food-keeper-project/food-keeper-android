@@ -2,7 +2,6 @@ package com.foodkeeper.core.data.datasource.external
 
 import com.foodkeeper.core.data.mapper.external.CategoryDTO
 import com.foodkeeper.core.data.mapper.external.FoodDTO
-import com.foodkeeper.core.data.mapper.external.FoodListDTO
 import com.foodkeeper.core.data.mapper.external.ResultDTO
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.data.network.ApiRoute

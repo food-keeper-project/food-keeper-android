@@ -35,8 +35,8 @@ class FoodRepositoryImpl @Inject constructor(
     override fun getImminentFoodList(): Flow<List<Food>> {
         return remoteDataSource
             .requestImminentFoodList()
-            .map { dto ->
-                dto.map { it.toFood() }
+            .map { result ->
+                result.content.map { it.toFood() }
             }
     }
 

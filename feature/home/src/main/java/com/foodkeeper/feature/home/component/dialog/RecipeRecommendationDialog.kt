@@ -70,7 +70,7 @@ fun RecipeRecommendationDialog(
     expiringFoods: List<Food>,
     onDismiss: () -> Unit,
     onGenerateRecipe: (List<Food>) -> Unit
-) {z`
+) {
     // 선택된 식재료 ID 목록
     var selectedFoodIds by remember { mutableStateOf(setOf<Long>()) }
 

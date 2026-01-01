@@ -1,5 +1,6 @@
 package com.foodkeeper.core.data.mapper.external
 
+import android.R
 import android.provider.Settings.System.DATE_FORMAT
 import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.Food
@@ -9,13 +10,6 @@ import com.foodkeeper.core.ui.util.parseServerDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class FoodListDTO(
-    @SerialName("content")
-    val content: List<FoodDTO>,
-    @SerialName("hasNext")
-    val hasNext: Long?
-)
 
 @Serializable
 data class FoodDTO(
