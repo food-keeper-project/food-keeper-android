@@ -41,6 +41,7 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
+import com.foodkeeper.core.ui.util.getDDay
 import com.foodkeeper.core.ui.util.toyyMMddString
 import com.foodkeeper.feature.home.component.allFoodsSection.CategoryTabs
 import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
@@ -188,8 +189,10 @@ fun HomeScreen(
         )
     }
     selectedRecipeRecommend?.let { foodList ->
+        //유통기한 임박 정렬
+        val sortedList = foodList.sortedBy { it.expiryDate.getDDay() }//.filter { it.expiryDate.getDDay() >= 0 } //유통기한 지난 식재료 제외 필요 시 주석 해제
         RecipeRecommendationDialog(
-            foodList,
+            sortedList,
             onDismiss = viewModel::onDismissDialog,
             onGenerateRecipe = { selectFoods ->
                 onRecipeRecommendFoods(selectFoods)
