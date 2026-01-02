@@ -23,7 +23,7 @@ fun MainBottomBar(
 ) {
     NavigationBar(
         modifier = Modifier.height(108.dp), // ✅ 전체 높이 제한
-        containerColor = Color.White,
+        containerColor =  AppColors.white,
         tonalElevation = 0.dp
     ) {
         MainTab.entries.forEach { tab ->

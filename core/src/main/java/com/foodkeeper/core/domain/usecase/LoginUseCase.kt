@@ -1,5 +1,6 @@
 package com.foodkeeper.core.domain.usecase
 
+import android.util.Log
 import com.foodkeeper.core.domain.model.LoginResult
 import com.foodkeeper.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,7 @@ class LoginUseCase @Inject constructor(
             emit(LoginResult.Failure("카카오 로그인 인증 실패: ${it.message}"))
             return@flow
         }
-
+        Log.d("TAG", "LoginUseCase invoke: kakaoToken $kakaoToken")
         // 2. FCM 토큰 획득 (선택 사항일 경우 null 허용)
         val fcmToken = authRepository.getFcmToken()
 

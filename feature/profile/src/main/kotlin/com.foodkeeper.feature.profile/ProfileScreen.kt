@@ -2,6 +2,7 @@
 package com.foodkeeper.feature.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,124 +18,155 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
 import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.core.ui.util.AppFonts
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun ProfileRoute(
-    onNavigateToHistory: () -> Unit,
     onLogoutSuccess: () -> Unit,
+    onWithdrawalClick: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-
-    // ViewModel에서 ProfileDTO? 타입을 구독
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
-    // ✅ 로그아웃 성공 관찰 (SharedFlow 구독)
+
     LaunchedEffect(Unit) {
-        viewModel.logoutSuccess.collect { success ->
+        viewModel.logoutSuccess.collectLatest { success ->
             if (success) {
-                onLogoutSuccess() // MainActivity나 상위 NavHost에서 처리하도록 알림
+                onLogoutSuccess()
             }
         }
     }
+
     ProfileScreen(
         profile = profile,
-        onHistoryClick = onNavigateToHistory,
-        onLogoutClick = { viewModel.logout() }
+        onLogoutClick = { viewModel.logout() },
+        onTermsClick = { /* 이용약관 이동 로직 */ },
+        onWithdrawalClick = onWithdrawalClick
     )
 }
 
 @Composable
 internal fun ProfileScreen(
     profile: ProfileDTO?,
-    onHistoryClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onWithdrawalClick: () -> Unit
 ) {
-    // 핑크색 기운을 없애고 흰색 배경을 강제하기 위해 Surface로 감쌉니다.
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = AppColors.white// ✅ 전체 배경 흰색
-    ){
+        color = AppColors.white
+    ) {
         Scaffold(
-            containerColor = AppColors.white,
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("마이페이지", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-                )
-            }
+            containerColor = AppColors.white
         ) { innerPadding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 24.dp)
             ) {
-                // 1. 프로필 정보 섹션
+                // [컬럼 1] 프로필 헤더
                 item {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Coil AsyncImage 사용
-                        AsyncImage(
-                            model = profile?.imageUrl,
-                            contentDescription = "프로필 이미지",
+                        Box(
                             modifier = Modifier
-                                .size(80.dp)
+                                .size(100.dp)
                                 .clip(CircleShape)
-                                .background(Color.LightGray),
-                            contentScale = ContentScale.Crop,
-                            // R.drawable.ic_default_profile가 없다면 프로젝트에 맞는 리소스로 교체 필요
-                            //error = painterResource(id =),
-                            //placeholder = painterResource(id = com.foodkeeper.core.designsystem.R.drawable.ic_default_profile)
-                        )
-
-                        Spacer(modifier = Modifier.width(20.dp))
-
+                                .border(2.dp, AppColors.main, CircleShape)
+                                .background(AppColors.light3Gray)
+                        ) {
+                            AsyncImage(
+                                model = profile?.imageUrl,
+                                contentDescription = "프로필 이미지",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = profile?.nickname?.ifEmpty { "사용자님" } ?: "로그인이 필요합니다",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
+                            style = AppFonts.size22Title2,
+                            color = AppColors.text
                         )
                     }
-                    Spacer(modifier = Modifier.height(40.dp))
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
 
+                // [컬럼 1-1] 설정 섹션
+                item {
+                    Text(
+                        text = "설정",
+                        style = AppFonts.size12Caption1,
+                        color = AppColors.light3Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    ProfileMenuItem(
+                        title = "이용약관 확인하기",
+                        onClick = onTermsClick
+                    )
+                }
 
-                item { ProfileMenuItem("로그아웃") {  onLogoutClick() } }
+                // [컬럼 1-2] 계정 섹션
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "계정",
+                        style = AppFonts.size12Caption1,
+                        color = AppColors.light3Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    ProfileMenuItem(
+                        title = "로그아웃",
+                        titleColor = Color.Red,
+                        onClick = onLogoutClick
+                    )
+                    ProfileMenuItem(
+                        title = "회원탈퇴",
+                        titleColor = AppColors.light3Gray,
+
+                        onClick = onWithdrawalClick
+                    )
+                }
             }
         }
     }
-
 }
 
 @Composable
 fun ProfileMenuItem(
     title: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    titleColor: Color = AppColors.text
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 18.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = title, fontSize = 16.sp)
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = Color.Gray
-        )
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = AppFonts.size16Body1,
+                color = titleColor
+            )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = AppColors.light3Gray)
+
+        }
     }
-    HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
 }

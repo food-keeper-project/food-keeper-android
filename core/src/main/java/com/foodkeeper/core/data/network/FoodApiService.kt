@@ -26,12 +26,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import javax.inject.Provider // Hilt에서 Lazy 주입을 위해 사용
+// ... 상단 임포트에 추가
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
 
 class FoodApiService @Inject constructor(
     private val client: HttpClient,
     @PublishedApi internal val tokenManagerProvider: Provider<TokenManager>,
     @PublishedApi internal val authRemoteDataSourceProvider: Provider<AuthRemoteDataSource>
 ) {
+    // ✅ 동시 재발급 방지를 위한 Mutex 선언
+    companion object {
+        private val refreshTokenMutex = Mutex()
+    }
     inline fun <reified T> request(
         route: ApiRoute
     ): Flow<T> = flow {
@@ -132,35 +140,51 @@ class FoodApiService @Inject constructor(
      */
     @PublishedApi
     internal suspend fun tryRefreshToken(): Boolean {
-        return try {
-            val tokenManager = tokenManagerProvider.get()
-            val authRemoteDataSource = authRemoteDataSourceProvider.get()
+        // 1️⃣ 현재 내가 알고 있는 "만료된" 토큰을 미리 기억해둡니다.
+        val oldTokenAtEntry = tokenManagerProvider.get().accessToken.first()
 
-            val oldRefreshToken = tokenManager.refreshToken.first()
-            val oldAccessToken = tokenManager.accessToken.first()
+        return refreshTokenMutex.withLock {
+            try {
+                val tokenManager = tokenManagerProvider.get()
+                // 2️⃣ 잠금이 풀려 진입했을 때, 다시 한번 현재 토큰을 확인합니다.
+                val currentToken = tokenManager.accessToken.first()
+                // 💡 만약 누군가 이미 토큰을 업데이트했다면 (내가 아까 본 토큰과 다르다면)
+                // 굳이 서버에 또 요청할 필요 없이 성공으로 간주하고 나갑니다.
+                if (currentToken != oldTokenAtEntry && !currentToken.isNullOrEmpty()) {
+                    Log.d("FoodApiService", "이미 다른 요청에 의해 토큰이 갱신됨. 재발급 건너뜀.")
+                    return true
+                }
 
-            Log.d("FoodApiService", "로컬 리프레시 토큰: $oldRefreshToken")
 
-            if (oldRefreshToken.isNullOrEmpty()) return false
+                // --- 이후 기존 로직 ---
+                val oldRefreshToken = tokenManager.refreshToken.first()
+                Log.d("FoodApiService", "로컬 리프레시 토큰: $oldRefreshToken")
+                if (oldRefreshToken.isNullOrEmpty()) {
+                    Log.e("FoodApiService", "리프레시 토큰이 없어 재발급 불가")
+                    return false
+                }
 
-            // ✅ request() 대신 executeHttpRequest()를 직접 호출
-            val response = executeHttpRequest(
-                ApiRoute.RefreshToken(oldAccessToken!!, oldRefreshToken)
-            )
-            val result = response.body<ApiResponse<AuthTokenDTO>>()
+                Log.d("FoodApiService", "재발급 요청 시작...")
+                val response = executeHttpRequest(ApiRoute.RefreshToken(currentToken ?: "", oldRefreshToken))
+                val result = response.body<ApiResponse<AuthTokenDTO>>()
 
-            if (result.result == "SUCCESS" && result.data != null) {
-                tokenManager.saveTokens(
-                    accessToken = result.data.accessToken ?: oldAccessToken,
-                    refreshToken = result.data.refreshToken ?: oldRefreshToken
-                )
-                true
-            } else {
+                if (result.result == "SUCCESS" && result.data != null) {
+                    tokenManager.saveTokens(
+                        accessToken = result.data.accessToken ?: currentToken ?: "",
+                        refreshToken = result.data.refreshToken ?: oldRefreshToken
+                    )
+                    Log.d("FoodApiService", "새 토큰 저장 완료")
+                    true
+                } else {
+                    Log.e("FoodApiService", "서버에서 재발급 거절: ${result.error?.errorCode}")
+                    false
+                }
+            } catch (e: Exception) {
+                // ✅ 여기서 CancellationException은 로그를 찍지 않거나 정상 처리로 넘겨야 깔끔합니다.
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Log.e("FoodApiService", "재발급 과정 중 예외 발생: ${e.message}")
                 false
             }
-        } catch (e: Exception) {
-            Log.e("FoodApiService", "재발급 과정 중 예외 발생: ${e.message}")
-            false
         }
     }
 
@@ -181,8 +205,10 @@ class FoodApiService @Inject constructor(
             // 헤더 설정
             if (route.requiresAuth) {
                 header("Authorization", "Bearer $accessToken")
-                Log.d("FoodApiService", "Header 주입 완료: Bearer $accessToken")
-            } else {
+                Log.d("FoodApiService", "[${route.path} Header 주입 완료: Bearer $accessToken")
+            }else{
+                // 만약 ApiRoute 내부에서 이미 처리가 되어있다면 그대로 사용
+
                 route.headers.forEach { (key, value) -> header(key, value) }
             }
 
