@@ -35,7 +35,17 @@ fun Date.isExpiringSoon(): Boolean {
 
 // 디데이 계산
 fun Date.getDDay(from: Date = Date()): Int {
-    val diffMillis = this.time - from.time
+    fun Date.atStartOfDay(): Long {
+        val cal = Calendar.getInstance()
+        cal.time = this
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.timeInMillis
+    }
+
+    val diffMillis = this.atStartOfDay() - from.atStartOfDay()
     return TimeUnit.MILLISECONDS.toDays(diffMillis).toInt()
 }
 //네트워크 결과값 String -> Date로 변환
