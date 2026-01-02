@@ -12,5 +12,6 @@ object AppColors {
     val light3Gray = Color(0xFFBBBBBB)  // 밝은 회색3
     val light4Gray = Color(0xFFD7D7D7)  // 밝은 회색4
     val light5Gray = Color(0xFFDEDEDE)  // 밝은 회색5
+    val light6Gray = Color(0xFFEAEAEA)  // 밝은 회색5
     val dartGray = Color(0xFF8C8C8C)  // 밝은 회색
 }
