@@ -13,6 +13,7 @@ import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.getDDay
 import com.foodkeeper.core.ui.util.minusDays
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -129,55 +130,56 @@ class AddFoodViewModel @Inject constructor(
 
     fun submitFood() {
         viewModelScope.launch {
-            val input = foodInput.value
+            try {
+                val input = foodInput.value
 
-            // 간단한 validation
-            if (input.name.isBlank()) {
-                _toastMessage.emit("식품명을 입력해주세요")
-                return@launch
-            }
-
-            if (input.expiryDate == null) {
-                _toastMessage.emit("유통기한을 선택해주세요")
-                return@launch
-            }
-
-            if (input.categorys.isEmpty() || input.storageMethod == null) {
-                _toastMessage.emit("카테고리와 보관 방식을 선택해주세요")
-                return@launch
-            }
-            val expiryDate = input.expiryDate!!
-            val alarm = input.expiryAlarm
-            val today = Date()
-
-            if (alarm != null) {
-                val alarmDay = alarm.daysBefore
-                val alarmDate = expiryDate.minusDays(alarmDay)
-
-                // 이미 지나간 날짜에 알림이 설정되는 경우
-                if (alarmDate.before(today)) {
-                    _toastMessage.emit("지난 날짜 알림은 설정할 수 없어요")
+                if (input.name.isBlank()) {
+                    _toastMessage.emit("식품명을 입력해주세요")
                     return@launch
                 }
 
-                // 알림 시점이 유통기한보다 빠른 경우
-                if (alarmDay > expiryDate.getDDay()) {
-                    _toastMessage.emit("유통기한보다 빠른 알림은 불가해요")
+                val expiryDate = input.expiryDate
+                if (expiryDate == null) {
+                    _toastMessage.emit("유통기한을 선택해주세요")
                     return@launch
                 }
+
+                if (input.categorys.isEmpty() || input.storageMethod == null) {
+                    _toastMessage.emit("카테고리와 보관 방식을 선택해주세요")
+                    return@launch
+                }
+
+                val alarm = input.expiryAlarm
+                val today = Date()
+
+                if (alarm != null) {
+                    val alarmDay = alarm.daysBefore
+                    val alarmDate = expiryDate.minusDays(alarmDay)
+
+                    if (alarmDate.before(today)) {
+                        _toastMessage.emit("지난 날짜 알림은 설정할 수 없어요")
+                        return@launch
+                    }
+
+                    if (alarmDay > expiryDate.getDDay()) {
+                        _toastMessage.emit("유통기한보다 빠른 알림은 불가해요")
+                        return@launch
+                    }
+                }
+                _uiState.value = BaseUiState.Processing
+                foodUseCase.addFood(input)
+                    .catch {
+                        _toastMessage.emit("식재료 추가 실패")
+                    }
+                    .collect { success ->
+                        _toastMessage.emit("식재료가 추가되었습니다")
+                        _dissmissEvent.emit(success)
+                    }
+
+            } finally {
+                delay(500)
+                _uiState.value = BaseUiState.Content
             }
-
-
-
-
-            foodUseCase.addFood(input)
-                .catch {
-                    _toastMessage.emit("식재료 추가 실패")
-                }
-                .collect { success ->
-                    _toastMessage.emit("식재료가 추가되었습니다")
-                    _dissmissEvent.emit(success)
-                }
         }
     }
 }
