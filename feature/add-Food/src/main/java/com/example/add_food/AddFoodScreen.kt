@@ -626,7 +626,7 @@ fun DatePickerDialog(
 fun AlarmPickerBottomSheet(
     selected: ExpiryAlarm?,
     onDismiss: () -> Unit,
-    onSelect: (ExpiryAlarm) -> Unit
+    onSelect: (ExpiryAlarm?) -> Unit
 ) {
     val alarms = ExpiryAlarm.values().toList()
     val context = LocalContext.current
@@ -641,10 +641,12 @@ fun AlarmPickerBottomSheet(
             if (window != null) {
                 val controller = WindowCompat.getInsetsController(window, view)
                 controller.hide(WindowInsetsCompat.Type.navigationBars())
-                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
             onDispose { }
         }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -656,34 +658,55 @@ fun AlarmPickerBottomSheet(
                 modifier = Modifier.padding(16.dp)
             )
 
+            // 🔥 알림 미선택
+            AlarmItem(
+                title = "알림 없음",
+                isSelected = selected == null,
+                onClick = {
+                    onSelect(null)
+                    onDismiss()
+                }
+            )
+
+            // 🔥 알림 목록
             alarms.forEach { alarm ->
-                Surface(
+                AlarmItem(
+                    title = alarm.displayName,
+                    isSelected = alarm == selected,
                     onClick = {
                         onSelect(alarm)
                         onDismiss()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    color = if (alarm == selected)
-                        Color(0xFFFFF3E0)
-                    else
-                        Color.Transparent
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = alarm.displayName,
-                            fontSize = 16.sp,
-                            color = Color.Black
-                        )
                     }
-                }
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun AlarmItem(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        color = if (isSelected) Color(0xFFFFF3E0) else Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                color = Color.Black
+            )
         }
     }
 }

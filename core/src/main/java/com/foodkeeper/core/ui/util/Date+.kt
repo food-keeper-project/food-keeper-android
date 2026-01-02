@@ -1,6 +1,7 @@
 package com.foodkeeper.core.ui.util
 
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -55,4 +56,11 @@ fun Date.toIsoUtcString(): String {
     )
     formatter.timeZone = TimeZone.getTimeZone("UTC")
     return formatter.format(this)
+}
+
+fun Date.minusDays(days: Int): Date {
+    val cal = Calendar.getInstance()
+    cal.time = this
+    cal.add(Calendar.DAY_OF_YEAR, -days)
+    return cal.time
 }

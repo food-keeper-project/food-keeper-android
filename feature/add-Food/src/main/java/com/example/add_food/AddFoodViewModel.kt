@@ -10,6 +10,8 @@ import com.foodkeeper.core.domain.model.StorageMethod
 import com.foodkeeper.core.domain.usecase.CategoryUseCase
 import com.foodkeeper.core.domain.usecase.FoodUseCase
 import com.foodkeeper.core.ui.base.BaseUiState
+import com.foodkeeper.core.ui.util.getDDay
+import com.foodkeeper.core.ui.util.minusDays
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -109,7 +111,7 @@ class AddFoodViewModel @Inject constructor(
         }
     }
     //알림
-    fun updateExpiryAlarm(alarm: ExpiryAlarm) {
+    fun updateExpiryAlarm(alarm: ExpiryAlarm?) {
         _foodInput.update {
             it.copy(expiryAlarm = alarm)
         }
@@ -144,6 +146,29 @@ class AddFoodViewModel @Inject constructor(
                 _toastMessage.emit("카테고리와 보관 방식을 선택해주세요")
                 return@launch
             }
+            val expiryDate = input.expiryDate!!
+            val alarm = input.expiryAlarm
+            val today = Date()
+
+            if (alarm != null) {
+                val alarmDay = alarm.daysBefore
+                val alarmDate = expiryDate.minusDays(alarmDay)
+
+                // 이미 지나간 날짜에 알림이 설정되는 경우
+                if (alarmDate.before(today)) {
+                    _toastMessage.emit("지난 날짜 알림은 설정할 수 없어요")
+                    return@launch
+                }
+
+                // 알림 시점이 유통기한보다 빠른 경우
+                if (alarmDay > expiryDate.getDDay()) {
+                    _toastMessage.emit("유통기한보다 빠른 알림은 불가해요")
+                    return@launch
+                }
+            }
+
+
+
 
             foodUseCase.addFood(input)
                 .catch {
