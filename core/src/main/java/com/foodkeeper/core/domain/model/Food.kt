@@ -18,9 +18,9 @@ import java.util.Date
 //}
 
 enum class StorageMethod(val displayName: String) {
-    FREEZER("냉장"),
     ROOM_TEMP("실온"),
-    REFRIGERATED("냉장")
+    REFRIGERATED("냉장"),
+    FREEZER("냉동"),
 }
 data class Food(
     val id: Long, //고유 ID
