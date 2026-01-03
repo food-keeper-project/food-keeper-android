@@ -37,13 +37,16 @@ import com.foodkeeper.core.ui.util.AppColors
 @Composable
 fun MainScaffoldScreen(
     currentTab: MainTab,
+    showTopBar: Boolean = true,
     containerColor: Color = AppColors.white,
     onTabSelected: (MainTab) -> Unit,
     content: @Composable () -> Unit // 🔥 화면은 외부에서 주입
 ) {
     Scaffold(
         topBar = {
-            MainTopBar(currentTab = currentTab) // ✅ 여기
+            if (showTopBar) { // ✅ 조건부 렌더링
+                MainTopBar(currentTab = currentTab)
+            }
         },
         bottomBar = {
             MainBottomBar(

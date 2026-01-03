@@ -1,11 +1,13 @@
 package com.foodkeeper.core.di
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.external.DefaultAuthRemoteDataSource
+import com.foodkeeper.core.data.repository.AiRecipeRepositoryImpl
 import com.foodkeeper.core.data.repository.AuthRepositoryImpl
 import com.foodkeeper.core.data.repository.CategoryRepositoryImpl
 import com.foodkeeper.core.data.repository.FoodRepositoryImpl
 import com.foodkeeper.core.data.repository.UserRepository
 import com.foodkeeper.core.data.repository.UserRepositoryImpl
+import com.foodkeeper.core.domain.repository.AiRecipeRepository
 import com.foodkeeper.core.domain.repository.AuthRepository
 import com.foodkeeper.core.domain.repository.CategoryRepository
 import com.foodkeeper.core.domain.repository.FoodRepository
@@ -46,5 +48,9 @@ abstract class DataModule {
     abstract fun bindCategoryRepository(
         categoryRepositoryImpl: CategoryRepositoryImpl
     ): CategoryRepository
-
+    @Binds
+    @Singleton
+    abstract fun bindAiRecipeRepository(
+        aiRecipeRepositoryImpl: AiRecipeRepositoryImpl
+    ): AiRecipeRepository
 }

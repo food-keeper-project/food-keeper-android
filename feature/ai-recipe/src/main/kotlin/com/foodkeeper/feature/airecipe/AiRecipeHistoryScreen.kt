@@ -27,7 +27,7 @@ import com.foodkeeper.core.ui.util.AppFonts
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiRecipeHistoryScreen(
-    onRecipeClick: (String) -> Unit,
+    onRecipeClick: (Long) -> Unit,
     viewModel: AiRecipeHistoryViewModel = hiltViewModel() // ✅ DetailScreen처럼 ViewModel을 주입받음
 ) {
     // ✅ ViewModel의 상태를 구독
@@ -91,14 +91,6 @@ fun SavedRecipeCard(
                 .padding(12.dp)
                 .height(80.dp)
         ) {
-            AsyncImage(
-                model = recipe.imageUrl.ifEmpty { "https://via.placeholder.com/150" },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -137,7 +129,7 @@ fun SavedRecipeCard(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "15분", // 실제 데이터라면 recipe.cookingTime 등으로 변경
+                        text = "${recipe.cookMinutes}분", // 실제 데이터라면 recipe.cookingTime 등으로 변경
                         style = AppFonts.size10Caption2,
                         color = AppColors.main,
                         fontWeight = FontWeight.ExtraBold

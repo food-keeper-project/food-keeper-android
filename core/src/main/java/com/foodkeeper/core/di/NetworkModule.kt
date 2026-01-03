@@ -10,6 +10,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -58,6 +59,12 @@ object NetworkModule {
             }
 
             // 여기에 로깅이나 타임아웃 설정을 추가할 수 있습니다.
+            // ✅ 타임아웃 설정 추가
+            install(HttpTimeout) {
+                requestTimeoutMillis = 60_000L  // 전체 요청 타임아웃 (60초)
+                connectTimeoutMillis = 10_000L  // 서버 연결 타임아웃 (10초)
+                socketTimeoutMillis = 60_000L   // 데이터 패킷 간 타임아웃 (60초)
+            }
 
         }
     }

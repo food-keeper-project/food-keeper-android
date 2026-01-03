@@ -66,7 +66,7 @@ class FoodApiService @Inject constructor(
 
                 // ✨ 201 Created 또는 data가 있는 경우 성공 처리
                 if (retryApiResponse.result == "SUCCESS") {
-                    handleSuccessResponse(retryApiResponse, response.status)
+                    handleSuccessResponse(retryApiResponse, response)
                 } else {
                     throw ServerException(
                         message = retryApiResponse.error?.message ?: "알 수 없는 서버 오류",
@@ -82,7 +82,7 @@ class FoodApiService @Inject constructor(
             // 3. 만료 상황이 아니면 첫 번째 결과를 그대로 처리
             if (initialApiResponse.result == "SUCCESS") {
                 // ✨ 201 Created 또는 data가 있는 경우 성공 처리
-                handleSuccessResponse(initialApiResponse, response.status)
+                handleSuccessResponse(initialApiResponse, response)
             } else {
                 throw ServerException(
                     message = initialApiResponse.error?.message ?: "알 수 없는 서버 오류",
@@ -99,14 +99,24 @@ class FoodApiService @Inject constructor(
     @PublishedApi
     internal suspend inline fun <reified T> FlowCollector<T>.handleSuccessResponse(
         apiResponse: ApiResponse<T>,
-        httpStatus: HttpStatusCode
+        httpResponse: HttpResponse
     ) {
+        val httpStatus = httpResponse.status
         when {
-            // ✅ Case 1: 201 Created - data가 null이어도 성공
-            httpStatus == HttpStatusCode.Created -> {
-                Log.d("FoodApiService", "201 Created 응답 - data 없이 성공 처리")
+            // ✅ Case 1: 201 Created 이고, 반환 타입 T가 Long인 경우 (ID 추출 로직)
+            httpStatus == HttpStatusCode.Created && T::class == Long::class -> {
+                val locationHeader = httpResponse.headers["Location"]
+                // Location 헤더에서 ID 추출 (예: /api/recipes/123 -> 123)
+                val extractedId = locationHeader?.substringAfterLast("/")?.toLongOrNull() ?: 0L
 
-                // T 타입이 Unit이면 Unit 반환, 아니면 SuccessResponse 반환
+                Log.d("FoodApiService", "201 Created - Location ID 추출 성공: $extractedId")
+
+                @Suppress("UNCHECKED_CAST")
+                emit(extractedId as T)
+            }
+
+            // ✅ Case 2: 201 Created 이지만 String 타입이 아닌 경우 (기존 유지)
+            httpStatus == HttpStatusCode.Created -> {
                 @Suppress("UNCHECKED_CAST")
                 val result = when (T::class) {
                     Unit::class -> Unit as T

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -89,7 +90,7 @@ fun WithdrawalScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.ArrowBackIosNew,
                             contentDescription = "뒤로가기"
                         )
                     }
@@ -159,41 +160,50 @@ fun WithdrawalScreen(
                 Text("위 유의사항을 모두 숙지했고 탈퇴에 동의합니다.")
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically){
-                // 더 써볼래요 버튼
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp, bottom = 16.dp), // 하단 여백 추가
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ✅ 더 써볼래요 버튼: 항상 활성화 상태여야 함
                 Button(
-                    onClick = onConfirmClick,
-                    enabled = isAgreed,
+                    onClick = onBackClick,
+                    enabled = true, // 동의 여부와 상관없이 항상 뒤로 갈 수 있음
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
+                        // 동의 전에는 Main색, 동의 후에는 회색(light3Gray)으로 변경
                         containerColor = if (isAgreed) AppColors.light3Gray else AppColors.main,
-                        disabledContainerColor = AppColors.main, // 비활성화 시 색상
-                        contentColor = AppColors.white,
-                        disabledContentColor = AppColors.white.copy(alpha = 0.5f)
+                        contentColor = Color.White
                     )
                 ) {
-                    Text("더 써볼래요", color = Color.White)
+                    Text("더 써볼래요", style = AppFonts.size16Body1)
                 }
-                Spacer(modifier = Modifier.width(24.dp))
-                // 탈퇴 버튼
+
+                Spacer(modifier = Modifier.width(12.dp)) // 버튼 사이 간격 조절
+
+                // ✅ 탈퇴하기 버튼: 동의해야만 활성화됨
                 Button(
                     onClick = onConfirmClick,
-                    enabled = isAgreed,
+                    enabled = isAgreed, // 동의했을 때만 클릭 가능
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
+                        // 동의 시 Main색, 동의 전에는 회색(light3Gray)
                         containerColor = if (isAgreed) AppColors.main else AppColors.light3Gray,
-                        disabledContainerColor = AppColors.light3Gray, // 비활성화 시 색상
-                        contentColor = AppColors.white,
-                        disabledContentColor = AppColors.white.copy(alpha = 0.5f)
+                        // 버튼이 비활성화(enabled=false)일 때 보여줄 색상
+                        disabledContainerColor = AppColors.light3Gray,
+                        contentColor = Color.White,
+                        disabledContentColor = Color.White.copy(alpha = 0.5f)
                     )
                 ) {
-                    Text("탈퇴하기", color = Color.White)
+                    Text("탈퇴하기", style = AppFonts.size16Body1)
                 }
             }
+
 
         }
     }
