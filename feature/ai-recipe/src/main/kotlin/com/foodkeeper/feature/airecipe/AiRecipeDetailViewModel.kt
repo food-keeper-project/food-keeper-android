@@ -34,7 +34,7 @@ data class AiRecipeUiState(
     val ingredients: List<Ingredient> = emptyList(),
     val steps: List<Step> = emptyList(),
     val isIngredientsExpanded: Boolean = false,
-    var isSaved: Boolean = false
+    val isSaved: Boolean = false
 )
 @HiltViewModel
 class AiRecipeDetailViewModel @Inject constructor(
@@ -63,6 +63,14 @@ class AiRecipeDetailViewModel @Inject constructor(
         }
         Log.d("AiRecipeDetailViewModel", "recipeId: $recipeId")
     }
+    override fun onCleared() {
+        super.onCleared()
+        clearAllState() // ViewModel이 파괴될 때 상태 초기화
+    }
+
+    fun clearAllState() {
+        _uiState.update { AiRecipeUiState() } // 아예 새로 생성된 초기 상태로 리셋
+    }
     // [통합 버튼 클릭 이벤트]
     fun toggleSaveState() {
         if (_uiState.value.isSaved) {
@@ -75,6 +83,7 @@ class AiRecipeDetailViewModel @Inject constructor(
     // [삭제 로직]
     private fun deleteRecipe() {
         if (_uiState.value.isSaving || _uiState.value.isLoading) return
+        Log.d("AiRecipeDetail", "삭제 시도 - 현재 ID: ${_uiState.value.recipeId}") // 추가
 
         val currentId = _uiState.value.recipeId
         if (currentId == 0L) return // ✅ 0L 체크
@@ -82,10 +91,11 @@ class AiRecipeDetailViewModel @Inject constructor(
         viewModelScope.launch {
             deleteRecipeUseCase(currentId) // ✅ 이제 이름을 보냈던 자리에 ID를 보냄
                 .onStart { _uiState.update { it.copy(isSaving = true) } }
-                .catch { e -> _uiState.update { it.copy(isSaving = false) } }
+                .catch { e -> _uiState.update { it.copy(isSaving = false) }
+                    Log.e("AiRecipeDetail", "삭제 실패 에러 발생: ${e.message}")}
                 .collect {
-                    _uiState.update { it.copy(isSaving = false, recipeId = 0L) } // ID 비우기
-                    _uiState.value.isSaved = false
+                    _uiState.update { it.copy(isSaving = false, recipeId = 0L, isSaved = false ) } // ID 비우기
+                    Log.d("AiRecipeDetail", "삭제 성공 - 하트 해제")
                 }
         }
     }
@@ -103,9 +113,22 @@ class AiRecipeDetailViewModel @Inject constructor(
     }
 
     fun generateRecipe(food: List<Food>) {
-        // 1. 이미 저장 중이거나 로딩 중이면 무시 (가드 로직)
-        if (_uiState.value.isSaving || _uiState.value.isLoading) return
+        // ✅ 1. 새 레시피 생성 시작 시 모든 데이터 필드를 빈 값으로 즉시 리셋
+        _uiState.update {
+            it.copy(
+                isSaved = false,
+                recipeId = 0L,
+                isLoading = true, // 로딩을 즉시 true로
+                title = "",       // 이전 제목 제거
+                description = "", // 이전 설명 제거
+                ingredients = emptyList(), // 이전 재료 제거
+                steps = emptyList(),       // 이전 순서 제거
+                recipeImage = ""           // 이전 이미지 제거
+            )
+        }
 
+        // 2. 이미 저장 중이면 무시 (isLoading은 위에서 이미 처리함)
+        if (_uiState.value.isSaving) return
         viewModelScope.launch {
             val ingredientNames = food.map { it.name }
 
@@ -179,10 +202,10 @@ class AiRecipeDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            recipeId = recipeId // ✅ UI 상태에 저장
+                            recipeId = recipeId ,// ✅ UI 상태에 저장
+                            isSaved = true
                         )
                     }
-                    _uiState.value.isSaved = true
                     Log.d("AiRecipeDetail", "저장 성공! 생성된 ID: $recipeId")
                 }
         }

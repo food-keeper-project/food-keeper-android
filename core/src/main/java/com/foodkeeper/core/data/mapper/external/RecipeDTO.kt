@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AiRecipeListResponse(
-    val items: List<AiRecipeResponse>, // 레시피 리스트
+    val content: List<AiRecipeResponse>, // 레시피 리스트
     val hasNext: Boolean               // 다음 페이지 존재 여부
 )
 

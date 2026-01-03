@@ -44,10 +44,13 @@ class FoodApiService @Inject constructor(
         route: ApiRoute
     ): Flow<T> = flow {
         // 1. 첫 번째 요청 실행
+        Log.d("FoodApiService", "🚀 요청 시작: ${route.path}") // 1번 확인용
+
         var response = executeHttpRequest(route)
 
         // 💡 응답 바디를 미리 역직렬화하여 에러 코드를 확인
         val initialApiResponse = response.body<ApiResponse<T>>()
+        Log.d("FoodApiService", "📥 응답 받음 헤더: ${response.headers}") // 2번 확인용
 
         // 2. 401 Unauthorized 또는 에러 코드가 E3003일 때 재발급 로직 진입
         val isExpired = response.status == HttpStatusCode.Unauthorized ||
@@ -102,7 +105,10 @@ class FoodApiService @Inject constructor(
         httpResponse: HttpResponse
     ) {
         val httpStatus = httpResponse.status
+        Log.d("FoodApiService", "API 응답 코드: $httpStatus")
+
         when {
+
             // ✅ Case 1: 201 Created 이고, 반환 타입 T가 Long인 경우 (ID 추출 로직)
             httpStatus == HttpStatusCode.Created && T::class == Long::class -> {
                 val locationHeader = httpResponse.headers["Location"]

@@ -39,7 +39,9 @@ sealed class ApiRoute {
     data class PostRecipe(
         val request: RecipeCreateRequest
     ) : ApiRoute()
-    object GetFavoriteRecipe : ApiRoute()
+    data class GetFavoriteRecipe(val cursor: Long?,
+                             val limit: Int?
+        ) : ApiRoute()
     data class GetDetailedRecipe(val recipeId: Long) : ApiRoute()
     data class DeleteFavoriteRecipe(val recipeId: Long) : ApiRoute()
 
@@ -95,7 +97,7 @@ sealed class ApiRoute {
             is Categories -> "api/v1/categories"
             // AI-Recipe
             is RecommendRecipe -> "api/v1/recipes/recommend"
-            is PostRecipe,GetFavoriteRecipe -> "api/v1/recipes"
+            is PostRecipe, is GetFavoriteRecipe -> "api/v1/recipes"
             // ApiRoute.kt의 path 부분
             is GetDetailedRecipe -> "api/v1/recipes/${this.recipeId}"
             is DeleteFavoriteRecipe -> "api/v1/recipes/${this.recipeId}"
@@ -201,6 +203,11 @@ sealed class ApiRoute {
                 "ingredients" to ingredients.joinToString(","),
                 "excludedMenus" to excludeMenus.joinToString(",")
             )
+            is GetFavoriteRecipe -> buildMap {
+                cursor?.let { put("cursor", it) }
+                limit?.let { put("limit", it) }
+            }
+            is DeleteFavoriteRecipe -> mapOf("recipeId" to recipeId)
             else -> emptyMap()
         }
 
