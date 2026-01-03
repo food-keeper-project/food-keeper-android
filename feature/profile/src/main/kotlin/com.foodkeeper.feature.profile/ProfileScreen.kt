@@ -127,7 +127,7 @@ internal fun ProfileScreen(
                     )
                     ProfileMenuItem(
                         title = "로그아웃",
-                        titleColor = Color.Red,
+                        titleColor = AppColors.main,
                         onClick = onLogoutClick
                     )
                     ProfileMenuItem(

@@ -1,6 +1,7 @@
 package com.foodkeeper.core.data.network
 
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
+import com.foodkeeper.core.data.mapper.request.RecipeCreateRequest
 import io.ktor.client.request.forms.FormBuilder
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -31,11 +32,23 @@ sealed class ApiRoute {
         val curAccessToken:String,
         val curRefreshToken:String
     ) : ApiRoute()
+    data class RecommendRecipe(
+        val ingredients:List<String>,
+        val excludeMenus:List<String>
+    ): ApiRoute()
+    data class PostRecipe(
+        val request: RecipeCreateRequest
+    ) : ApiRoute()
+    object GetFavoriteRecipe : ApiRoute()
+    data class GetDetailedRecipe(val recipeId: Long) : ApiRoute()
+    data class DeleteFavoriteRecipe(val recipeId: Long) : ApiRoute()
+
     // ✅ MyProfile 수정: GET 요청이므로 별도의 파라미터가 필요 없습니다.
     // 인증은 requiresAuth = true를 통해 자동으로 처리됩니다.
     object MyProfile : ApiRoute()
     object Logout: ApiRoute()
     object WithdrawAccount: ApiRoute()
+
 
     // ========== 식자재 관련 정의 ==========
     data class AllFoodList(
@@ -77,9 +90,16 @@ sealed class ApiRoute {
             is AllFoodList -> "api/v1/foods"
             is ImminentFoodList -> "api/v1/foods/imminent"
             is AddFood -> "api/v1/foods"
-            is ConsumptionFood -> "api/v1/foods"
+            is ConsumptionFood -> "api/v1/foods/${this.foodId}"
             // Categorie
             is Categories -> "api/v1/categories"
+            // AI-Recipe
+            is RecommendRecipe -> "api/v1/recipes/recommend"
+            is PostRecipe,GetFavoriteRecipe -> "api/v1/recipes"
+            // ApiRoute.kt의 path 부분
+            is GetDetailedRecipe -> "api/v1/recipes/${this.recipeId}"
+            is DeleteFavoriteRecipe -> "api/v1/recipes/${this.recipeId}"
+
         }
 
     // ========== HTTP 메서드 정의 ==========
@@ -90,7 +110,11 @@ sealed class ApiRoute {
             is Logout -> HttpMethod.Delete
             is AddFood -> HttpMethod.Post
             is ConsumptionFood -> HttpMethod.Delete
-
+            is RecommendRecipe -> HttpMethod.Get
+            is PostRecipe -> HttpMethod.Post
+            is GetFavoriteRecipe -> HttpMethod.Get
+            is GetDetailedRecipe -> HttpMethod.Get
+            is DeleteFavoriteRecipe -> HttpMethod.Delete
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }
@@ -122,8 +146,47 @@ sealed class ApiRoute {
                 imageBytes = imageBytes,
                 imageFileName = request.expiryDate
             )
+            is PostRecipe -> request
             else -> null
         }
+    // ✅ 빨간 줄 해결: private 함수들을 companion object 안으로 이동하여 스코프를 명확히 함
+    companion object {
+        private fun appendImagePart(
+            builder: FormBuilder,
+            imageBytes: ByteArray,
+            fileName: String
+        ) {
+            builder.append(
+                "image",
+                imageBytes,
+                Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                }
+            )
+        }
+
+        private fun buildAddFoodMultipart(
+            request: FoodCreateRequestDTO,
+            imageBytes: ByteArray?,
+            imageFileName: String
+        ): MultiPartFormDataContent {
+            return MultiPartFormDataContent(
+                formData {
+                    append(
+                        "request",
+                        Json.encodeToString(request),
+                        Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        }
+                    )
+                    imageBytes?.let {
+                        appendImagePart(this, it, imageFileName)
+                    }
+                }
+            )
+        }
+    }
     // ========== 쿼리 파라미터 ==========
     val queryParameters: Map<String, Any>
         get() = when (this) {
@@ -133,6 +196,11 @@ sealed class ApiRoute {
                 limit?.let { put("limit", it) }
             }
             is ConsumptionFood -> mapOf("foodId" to foodId)
+            // ✅ GET 방식일 때 리스트 데이터를 쿼리 스트링으로 변환
+            is RecommendRecipe -> mapOf(
+                "ingredients" to ingredients.joinToString(","),
+                "excludedMenus" to excludeMenus.joinToString(",")
+            )
             else -> emptyMap()
         }
 
@@ -152,53 +220,53 @@ sealed class ApiRoute {
 }
 
 
-// ========== 이미지 파일 JSON 변환 함수 ==========
-private fun appendImagePart(
-    builder: FormBuilder,
-    imageBytes: ByteArray,
-    fileName: String
-) {
-    builder.append(
-        "image",
-        imageBytes,
-        Headers.build {
-            append(HttpHeaders.ContentType, "image/jpeg")
-            append(
-                HttpHeaders.ContentDisposition,
-                "filename=\"$fileName\""
-            )
-        }
-    )
-}
-
-private fun buildAddFoodMultipart(
-    request: FoodCreateRequestDTO,
-    imageBytes: ByteArray?,
-    imageFileName: String
-): MultiPartFormDataContent {
-    return MultiPartFormDataContent(
-        formData {
-
-            // ✅ request JSON
-            append(
-                "request",
-                Json.encodeToString(request),
-                Headers.build {
-                    append(
-                        HttpHeaders.ContentType,
-                        ContentType.Application.Json.toString()
-                    )
-                }
-            )
-
-            // ✅ image (선택)
-            imageBytes?.let {
-                appendImagePart(
-                    builder = this,
-                    imageBytes = it,
-                    fileName = imageFileName
-                )
-            }
-        }
-    )
-}
+//// ========== 이미지 파일 JSON 변환 함수 ==========
+//private fun appendImagePart(
+//    builder: FormBuilder,
+//    imageBytes: ByteArray,
+//    fileName: String
+//) {
+//    builder.append(
+//        "image",
+//        imageBytes,
+//        Headers.build {
+//            append(HttpHeaders.ContentType, "image/jpeg")
+//            append(
+//                HttpHeaders.ContentDisposition,
+//                "filename=\"$fileName\""
+//            )
+//        }
+//    )
+//}
+//
+//private fun buildAddFoodMultipart(
+//    request: FoodCreateRequestDTO,
+//    imageBytes: ByteArray?,
+//    imageFileName: String
+//): MultiPartFormDataContent {
+//    return MultiPartFormDataContent(
+//        formData {
+//
+//            // ✅ request JSON
+//            append(
+//                "request",
+//                Json.encodeToString(request),
+//                Headers.build {
+//                    append(
+//                        HttpHeaders.ContentType,
+//                        ContentType.Application.Json.toString()
+//                    )
+//                }
+//            )
+//
+//            // ✅ image (선택)
+//            imageBytes?.let {
+//                appendImagePart(
+//                    builder = this,
+//                    imageBytes = it,
+//                    fileName = imageFileName
+//                )
+//            }
+//        }
+//    )
+//}

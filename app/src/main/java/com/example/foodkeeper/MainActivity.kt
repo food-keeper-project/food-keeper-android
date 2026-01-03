@@ -30,6 +30,7 @@ import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
 import com.foodkeeper.core.data.network.SessionManager
+import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.feature.home.HomeScreen
 import com.foodkeeper.feature.home.HomeViewModel
@@ -126,9 +127,22 @@ fun FoodKeeperNavHost(navController: NavHostController) {
         // 3. 메인 화면 (임시)
         composable("main") {
             var currentTab by rememberSaveable { mutableStateOf(MainTab.Home) }
+// ✅ 상세 화면 진입 여부를 체크하는 상태값들
+            var selectedRecipeId by rememberSaveable { mutableStateOf<Long?>(0L) }
+            var isWithdrawalMode by rememberSaveable { mutableStateOf(false) }
+// ✅ 1. 추가: 상세 페이지에서 사용할 상태값들
+            var selectedIngredients by rememberSaveable { mutableStateOf<List<Food>>(emptyList()) }
+            var isFromHistory by rememberSaveable { mutableStateOf(false) }
 
+            // ✅ 하단바는 유지하되, 특정 상황(상세페이지)에서 상단바를 숨김 처리
+            val showTopBar = when {
+                currentTab == MainTab.Recipe && selectedRecipeId != 0L -> false
+                currentTab == MainTab.MyPage && isWithdrawalMode -> false
+                else -> true
+            }
             MainScaffoldScreen(
                 currentTab = currentTab,
+                showTopBar = showTopBar,
                 onTabSelected = { tab ->
                     // ✨ Search 탭 클릭 시 다른 화면으로 이동
                     if (tab == MainTab.AddFood) {
@@ -139,27 +153,81 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                 }
             ) {
                 when (currentTab) {
-                    MainTab.Home -> HomeScreen(
-                        onRecipeRecommendFoods = {} //레시피 생성 시 필요한 재료들 방출
-
-                    ) //홈
+                    MainTab.Home -> {
+                        // ✅ 홈 탭에서도 상세 화면 진입 여부를 체크
+                        if (selectedRecipeId !=0L && !isFromHistory) {
+                            // ✅ 홈에서 재료를 선택해 넘어온 경우 상세 화면 표시
+                            AiRecipeDetailScreen(
+                                ingredients = selectedIngredients,
+                                isFromHistory = false,
+                                onBackClick = {
+                                    selectedRecipeId = 0L
+                                    selectedIngredients = emptyList()
+                                }
+                            )
+                        } else {
+                            // ✅ 기본 홈 화면
+                            HomeScreen(
+                                onRecipeRecommendFoods = { ingredients ->
+                                    // 콜백 발생 시 데이터 설정 -> 위 if문이 true가 되어 상세화면으로 교체됨
+                                    selectedIngredients = ingredients
+                                    isFromHistory = false
+                                    selectedRecipeId = 1L // 트리거 역할
+                                }
+                            )
+                        }
+                    } // 홈 끝
                     MainTab.AddFood -> {}
-                    MainTab.Recipe -> AiRecipeHistoryScreen(
-                        onRecipeClick = { recipeId ->
-                            navController.navigate("ai_recipe_detail/$recipeId")
+                    MainTab.Recipe -> {
+                        // 상세 화면으로 갈 레시피 ID를 저장하는 상태 (null이면 목록, 아니면 상세)
+
+                        if (selectedRecipeId !=0L) {
+                            // ✅ 레시피 상세 화면 (하단바 유지됨)
+                            AiRecipeDetailScreen(
+                                // 홈에서 올 때는 실제 리스트, 히스토리에서 올 때는 빈 리스트 전달
+                                ingredients = emptyList(),
+                                isFromHistory =  true,
+                                onBackClick = { selectedRecipeId = 0L
+                                } // 뒤로가기 시 다시 목록으로
+                                // 필요한 다른 파라미터가 있다면 여기에 추가
+                            )
+                        } else {
+                            // ✅ 레시피 목록 화면
+                            AiRecipeHistoryScreen(
+                                onRecipeClick = { recipeId ->
+                                    // 클릭 시 상태를 업데이트하여 상세 화면으로 전환
+                                    selectedRecipeId = recipeId
+                                }
+                            )
                         }
-                    )
-                    MainTab.MyPage -> ProfileRoute(
-                        onLogoutSuccess = {
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        },
-                        onWithdrawalClick = {
-                            // ✅ 회원탈퇴 스크린으로 이동
-                            navController.navigate("withdrawal")
+                    }
+
+                    MainTab.MyPage -> {
+                        // 내부에서 탈퇴 화면 여부를 관리하는 상태 (또는 ProfileRoute 내부에서 관리 가능)
+
+                        if (isWithdrawalMode) {
+                            WithdrawalRoute(
+                                onBackClick = { isWithdrawalMode = false }, // 뒤로가기 시 다시 프로필로
+                                onWithdrawalSuccess = {
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            )
+                        } else {
+                            ProfileRoute(
+                                onLogoutSuccess = {
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                },
+                                onWithdrawalClick = {
+                                    isWithdrawalMode = true // ✅ 하단바를 유지한 채 화면만 교체
+                                }
+                            )
                         }
-                    )
+                    }
+
                 }
             }
         }
@@ -201,16 +269,16 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             )
         }
 
-        // 레시피 디테일(상세) 화면
-        composable(
-            route = "ai_recipe_detail/{recipeId}",
-            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
-        ) {
-            AiRecipeDetailScreen(
-                onBackClick = { navController.popBackStack() },
-                // 필요한 다른 콜백들...
-            )
-        }
+//        // 레시피 디테일(상세) 화면
+//        composable(
+//            route = "ai_recipe_detail/{recipeId}",
+//            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
+//        ) {
+//            AiRecipeDetailScreen(
+//                onBackClick = { navController.popBackStack() },
+//                // 필요한 다른 콜백들...
+//            )
+//        }
         // ✨ 4. 식재료 추가 화면 (새로 추가)
         composable("addFood") {
             AddFoodScreen(

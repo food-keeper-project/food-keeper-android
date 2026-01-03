@@ -1,6 +1,9 @@
 package com.foodkeeper.core.domain.model
 
+import android.os.Parcel
+import android.os.Parcelable
 import java.util.Date
+import kotlinx.parcelize.Parcelize
 
 //미사용!
 //enum class FoodCategory(val displayName: String) {
@@ -22,6 +25,7 @@ enum class StorageMethod(val displayName: String) {
     ROOM_TEMP("실온"),
     REFRIGERATED("냉장")
 }
+@Parcelize
 data class Food(
     val id: Long, //고유 ID
     val name: String, //식품명
@@ -33,4 +37,4 @@ data class Food(
     val category: String, //카테고리
     val categoryModel: List<Category>, //카테고리
     val expiryAlarm: Int = 0, // 알람일
-)
+): Parcelable

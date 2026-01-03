@@ -1,5 +1,6 @@
 package com.foodkeeper.feature.home
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -193,6 +194,7 @@ fun HomeScreen(
             onDismiss = viewModel::onDismissDialog,
             onGenerateRecipe = { selectFoods ->
                 onRecipeRecommendFoods(selectFoods)
+                Log.d("TAG", "HomeScreen: ")
                 viewModel.onDismissDialog()
             }
         )

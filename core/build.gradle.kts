@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
-
+    id("kotlin-parcelize") // 이 플러그인이 있어야 합니다.
 
 }
 android {
