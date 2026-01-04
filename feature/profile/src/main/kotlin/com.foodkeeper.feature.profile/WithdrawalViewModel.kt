@@ -73,25 +73,30 @@ class WithdrawalViewModel @Inject constructor(
     fun withdraw() {
         viewModelScope.launch {
             withdrawAccountUseCase()
-                .onStart { _isLoading.value = true }
-                .collect { result ->
+                .onStart {
+                    _isLoading.value = true
+                }
+                .catch { e ->
+                    // ✅ Repository에서 throw한 에러를 여기서 잡습니다.
                     _isLoading.value = false
-                    when (result) {
-                        is ApiResult.Success -> {
-                            // "SUCCESS" 응답 시 성공 이벤트 전송
-                            _withdrawalSuccess.emit(true)
-                        }
-                        // ✅ 이 부분이 누락되어 에러가 발생했을 것입니다.
-                        is ApiResult.Error -> {
-                            val message = when (result.throwable.message) {
-                                "KAKAO_UNLINK_FAIL" -> "카카오 계정 연결 해제에 실패했습니다."
-                                "SERVER_FAIL" -> "서버 탈퇴 처리에 실패했습니다."
-                                else -> result.throwable.message ?: "알 수 없는 오류가 발생했습니다."
-                            }
-                            _errorEvent.emit(message)
-                        }
+                    val message = when (e.message) {
+                        "KAKAO_UNLINK_FAIL" -> "카카오 계정 연결 해제에 실패했습니다."
+                        "SERVER_FAIL" -> "서버 탈퇴 처리에 실패했습니다."
+                        "SERVER_RESPONSE_EMPTY" -> "서버 응답이 올바르지 않습니다."
+                        else -> e.message ?: "알 수 없는 오류가 발생했습니다."
+                    }
+                    _errorEvent.emit(message)
+                }
+                .collect { result ->
+                    // ✅ 이제 result는 ApiResult가 아니라 순수 String("SUCCESS")입니다.
+                    _isLoading.value = false
+                    if (result == "SUCCESS") {
+                        _withdrawalSuccess.emit(true)
+                    } else {
+                        _errorEvent.emit("탈퇴 처리가 완료되지 않았습니다.")
                     }
                 }
         }
     }
+
 }

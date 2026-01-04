@@ -36,6 +36,9 @@ class NotificationHelper(private val context: Context) {
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 enableLights(true)
                 enableVibration(true)
+                // ✅ 잠금화면에서 알림이 올 때 화면을 깨우도록 설정 (일부 기기)
+                setShowBadge(true)
+                setBypassDnd(true) // 방해금지 모드 우회 (선택 사항)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -65,7 +68,10 @@ class NotificationHelper(private val context: Context) {
             .setContentIntent(pendingIntent) // ✅ 이제 에러가 발생하지 않습니다.
             .setGroup(GROUP_KEY)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            // ✅ 수정한 부분: HIGH -> MAX (최고 수준의 우선순위)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            // ✅ 추가: 시스템이 알림의 성격을 파악해 즉시 노출하도록 카테고리 설정
+            .setCategory(NotificationCompat.CATEGORY_ALARM) // 또는 CATEGORY_MESSAGE
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 

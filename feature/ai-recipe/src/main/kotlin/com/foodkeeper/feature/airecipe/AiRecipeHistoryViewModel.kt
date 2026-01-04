@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AiRecipeHistoryUiState(
+    val isError:Boolean=false,
     val isLoading: Boolean = false,
     val isPaging: Boolean = false, // ✅ 추가 페이지 로딩 상태
     val savedRecipes: List<AiRecipeItemState> = emptyList(),
@@ -52,7 +53,7 @@ class AiRecipeHistoryViewModel @Inject constructor(
 
             // ✅ 첫 페이지는 0, 다음 페이지는 저장된 lastId를 커서로 사용
             val currentCursor = if (isFirstPage) null else uiState.value.lastId
-            val limit = 20
+            val limit = 10
             Log.d("AiRecipeHistory", "📡 API 요청 시작 (cursor: ${if (isFirstPage) 0L else uiState.value.lastId})")
             getSavedRecipesUseCase(cursor = currentCursor, limit = limit)
                 .onStart {
@@ -63,7 +64,7 @@ class AiRecipeHistoryViewModel @Inject constructor(
                 }
                 .catch { e ->
                     Log.e("AiRecipeHistory", "레시피 목록 로드 실패: ${e.message}")
-                    _uiState.update { it.copy(isLoading = false, isPaging = false) }
+                    _uiState.update { it.copy(isLoading = false, isPaging = false,isError = true) }
                 }
                 .collect { response ->
                     // ✅ response는 서버 규격에 따라 { content: List, hasNext: Boolean } 구조라고 가정

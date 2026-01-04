@@ -60,62 +60,82 @@ fun AiRecipeHistoryScreen(
             )
         }
     ) { padding ->
-        // 1. 초기 로딩 상태
-        if (uiState.isLoading && uiState.savedRecipes.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AppColors.main)
-            }
-        }
-        // 2. 데이터가 없을 때 (Empty State) ✅ 추가된 부분
-        else if (uiState.savedRecipes.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.empty_favorite_recipe),
-                    contentDescription = "저장된 레시피 없음",
-                    modifier = Modifier.size(200.dp)
-                )
-
-            }
-        }
-        // 3. 리스트가 있을 때
-        else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp),
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-
-                // ✅ itemsIndexed를 사용하여 페이징 트리거 감지
-                itemsIndexed(uiState.savedRecipes) { index, recipe ->
-                    SavedRecipeCard(
-                        recipe = recipe,
-                        onClick = { onRecipeClick(recipe.id) }
+        // ✅ Box로 감싸서 Scaffold가 주는 padding(상단바 높이)을 적용합니다.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when {
+                // 1. 에러 발생 시 ✅ (추가된 부분)
+                uiState.isError -> {
+                    AiHistoryErrorScreen(
+                        onRetry = { viewModel.fetchSavedRecipes(isFirstPage = true) }
                     )
+                }
 
-                    // ✅ 마지막 아이템 도달 시 다음 페이지 요청
-                    if (index == uiState.savedRecipes.lastIndex && uiState.hasNext && !uiState.isPaging) {
-                        LaunchedEffect(Unit) {
-                            viewModel.fetchSavedRecipes(isFirstPage = false)
-                        }
+                // 2. 초기 로딩 상태
+                uiState.isLoading && uiState.savedRecipes.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = AppColors.main)
                     }
                 }
 
-                // 페이징 로딩 바
-                if (uiState.isPaging) {
-                    item {
-                        Box(Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppColors.main)
+                // 3. 데이터가 없을 때 (Empty State)
+                uiState.savedRecipes.isEmpty() -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.empty_favorite_recipe),
+                            contentDescription = "저장된 레시피 없음",
+                            modifier = Modifier.size(200.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+//                    Text(
+//                        text = "저장된 레시피가 없어요",
+//                        style = AppFonts.size16Body1,
+//                        color = AppColors.light3Gray
+//                    )
+                    }
+                }
+
+                // 4. 리스트 출력
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        itemsIndexed(uiState.savedRecipes) { index, recipe ->
+                            SavedRecipeCard(
+                                recipe = recipe,
+                                onClick = { onRecipeClick(recipe.id) }
+                            )
+
+                            if (index == uiState.savedRecipes.lastIndex && uiState.hasNext && !uiState.isPaging) {
+                                LaunchedEffect(Unit) {
+                                    viewModel.fetchSavedRecipes(isFirstPage = false)
+                                }
+                            }
+                        }
+
+                        if (uiState.isPaging) {
+                            item {
+                                Box(
+                                    Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = AppColors.main
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -123,7 +143,46 @@ fun AiRecipeHistoryScreen(
         }
     }
 }
-
+/**
+ * 서버 오류 시 보여줄 에러 화면 ✅
+ */
+@Composable
+fun AiHistoryErrorScreen(onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppColors.white),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.history_timer), // 적절한 경고 아이콘으로 교체 가능
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = AppColors.light4Gray
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "서버 오류가 발생하였습니다.",
+            style = AppFonts.size16Body1,
+            fontWeight = FontWeight.Bold,
+            color = AppColors.black
+        )
+        Text(
+            text = "잠시 후 다시 시도해주세요.",
+            style = AppFonts.size14Body2,
+            color = AppColors.light2Gray
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.main),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(text = "다시 시도하기", color = AppColors.white)
+        }
+    }
+}
 @Composable
 fun SavedRecipeCard(
     recipe: AiRecipeItemState,

@@ -93,17 +93,18 @@ fun AiRecipeGeneratorScreen(
                 .padding(padding)
         ) {
             when {
-                // 1. 로딩 중일 때
-                uiState.isLoading -> {
-                    AiLoadingScreen()
-                }
-
                 // 2. 에러가 발생했을 때 (추가됨)
                 uiState.isError -> {
                     AiErrorScreen(
                         onRetry = { viewModel.generateRecipe(ingredients) }
                     )
                 }
+                // 1. 로딩 중일 때
+                uiState.isLoading|| uiState.title.isEmpty() -> {
+                    AiLoadingScreen()
+                }
+
+
 
                 // 3. 정상적으로 레시피가 생성되었을 때
                 else -> {

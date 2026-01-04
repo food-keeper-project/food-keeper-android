@@ -17,9 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,10 +35,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.foodkeeper.core.R
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
@@ -74,7 +80,8 @@ fun HomeScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()
+    Box(modifier = Modifier
+        .fillMaxSize()
         .background(AppColors.white)
     ) {
 
@@ -131,30 +138,10 @@ fun HomeScreen(
             }
 
             is BaseUiState.ErrorState -> {
-                val error = uiState as BaseUiState.ErrorState
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "오류가 발생했습니다",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = error.message ?: "알 수 없는 오류",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                        Button(onClick = { viewModel.onScreenEnter() }) {
-                            Text("다시 시도")
-                        }
-                    }
-                }
+                // ✅ 에러 발생 시 호출
+                HomeErrorScreen(
+                    onRetry = { viewModel.onScreenEnter() }
+                )
             }
         }
 
@@ -201,6 +188,67 @@ fun HomeScreen(
                 viewModel.onDismissDialog()
             }
         )
+    }
+}
+@Composable
+fun HomeErrorScreen(
+    onRetry: () -> Unit,modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppColors.white)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 에러를 시각적으로 보여줄 아이콘 (AiHistory와 통일감 유지)
+        Icon(
+            painter = painterResource(id = R.drawable.foodplaceholder), // 혹은 알맞은 경고 아이콘
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = AppColors.light4Gray
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "데이터를 불러오지 못했습니다",
+            style = AppFonts.size19Title3,
+            fontWeight = FontWeight.Bold,
+            color = AppColors.black
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "서버 오류가 발생하였습니다.\n잠시 후 다시 시도해주세요.",
+            style = AppFonts.size14Body2,
+            color = AppColors.light2Gray,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // 다시 시도 버튼
+        Button(
+            onClick = onRetry,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppColors.main,
+                contentColor = AppColors.white
+            ),
+            shape = RoundedCornerShape(12.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+        ) {
+            Text(
+                text = "다시 시도하기",
+                style = AppFonts.size16Body1,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 

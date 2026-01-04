@@ -149,46 +149,44 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun withdrawAccount(): Flow<ApiResult<String>> = flow {
+    override suspend fun withdrawAccount(): Flow<String> = flow {
         // 1. 서버 회원탈퇴 API 호출
-        authRemoteDataSource.withdrawAccount().collect { apiResult ->
-            // ✅ ApiResult가 Success인 경우를 먼저 체크해야 함
-            when (apiResult) {
-                is ApiResult.Success -> {
-                    if (apiResult.data == "SUCCESS") {
-                        // 2. 카카오 연결 끊기 수행
-                        val isKakaoUnlinkSuccess = suspendCoroutine<Boolean> { continuation ->
-                            UserApiClient.instance.unlink { error ->
-                                if (error != null) {
-                                    Log.e("AuthRepo", "카카오 연결 끊기 실패: ${error.message}")
-                                    continuation.resume(false)
-                                } else {
-                                    Log.d("AuthRepo", "카카오 연결 끊기 성공")
-                                    continuation.resume(true)
-                                }
-                            }
-                        }
+        // 여기서 collect되는 'response'는 순수 String입니다.
+        authRemoteDataSource.withdrawAccount().collect { response ->
 
-                        if (isKakaoUnlinkSuccess) {
-                            // 3. 모든 단계 성공 시 로컬 토큰 삭제
-                            tokenManager.clearTokens()
-                            emit(ApiResult.Success("SUCCESS"))
+            // ✅ 서버 응답이 성공인지 확인 (보통 "SUCCESS" 또는 빈 문자열이 아님을 체크)
+            if (response=="SUCCESS") {
+
+                // 2. 카카오 연결 끊기 수행
+                val isKakaoUnlinkSuccess = suspendCoroutine{ continuation ->
+                    UserApiClient.instance.unlink { error ->
+                        if (error != null) {
+                            Log.e("AuthRepo", "카카오 연결 끊기 실패: ${error.message}")
+                            continuation.resume(false)
                         } else {
-                            emit(ApiResult.Error(Throwable("KAKAO_UNLINK_FAIL")))
+                            Log.d("AuthRepo", "카카오 연결 끊기 성공")
+                            continuation.resume(true)
                         }
-                    } else {
-                        emit(ApiResult.Error(Throwable("SERVER_FAIL")))
                     }
                 }
-                is ApiResult.Error -> {
-                    // 서버 통신 자체가 실패한 경우
-                    emit(ApiResult.Error(apiResult.throwable))
+
+                if (isKakaoUnlinkSuccess) {
+                    // 3. 모든 단계 성공 시 로컬 토큰 삭제
+                    tokenManager.clearTokens()
+                    emit("SUCCESS")
+                } else {
+                    throw Exception("KAKAO_UNLINK_FAIL")
                 }
+            } else {
+                throw Exception("SERVER_RESPONSE_EMPTY")
             }
         }
     }.catch { e ->
-        emit(ApiResult.Error(e))
+        Log.e("AuthRepo", "회원탈퇴 실패: ${e.message}")
+        throw e
     }
+
+
 
 
 

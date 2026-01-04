@@ -1,6 +1,8 @@
 import android.widget.Toast
+import androidx.activity.result.launch
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
@@ -30,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +49,7 @@ import com.foodkeeper.core.ui.util.AppFonts
 
 import com.foodkeeper.feature.profile.WithdrawalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun WithdrawalRoute(
@@ -55,12 +60,15 @@ fun WithdrawalRoute(
     val context = LocalContext.current
     val recipeCount by viewModel.recipeCount.collectAsStateWithLifecycle()
     val foodCount by viewModel.foodCount.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle() // ✅ 로딩 상태 추가
 
     LaunchedEffect(Unit) {
         viewModel.fetchAllCounts()
     }
 
+    // ✅ 회원탈퇴 결과/에러 처리
     LaunchedEffect(Unit) {
+        // 성공 처리
         viewModel.withdrawalSuccess.collectLatest { success ->
             if (success) {
                 Toast.makeText(context, "회원 탈퇴가 완료되었습니다.", Toast.LENGTH_SHORT).show()
@@ -69,10 +77,19 @@ fun WithdrawalRoute(
         }
     }
 
+    // ✅ 에러 메시지 처리 추가
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collectLatest { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+
     WithdrawalScreen(
         foodCount = foodCount,
         recipeCount = recipeCount,
         onBackClick = onBackClick,
+        isLoading = isLoading,
         onConfirmClick = { viewModel.withdraw() }
     )
 }
@@ -82,11 +99,14 @@ fun WithdrawalRoute(
 fun WithdrawalScreen(
     recipeCount: Long,
     foodCount: Long,
+    isLoading: Boolean,
     onBackClick: () -> Unit,
     onConfirmClick: () -> Unit
 ) {
     var isAgreed by remember { mutableStateOf(false) }
-
+// ✅ 1. 스크롤 상태와 코루틴 스코프 정의
+    val scrollState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -114,6 +134,7 @@ fun WithdrawalScreen(
     ) { padding ->
         // ✅ 전체 레이아웃을 LazyColumn으로 변경하여 스크롤 대응
         LazyColumn(
+            state = scrollState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -174,11 +195,30 @@ fun WithdrawalScreen(
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { isAgreed = !isAgreed }
+                    modifier = Modifier.clickable {
+                        isAgreed = !isAgreed
+                        // ✅ 3. 체크 시 맨 아래로 스크롤 이동 로직 추가
+                        if (isAgreed) {
+                            scope.launch {
+                                // 마지막 아이템 인덱스(현재 LazyColumn은 약 8~9개 아이템으로 구성됨)
+                                // 여유 있게 100 등 큰 숫자를 넣어도 상관없습니다.
+                                scrollState.animateScrollToItem(index = 99)
+                            }
+                        }
+                    }
                 ) {
                     Checkbox(
+                        enabled = !isLoading,
                         checked = isAgreed,
-                        onCheckedChange = { isAgreed = it },
+                        onCheckedChange = { checked ->
+                            isAgreed = checked
+                            // ✅ 4. 체크박스 직접 클릭 시에도 이동
+                            if (checked) {
+                                scope.launch {
+                                    scrollState.animateScrollToItem(index = 99)
+                                }
+                            }
+                        },
                         colors = CheckboxDefaults.colors(checkedColor = AppColors.main)
                     )
                     Text("위 유의사항을 모두 숙지했고 탈퇴에 동의합니다.")
@@ -194,6 +234,7 @@ fun WithdrawalScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
+                        enabled = !isLoading,
                         onClick = onBackClick,
                         modifier = Modifier
                             .weight(1f)
@@ -210,7 +251,7 @@ fun WithdrawalScreen(
 
                     Button(
                         onClick = onConfirmClick,
-                        enabled = isAgreed,
+                        enabled = isAgreed&& !isLoading,
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp),
@@ -222,6 +263,17 @@ fun WithdrawalScreen(
                     ) {
                         Text("탈퇴하기", style = AppFonts.size16Body1)
                     }
+                }
+            }
+        }
+        // ✅ 3. 로딩 인디케이터 표시 (화면 중앙)
+        if (isLoading) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = Color.Black.copy(alpha = 0.1f) // 반투명 배경
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator(color = AppColors.main)
                 }
             }
         }
