@@ -43,57 +43,78 @@ class FoodApiService @Inject constructor(
     inline fun <reified T> request(
         route: ApiRoute
     ): Flow<T> = flow {
-        // 1. 첫 번째 요청 실행
-        Log.d("FoodApiService", "🚀 요청 시작: ${route.path}") // 1번 확인용
+        try {
+            // 1. 첫 번째 요청 실행
+            Log.d("FoodApiService", "🚀 요청 시작: ${route.path}")
 
-        var response = executeHttpRequest(route)
+            var response = try {
+                executeHttpRequest(route)
+            } catch (e: java.nio.channels.UnresolvedAddressException) {
+                // ✅ 인터넷 연결 자체가 없는 경우 (DNS 조회 실패)
+                Log.e("FoodApiService", "❌ 네트워크 주소를 찾을 수 없음: ${e.message}")
+                throw NetworkException("인터넷 연결이 불안정합니다. 네트워크 설정을 확인해주세요.", e)
+            } catch (e: io.ktor.client.plugins.HttpRequestTimeoutException) {
+                // ✅ 타임아웃 발생 시
+                throw NetworkException("서버 응답 시간이 초과되었습니다.", e)
+            }
 
-        // 💡 응답 바디를 미리 역직렬화하여 에러 코드를 확인
-        val initialApiResponse = response.body<ApiResponse<T>>()
-        Log.d("FoodApiService", "📥 응답 받음 헤더: ${response.headers}") // 2번 확인용
+            // 💡 응답 바디를 미리 역직렬화하여 에러 코드를 확인
+            val initialApiResponse = response.body<ApiResponse<T>>()
+            Log.d("FoodApiService", "📥 응답 받음 헤더: ${response.headers}")
 
-        // 2. 401 Unauthorized 또는 에러 코드가 E3003일 때 재발급 로직 진입
-        val isExpired = response.status == HttpStatusCode.Unauthorized ||
-                initialApiResponse.error?.errorCode == "E3003"
+            // 2. 401 Unauthorized 또는 에러 코드가 E3003일 때 재발급 로직 진입
+            val isExpired = response.status == HttpStatusCode.Unauthorized ||
+                    initialApiResponse.error?.errorCode == "E3003"
 
-        if (isExpired && !route.isRefreshTokenRequest) {
-            Log.d("FoodApiService", "토큰 만료 감지 (E3003) -> 재발급 시도")
+            if (isExpired && !route.isRefreshTokenRequest) {
+                Log.d("FoodApiService", "토큰 만료 감지 (E3003) -> 재발급 시도")
 
-            val isSuccess = tryRefreshToken()
+                val isSuccess = tryRefreshToken()
 
-            if (isSuccess) {
-                Log.d("FoodApiService", "재발급 성공 -> 원래 요청 재시도")
-                response = executeHttpRequest(route)
+                if (isSuccess) {
+                    Log.d("FoodApiService", "재발급 성공 -> 원래 요청 재시도")
+                    // 재시도 시에도 네트워크 예외 처리 적용
+                    response = try {
+                        executeHttpRequest(route)
+                    } catch (e: java.nio.channels.UnresolvedAddressException) {
+                        throw NetworkException("인터넷 연결이 불안정합니다.", e)
+                    }
 
-                val retryApiResponse = response.body<ApiResponse<T>>()
+                    val retryApiResponse = response.body<ApiResponse<T>>()
 
-                // ✨ 201 Created 또는 data가 있는 경우 성공 처리
-                if (retryApiResponse.result == "SUCCESS") {
-                    handleSuccessResponse(retryApiResponse, response)
+                    if (retryApiResponse.result == "SUCCESS") {
+                        handleSuccessResponse(retryApiResponse, response)
+                    } else {
+                        throw ServerException(
+                            message = retryApiResponse.error?.message ?: "알 수 없는 서버 오류",
+                            errorCode = retryApiResponse.error?.errorCode
+                        )
+                    }
                 } else {
-                    throw ServerException(
-                        message = retryApiResponse.error?.message ?: "알 수 없는 서버 오류",
-                        errorCode = retryApiResponse.error?.errorCode
-                    )
+                    Log.e("FoodApiService", "재발급 실패 -> 로그인 필요")
+                    tokenManagerProvider.get().clearTokens()
+                    SessionManager.emitLogout()
                 }
             } else {
-                Log.e("FoodApiService", "재발급 실패 (리프레시 토큰 만료) -> 로그인 필요")
-                tokenManagerProvider.get().clearTokens()
-                SessionManager.emitLogout()
+                // 3. 만료 상황이 아니면 첫 번째 결과를 그대로 처리
+                if (initialApiResponse.result == "SUCCESS") {
+                    handleSuccessResponse(initialApiResponse, response)
+                } else {
+                    throw ServerException(
+                        message = initialApiResponse.error?.message ?: "알 수 없는 서버 오류",
+                        errorCode = initialApiResponse.error?.errorCode
+                    )
+                }
             }
-        } else {
-            // 3. 만료 상황이 아니면 첫 번째 결과를 그대로 처리
-            if (initialApiResponse.result == "SUCCESS") {
-                // ✨ 201 Created 또는 data가 있는 경우 성공 처리
-                handleSuccessResponse(initialApiResponse, response)
-            } else {
-                throw ServerException(
-                    message = initialApiResponse.error?.message ?: "알 수 없는 서버 오류",
-                    errorCode = initialApiResponse.error?.errorCode
-                )
-            }
+        } catch (e: Exception) {
+            // 이미 정의된 ServerException이나 새로 만든 NetworkException은 그대로 던짐
+            if (e is ServerException || e is NetworkException) throw e
+            // 그 외 예상치 못한 에러 처리
+            Log.e("FoodApiService", "Unexpected Error: ${e.message}")
+            throw e
         }
     }
+
 
     /**
      * ✨ 성공 응답 처리 헬퍼 함수
@@ -240,3 +261,4 @@ class FoodApiService @Inject constructor(
 }
 class ServerException(message: String, val errorCode: String?) : Exception(message)
 class UnauthorizedException(message: String) : Exception(message)
+class NetworkException(message: String, cause: Throwable) : Exception(message, cause)

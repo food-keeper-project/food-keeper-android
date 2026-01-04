@@ -1,6 +1,7 @@
 package com.foodkeeper.feature.airecipe // 이 줄이 반드시 맨 위에 있어야 합니다.
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -79,14 +81,18 @@ fun AiRecipeDetailScreen(
     }
 
     Scaffold(
+        containerColor = AppColors.white,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(text = "레시피", style = AppFonts.size22Title2, fontWeight = FontWeight.Bold) },
+            TopAppBar(
+                title = {  },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(imageVector = Icons.Default.ArrowBackIosNew, contentDescription = "뒤로가기")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.white // 배경색 유지 필요 시 추가
+                )
             )
         },
         bottomBar = {
@@ -102,16 +108,16 @@ fun AiRecipeDetailScreen(
             }
         }
     ) { padding ->
-        Box(
+        // ✅ 배경색 통일을 위해 Surface로 감싸거나 Modifier.background 사용
+        androidx.compose.material3.Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            color = AppColors.white
         ) {
-            if (uiState.isLoading|| uiState.title.isEmpty()) {
-                // ✅ Case 1: 로딩 중일 때 (AiLoadingScreen 역할)
+            if (uiState.isLoading || uiState.title.isEmpty()) {
                 AiLoadingScreen()
             } else {
-                // ✅ 로딩이 끝나고 제목이 확실히 있을 때만 컨텐츠 노출
                 RecipeDetailContent(uiState, viewModel)
             }
         }
@@ -127,27 +133,36 @@ fun AiRecipeDetailScreen(
 
 @Composable
 fun AiLoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        // 배경 이미지
-        Image(            painter = painterResource(id = R.drawable.ai_loading),
-            contentDescription = "로딩 이미지",
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // 이미지 위에 겹쳐서 하단에 텍스트 배치
+    // 전체 배경은 흰색
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppColors.white),
+        contentAlignment = Alignment.Center
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // 이미지의 메인 그래픽 아래에 텍스트를 두기 위해 적절한 간격 추가
-            Spacer(modifier = Modifier.height(260.dp))
+            // ✅ 이미지: fillMaxSize를 제거하고, 이미지 고유 크기를 유지하거나 wrapContentSize로 설정
+            Image(
+                painter = painterResource(id = R.drawable.ai_loading),
+                contentDescription = "로딩 이미지",
+                modifier = Modifier
+                    .height(280.dp)
+                    .width(170.dp) // 너무 크면 화면 밖으로 나가므로 적절한 너비 지정 (또는 wrapContentSize)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            // ✅ 이미지와 텍스트 사이 간격
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "AI가 레시피를 생성중입니다...",
                 style = AppFonts.size16Body1,
                 color = AppColors.main,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -158,7 +173,8 @@ fun RecipeDetailContent(uiState: AiRecipeUiState, viewModel: AiRecipeDetailViewM
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .background(AppColors.white),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -247,6 +263,7 @@ fun AiRecipeBottomBar(
             .fillMaxWidth()
             .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
+
     ) {
         // 저장하기 버튼
         Button(
@@ -264,7 +281,7 @@ fun AiRecipeBottomBar(
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (uiState.isSaved) "저장됨" else "레시피 저장하기", // ✅ 텍스트 상태 변경 적용
+                        text = "레시피 저장하기", // ✅ 텍스트 상태 변경 적용
                         style = AppFonts.size16Body1,
                         modifier = Modifier.padding(end = 8.dp)
                     )

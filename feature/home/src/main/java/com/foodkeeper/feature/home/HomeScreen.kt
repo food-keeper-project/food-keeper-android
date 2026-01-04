@@ -76,7 +76,9 @@ fun HomeScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()
+        .background(AppColors.white)
+    ) {
 
         // --------------------
         // 메인 UI

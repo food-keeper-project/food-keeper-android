@@ -42,6 +42,7 @@ class AiRecipeDetailViewModel @Inject constructor(
     private val getAiRecipeUseCase: GetAiRecipeUseCase,
     private val saveRecipeUseCase: SaveRecipeUseCase,
     private val deleteRecipeUseCase: DeleteRecipeUseCase
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AiRecipeUiState())
@@ -50,11 +51,11 @@ class AiRecipeDetailViewModel @Inject constructor(
 
     // ✅ 지금까지 생성된 레시피 제목들을 저장할 리스트
     private val generatedTitles = mutableListOf("")
-
-
+    // ✅ 네비게이션에서 넘어온 ID도 Long으로 수신
+    // 네비게이션에서 넘어온 recipeId (없으면 0)
+    private val recipeId: Long = savedStateHandle.get<Long>("recipeId") ?: 0L
     init {
-        // ✅ 네비게이션에서 넘어온 ID도 Long으로 수신
-        val recipeId: Long? = savedStateHandle.get<Long>("recipeId")
+
         recipeId?.let {
             if (it != 0L) {
                 _uiState.update { state -> state.copy(recipeId = it) }
@@ -109,9 +110,8 @@ class AiRecipeDetailViewModel @Inject constructor(
     }
 
     fun fetchRecipeDetail() {
-        viewModelScope.launch {}
-    }
 
+    }
     fun generateRecipe(food: List<Food>) {
         // ✅ 1. 새 레시피 생성 시작 시 모든 데이터 필드를 빈 값으로 즉시 리셋
         _uiState.update {

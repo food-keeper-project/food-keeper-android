@@ -87,7 +87,7 @@ fun LoginScreen(
                 // 로딩 상태가 아닐 때 카카오 로그인 버튼을 표시합니다.
                 // 3. 카카오로 시작하기 버튼
                 Button(
-                    onClick = { viewModel.login() },
+                    onClick = { viewModel.login(context) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

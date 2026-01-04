@@ -83,10 +83,10 @@ sealed class ApiRoute {
             is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
-            is WithdrawAccount -> "api/v1/auth/withdraw" // 회원탈퇴 api
 
             // User
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
+            is WithdrawAccount -> "api/v1/members/me/withdraw" // 회원탈퇴 api
 
             // Food
             is AllFoodList -> "api/v1/foods"
