@@ -2,6 +2,8 @@ package com.foodkeeper.core.data.repository
 
 import coil.util.CoilUtils.result
 import com.foodkeeper.core.data.datasource.external.FoodRemoteDataSource
+import com.foodkeeper.core.data.mapper.external.ApiResponse
+import com.foodkeeper.core.data.mapper.external.FoodCountDTO
 import com.foodkeeper.core.data.mapper.external.toCategory
 import com.foodkeeper.core.data.mapper.external.toFood
 import com.foodkeeper.core.data.mapper.external.toRequestResult
@@ -55,5 +57,10 @@ class FoodRepositoryImpl @Inject constructor(
         return remoteDataSource
             .requestConsumptionFood(foodId)
             .map { it.toRequestResult() }
+    }
+
+    override fun getFoodCount(): Flow<FoodCountDTO> {
+        return remoteDataSource.getFoodCount()
+
     }
 }

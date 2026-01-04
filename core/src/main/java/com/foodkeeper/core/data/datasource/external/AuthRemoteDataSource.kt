@@ -1,6 +1,7 @@
 package com.foodkeeper.core.data.datasource.external
 
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.data.network.ApiRoute
 import com.foodkeeper.core.data.network.FoodApiService
 import kotlinx.coroutines.flow.Flow
@@ -9,7 +10,7 @@ import javax.inject.Inject
 interface AuthRemoteDataSource {
     fun signInWithKakao(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
     fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
-    fun withdrawAccount(): Flow<String>
+    fun withdrawAccount(): Flow<ApiResult<String>>
     // ✅ 로그아웃 추가
     fun logOut(): Flow<String>
 }
@@ -40,7 +41,7 @@ class DefaultAuthRemoteDataSource @Inject constructor(
         )
     }
 
-    override fun withdrawAccount(): Flow<String> {
+    override fun withdrawAccount(): Flow<ApiResult<String>> {
         return apiService.request(ApiRoute.WithdrawAccount)
     }
 

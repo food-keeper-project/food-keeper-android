@@ -10,6 +10,7 @@ import com.foodkeeper.core.data.mapper.external.ResultDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.request
@@ -43,54 +44,78 @@ class FoodApiService @Inject constructor(
     inline fun <reified T> request(
         route: ApiRoute
     ): Flow<T> = flow {
-        // 1. 첫 번째 요청 실행
-        var response = executeHttpRequest(route)
+        try {
+            // 1. 첫 번째 요청 실행
+            Log.d("FoodApiService", "🚀 요청 시작: ${route.path}")
 
-        // 💡 응답 바디를 미리 역직렬화하여 에러 코드를 확인
-        val initialApiResponse = response.body<ApiResponse<T>>()
+            var response = try {
+                executeHttpRequest(route)
+            } catch (e: java.nio.channels.UnresolvedAddressException) {
+                // ✅ 인터넷 연결 자체가 없는 경우 (DNS 조회 실패)
+                Log.e("FoodApiService", "❌ 네트워크 주소를 찾을 수 없음: ${e.message}")
+                throw NetworkException("인터넷 연결이 불안정합니다. 네트워크 설정을 확인해주세요.", e)
+            } catch (e: io.ktor.client.plugins.HttpRequestTimeoutException) {
+                // ✅ 타임아웃 발생 시
+                throw NetworkException("서버 응답 시간이 초과되었습니다.", e)
+            }
 
-        // 2. 401 Unauthorized 또는 에러 코드가 E3003일 때 재발급 로직 진입
-        val isExpired = response.status == HttpStatusCode.Unauthorized ||
-                initialApiResponse.error?.errorCode == "E3003"
+            // 💡 응답 바디를 미리 역직렬화하여 에러 코드를 확인
+            val initialApiResponse = response.body<ApiResponse<T>>()
+            Log.d("FoodApiService", "📥 응답 받음 헤더: ${response.headers}")
 
-        if (isExpired && !route.isRefreshTokenRequest) {
-            Log.d("FoodApiService", "토큰 만료 감지 (E3003) -> 재발급 시도")
+            // 2. 401 Unauthorized 또는 에러 코드가 E3003일 때 재발급 로직 진입
+            val isExpired = response.status == HttpStatusCode.Unauthorized ||
+                    initialApiResponse.error?.errorCode == "E3003"
 
-            val isSuccess = tryRefreshToken()
+            if (isExpired && !route.isRefreshTokenRequest) {
+                Log.d("FoodApiService", "토큰 만료 감지 (E3003) -> 재발급 시도")
 
-            if (isSuccess) {
-                Log.d("FoodApiService", "재발급 성공 -> 원래 요청 재시도")
-                response = executeHttpRequest(route)
+                val isSuccess = tryRefreshToken()
 
-                val retryApiResponse = response.body<ApiResponse<T>>()
+                if (isSuccess) {
+                    Log.d("FoodApiService", "재발급 성공 -> 원래 요청 재시도")
+                    // 재시도 시에도 네트워크 예외 처리 적용
+                    response = try {
+                        executeHttpRequest(route)
+                    } catch (e: java.nio.channels.UnresolvedAddressException) {
+                        throw NetworkException("인터넷 연결이 불안정합니다.", e)
+                    }
 
-                // ✨ 201 Created 또는 data가 있는 경우 성공 처리
-                if (retryApiResponse.result == "SUCCESS") {
-                    handleSuccessResponse(retryApiResponse, response)
+                    val retryApiResponse = response.body<ApiResponse<T>>()
+
+                    if (retryApiResponse.result == "SUCCESS") {
+                        handleSuccessResponse(retryApiResponse, response)
+                    } else {
+                        throw ServerException(
+                            message = retryApiResponse.error?.message ?: "알 수 없는 서버 오류",
+                            errorCode = retryApiResponse.error?.errorCode
+                        )
+                    }
                 } else {
-                    throw ServerException(
-                        message = retryApiResponse.error?.message ?: "알 수 없는 서버 오류",
-                        errorCode = retryApiResponse.error?.errorCode
-                    )
+                    Log.e("FoodApiService", "재발급 실패 -> 로그인 필요")
+                    tokenManagerProvider.get().clearTokens()
+                    SessionManager.emitLogout()
                 }
             } else {
-                Log.e("FoodApiService", "재발급 실패 (리프레시 토큰 만료) -> 로그인 필요")
-                tokenManagerProvider.get().clearTokens()
-                SessionManager.emitLogout()
+                // 3. 만료 상황이 아니면 첫 번째 결과를 그대로 처리
+                if (initialApiResponse.result == "SUCCESS") {
+                    handleSuccessResponse(initialApiResponse, response)
+                } else {
+                    throw ServerException(
+                        message = initialApiResponse.error?.message ?: "알 수 없는 서버 오류",
+                        errorCode = initialApiResponse.error?.errorCode
+                    )
+                }
             }
-        } else {
-            // 3. 만료 상황이 아니면 첫 번째 결과를 그대로 처리
-            if (initialApiResponse.result == "SUCCESS") {
-                // ✨ 201 Created 또는 data가 있는 경우 성공 처리
-                handleSuccessResponse(initialApiResponse, response)
-            } else {
-                throw ServerException(
-                    message = initialApiResponse.error?.message ?: "알 수 없는 서버 오류",
-                    errorCode = initialApiResponse.error?.errorCode
-                )
-            }
+        } catch (e: Exception) {
+            // 이미 정의된 ServerException이나 새로 만든 NetworkException은 그대로 던짐
+            if (e is ServerException || e is NetworkException) throw e
+            // 그 외 예상치 못한 에러 처리
+            Log.e("FoodApiService", "Unexpected Error: ${e.message}")
+            throw e
         }
     }
+
 
     /**
      * ✨ 성공 응답 처리 헬퍼 함수
@@ -102,7 +127,10 @@ class FoodApiService @Inject constructor(
         httpResponse: HttpResponse
     ) {
         val httpStatus = httpResponse.status
+        Log.d("FoodApiService", "API 응답 코드: $httpStatus")
+
         when {
+
             // ✅ Case 1: 201 Created 이고, 반환 타입 T가 Long인 경우 (ID 추출 로직)
             httpStatus == HttpStatusCode.Created && T::class == Long::class -> {
                 val locationHeader = httpResponse.headers["Location"]
@@ -115,29 +143,40 @@ class FoodApiService @Inject constructor(
                 emit(extractedId as T)
             }
 
-            // ✅ Case 2: 201 Created 이지만 String 타입이 아닌 경우 (기존 유지)
+            // ✅ Case 2: 201 Created 응답 처리
             httpStatus == HttpStatusCode.Created -> {
                 @Suppress("UNCHECKED_CAST")
                 val result = when (T::class) {
                     Unit::class -> Unit as T
+                    String::class -> "SUCCESS" as T // 🚀 추가
                     else -> ResultDTO(result = "SUCCESS") as T
                 }
                 emit(result)
             }
 
-            // ✅ Case 2: 200 OK with data
+            // ✅ Case 3: 200 OK - 데이터가 포함된 경우
             apiResponse.data != null -> {
                 Log.d("FoodApiService", "200 OK 응답 - data 포함")
-                emit(apiResponse.data)
+
+                @Suppress("UNCHECKED_CAST")
+                val result = when {
+                    // 서버 data는 String인데 나는 ResultDTO를 원할 때 (확장 고려)
+                    T::class == ResultDTO::class && apiResponse.data is String -> {
+                        ResultDTO(result = apiResponse.data as String) as T
+                    }
+                    else -> apiResponse.data as T
+                }
+                emit(result)
             }
 
-            // ✅ Case 3: 200 OK without data (but SUCCESS)
+            // ✅ Case 4: 200 OK - 데이터가 없는 경우
             else -> {
-                Log.d("FoodApiService", "200 OK 응답 - data 없음, SuccessResponse 반환")
+                Log.d("FoodApiService", "200 OK 응답 - data 없음")
 
                 @Suppress("UNCHECKED_CAST")
                 val result = when (T::class) {
                     Unit::class -> Unit as T
+                    String::class -> "SUCCESS" as T // 🚀 추가
                     else -> ResultDTO(result = "SUCCESS") as T
                 }
                 emit(result)
@@ -222,8 +261,17 @@ class FoodApiService @Inject constructor(
                 route.headers.forEach { (key, value) -> header(key, value) }
             }
 
-            // 쿼리 및 바디 설정
-            route.body?.let { setBody(it) }
+            // 3. 바디 설정 (여기가 중요 ⭐)
+            route.body?.let {
+                if (route.multiPartRequest) {
+                    // ✅ 멀티파트일 때는 ContentType을 명시적으로 세팅하지 않음 (Ktor가 자동 생성)
+                    setBody(it)
+                } else {
+                    // 일반 JSON 요청일 때만 ContentType 설정
+                    contentType(ContentType.Application.Json)
+                    setBody(it)
+                }
+            }
             route.queryParameters.forEach { (key, value) -> parameter(key, value) }
 
             route.timeoutMillis?.let {
@@ -234,3 +282,4 @@ class FoodApiService @Inject constructor(
 }
 class ServerException(message: String, val errorCode: String?) : Exception(message)
 class UnauthorizedException(message: String) : Exception(message)
+class NetworkException(message: String, cause: Throwable) : Exception(message, cause)

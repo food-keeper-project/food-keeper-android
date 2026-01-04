@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foodkeeper.core.ui.util.AppColors
@@ -35,7 +34,7 @@ fun ExpiringBadge() {
             Text(
                 text = "유통기한 임박!",
                 modifier = Modifier.padding(horizontal = 6.dp),
-                color = AppColors.text,
+                color = AppColors.black,
                 style = AppFonts.size12Caption1,
                 lineHeight = 18.sp,
             )

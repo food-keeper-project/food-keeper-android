@@ -96,7 +96,7 @@ internal fun ProfileScreen(
                         Text(
                             text = profile?.nickname?.ifEmpty { "사용자님" } ?: "로그인이 필요합니다",
                             style = AppFonts.size22Title2,
-                            color = AppColors.text
+                            color = AppColors.black
                         )
                     }
                     Spacer(modifier = Modifier.height(48.dp))
@@ -146,7 +146,7 @@ internal fun ProfileScreen(
 fun ProfileMenuItem(
     title: String,
     onClick: () -> Unit,
-    titleColor: Color = AppColors.text
+    titleColor: Color = AppColors.black
 ) {
     Column {
         Row(

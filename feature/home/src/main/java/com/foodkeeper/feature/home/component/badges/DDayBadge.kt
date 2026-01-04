@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foodkeeper.core.ui.util.AppColors
@@ -23,7 +22,7 @@ import com.foodkeeper.core.ui.util.AppFonts
 @Composable
 fun DDayBadge(dDay: Int) {
     val isExpiring = dDay >= 0
-    val backgroundColor = if (isExpiring) AppColors.main else AppColors.text
+    val backgroundColor = if (isExpiring) AppColors.main else AppColors.black
     val textColor = if (isExpiring) Color.White else Color(0xFFFF6D00)
 
     Surface(

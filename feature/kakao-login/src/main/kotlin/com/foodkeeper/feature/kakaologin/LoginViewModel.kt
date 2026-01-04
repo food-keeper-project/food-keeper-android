@@ -1,4 +1,5 @@
 package com.foodkeeper.feature.kakaologin
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.domain.model.LoginResult
@@ -31,14 +32,14 @@ class LoginViewModel  @Inject constructor(
     /**
      * 로그인을 요청하는 함수. UI(Composable)에서 이 함수를 호출하게 됩니다.
      */
-    fun login() {
+    fun login(context: Context) {
         // 이미 로그인 중이면 다시 요청하지 않도록 방지
         if (_uiState.value is LoginUiState.Loading) return
 
         // 로그인 시작 시 상태를 Loading으로 변경하여 UI에 프로그레스 바 등을 표시하도록 알립니다.
         _uiState.value = LoginUiState.Loading
 
-        loginUseCase()
+        loginUseCase(context)
             .onEach { result ->
                 // :core 모듈에서 정의한 LoginResult 결과에 따라 UI 상태를 업데이트합니다.
                 val newState = when (result) {

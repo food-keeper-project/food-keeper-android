@@ -9,9 +9,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 
@@ -29,7 +27,7 @@ fun DateHeader(date: String) {
         Text(
             text = date,
             style = AppFonts.size12Caption1,
-            color = AppColors.text
+            color = AppColors.black
         )
 
         Spacer(modifier = Modifier.height(2.dp))

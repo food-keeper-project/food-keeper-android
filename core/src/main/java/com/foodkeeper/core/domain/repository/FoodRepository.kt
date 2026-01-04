@@ -1,6 +1,8 @@
 package com.foodkeeper.core.domain.repository
 
+import com.foodkeeper.core.data.mapper.external.ApiResponse
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.mapper.external.FoodCountDTO
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.domain.model.Category
@@ -30,4 +32,6 @@ interface FoodRepository {
     fun consumptionFood(
         foodId: Long
     ): Flow<RequestResult>
+
+    fun getFoodCount(): Flow<FoodCountDTO>
 }

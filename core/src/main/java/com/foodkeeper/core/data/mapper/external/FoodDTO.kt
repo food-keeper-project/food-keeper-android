@@ -1,11 +1,8 @@
 package com.foodkeeper.core.data.mapper.external
 
-import android.R
-import android.provider.Settings.System.DATE_FORMAT
-import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.domain.model.StorageMethod
-import com.foodkeeper.core.domain.model.User
+
 import com.foodkeeper.core.ui.util.parseServerDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -32,20 +29,33 @@ data class FoodDTO(
 )
 
 
-
+@Serializable
+data class FoodCountDTO(
+    val foodCount:Long?
+)
 
 fun FoodDTO.toFood(): Food {
+    // 제공해주신 NCloud Storage Base URL
+    val IMAGE_BASE_URL = "https://kitchenlog.gcdn.ntruss.com/"
+
+    // 서버가 준 imageUrl 앞에 baseurl을 결합
+    val fullImageUrl = if (!imageUrl.isNullOrEmpty()) {
+        "${IMAGE_BASE_URL}${imageUrl}"
+    } else {
+        null
+    }
+
     return Food(
         id = id,
         name = name,
-        imageURL = imageUrl,
+        imageURL = fullImageUrl?:"", // 이제 UI에서는 이 주소를 바로 사용하면 됩니다.
         storageMethod = toStorageMethod(storageMethod),
         expiryDate = expiryDate.parseServerDate(),
-        memo = memo,
+        memo = memo ?: "",
         createdAt = createdAt.parseServerDate(),
-        category = categoryIds.first().name,
+        category = categoryIds.firstOrNull()?.name ?: "미분류",
         categoryModel = categoryIds.map { it.toCategory() },
-        expiryAlarm = 0 //추후 응답주면 변경 필요
+        expiryAlarm = 0
     )
 }
 

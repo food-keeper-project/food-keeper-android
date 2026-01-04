@@ -1,8 +1,12 @@
 package com.foodkeeper.core.data.datasource.external
 
 import com.foodkeeper.core.data.mapper.external.AiRecipe
+import com.foodkeeper.core.data.mapper.external.AiRecipeListResponse
 import com.foodkeeper.core.data.mapper.external.AiRecipeResponse
+import com.foodkeeper.core.data.mapper.external.ApiResponse
+import com.foodkeeper.core.data.mapper.external.RecipeCountDTO
 import com.foodkeeper.core.data.mapper.request.RecipeCreateRequest
+import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.data.network.FoodApiService
 import com.foodkeeper.core.data.network.ApiRoute
 import kotlinx.coroutines.flow.Flow
@@ -24,14 +28,22 @@ class RecipeRemoteDataSource @Inject constructor(
         return apiService.request(ApiRoute.PostRecipe(request))
     }
     // ... 기존 import 생략
-    suspend fun deleteRecipe(menuId: Long): Flow<String> {
+    suspend fun deleteRecipe(menuId: Long): Flow<Unit> {
         // ApiRoute에 DeleteRecipe(menuName)가 정의되어 있어야 합니다.
         return apiService.request(ApiRoute.DeleteFavoriteRecipe(menuId))
     }
     // RecipeRemoteDataSource.kt
-    suspend fun getSavedRecipes(): Flow<List<AiRecipeResponse>> {
+    suspend fun getSavedRecipes(
+                                cursor: Long?,
+                                limit: Int): Flow<AiRecipeListResponse> {
         // GET 요청으로 저장된 레시피 리스트를 가져온다고 가정
-        return apiService.request(ApiRoute.GetFavoriteRecipe)
+        return apiService.request(ApiRoute.GetFavoriteRecipe(cursor,limit))
+    }
+    suspend fun getSavedRecipeDetail(recipeId: Long): Flow<AiRecipe> {
+        return apiService.request(ApiRoute.GetDetailedRecipe(recipeId))
+    }
+    suspend fun getMyRecipeCount(): Flow<RecipeCountDTO> {
+        return apiService.request(ApiRoute.GetMyRecipeCount)
     }
 
 

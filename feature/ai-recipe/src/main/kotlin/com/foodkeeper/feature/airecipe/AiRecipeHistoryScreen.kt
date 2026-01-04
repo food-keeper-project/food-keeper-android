@@ -1,26 +1,27 @@
 package com.foodkeeper.feature.airecipe
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed // ✅ items 대신 itemsIndexed 임포트
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import androidx.lifecycle.repeatOnLifecycle
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 
@@ -28,23 +29,62 @@ import com.foodkeeper.core.ui.util.AppFonts
 @Composable
 fun AiRecipeHistoryScreen(
     onRecipeClick: (Long) -> Unit,
-    viewModel: AiRecipeHistoryViewModel = hiltViewModel() // ✅ DetailScreen처럼 ViewModel을 주입받음
+    viewModel: AiRecipeHistoryViewModel = hiltViewModel()
 ) {
-    // ✅ ViewModel의 상태를 구독
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            // ✅ 화면이 다시 보일 때마다(탭 클릭, 뒤로가기 포함) 리스트 첫 페이지를 새로 가져옴
+            viewModel.fetchSavedRecipes(isFirstPage = true)
+        }
+    }
     Scaffold(
         containerColor = AppColors.white,
         topBar = {
-
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "내가 저장한 AI 레시피 목록",
+                        style = AppFonts.size19Title3,
+                        fontWeight = FontWeight.Bold,
+                        color= AppColors.black
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.white
+                )
+            )
         }
     ) { padding ->
-        // 로딩 처리 추가
-        if (uiState.isLoading) {
+        // 1. 초기 로딩 상태
+        if (uiState.isLoading && uiState.savedRecipes.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = AppColors.main)
             }
-        } else {
+        }
+        // 2. 데이터가 없을 때 (Empty State) ✅ 추가된 부분
+        else if (uiState.savedRecipes.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.empty_favorite_recipe),
+                    contentDescription = "저장된 레시피 없음",
+                    modifier = Modifier.size(200.dp)
+                )
+
+            }
+        }
+        // 3. 리스트가 있을 때
+        else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -53,20 +93,31 @@ fun AiRecipeHistoryScreen(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item {
-                    Text(
-                        text = "내가 저장한 AI 레시피 목록",
-                        style = AppFonts.size19Title3,
-                        color=AppColors.text,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
 
-                items(uiState.savedRecipes) { recipe ->
+                // ✅ itemsIndexed를 사용하여 페이징 트리거 감지
+                itemsIndexed(uiState.savedRecipes) { index, recipe ->
                     SavedRecipeCard(
                         recipe = recipe,
                         onClick = { onRecipeClick(recipe.id) }
                     )
+
+                    // ✅ 마지막 아이템 도달 시 다음 페이지 요청
+                    if (index == uiState.savedRecipes.lastIndex && uiState.hasNext && !uiState.isPaging) {
+                        LaunchedEffect(Unit) {
+                            viewModel.fetchSavedRecipes(isFirstPage = false)
+                        }
+                    }
+                }
+
+                // 페이징 로딩 바
+                if (uiState.isPaging) {
+                    item {
+                        Box(Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = AppColors.main)
+                        }
+                    }
                 }
             }
         }
@@ -88,53 +139,58 @@ fun SavedRecipeCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
-                .height(80.dp)
+                .padding(horizontal = 22.dp, vertical = 16.dp)
+                .height(IntrinsicSize.Min) // 고정 높이 80.dp보다 내용에 맞게 조정하는 것이 안전함
         ) {
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Column(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = recipe.title,
                     style = AppFonts.size16Body1,
-                    color= AppColors.main,
+                    color = AppColors.main,
                     fontWeight = FontWeight.ExtraBold,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = recipe.description,
                     style = AppFonts.size12Caption1,
-                    color = AppColors.text,
+                    color = AppColors.black,
                     maxLines = 2
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    // 변환된 XML 아이콘 사용
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .background(
+                            color = AppColors.light6Gray, // 또는 원하는 다크그레이 색상 (ex: Color(0xFF424242))
+                            shape = RoundedCornerShape(4.dp) // 모서리를 살짝 둥글게
+                        )
+                        .padding(horizontal = 2.dp, vertical = 2.dp), // 배경 안쪽 여백
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(2.dp))
                     Icon(
-                        painter = painterResource(id = R.drawable.history_timer), // 본인 폴더명에 맞게 수정
+                        painter = painterResource(id = R.drawable.history_timer),
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color((0xF1C274C)) // 아이콘 색상 입히기
+                        modifier = Modifier.size(11.dp),
+                        tint = Color(0xFF1C274C) // ✅ 색상 코드 괄호 및 값 수정 (0xFF... 형식)
                     )
-                    Spacer(modifier = Modifier.width(2.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "요리 예상 소요시간", // 실제 데이터라면 recipe.cookingTime 등으로 변경
+                        text = "요리 예상 소요시간",
                         style = AppFonts.size10Caption2,
-                        color = AppColors.text
+                        color = AppColors.black
                     )
-                    Spacer(modifier = Modifier.width(2.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${recipe.cookMinutes}분", // 실제 데이터라면 recipe.cookingTime 등으로 변경
+                        text = "${recipe.cookMinutes}분",
                         style = AppFonts.size10Caption2,
                         color = AppColors.main,
                         fontWeight = FontWeight.ExtraBold
                     )
-
+                    Spacer(modifier = Modifier.width(2.dp))
                 }
             }
         }

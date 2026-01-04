@@ -5,6 +5,7 @@ import android.util.Log
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.domain.repository.AuthRepository
 import com.kakao.sdk.user.UserApiClient
 import com.google.firebase.messaging.FirebaseMessaging
@@ -12,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.tasks.await
@@ -72,23 +74,45 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    // ✅ [카카오 로그인] (완성본)
-    override suspend fun loginWithKakao(): Result<String> = suspendCoroutine { continuation ->
+    // ✅ [카카오 로그인] (개선된 폴백 로직 적용)
+    override suspend fun loginWithKakao(activityContext: Context): Result<String> = suspendCoroutine { continuation ->
+
+        // 공통 콜백 함수
         val callback: (com.kakao.sdk.auth.model.OAuthToken?, Throwable?) -> Unit = { token, error ->
             if (error != null) {
+                Log.e("AuthRepo", "카카오 로그인 실패: ${error.message}")
                 continuation.resume(Result.failure(error))
             } else if (token != null) {
+                Log.d("AuthRepo", "카카오 로그인 성공: ${token.accessToken}")
                 continuation.resume(Result.success(token.accessToken))
             }
         }
 
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-            UserApiClient.instance.loginWithKakaoTalk(context, callback = callback)
+        // 1. 카카오톡 설치 여부 확인
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(activityContext)) {
+            UserApiClient.instance.loginWithKakaoTalk(activityContext) { token, error ->
+                if (error != null) {
+                    Log.e("AuthRepo", "카카오톡 로그인 시도 중 에러: ${error.message}")
+
+                    // ✅ 사용자가 의도적으로 취소한 경우 (뒤로가기 등)
+                    // 이때는 웹 로그인으로 넘기지 않고 바로 에러 처리
+                    if (error is com.kakao.sdk.common.model.ClientError &&
+                        error.reason == com.kakao.sdk.common.model.ClientErrorCause.Cancelled) {
+                        continuation.resume(Result.failure(error))
+                        return@loginWithKakaoTalk
+                    }
+
+                    // ✅ 카카오톡은 깔려있는데 로그인이 불가능한 상태라면 웹 브라우저로 재시도
+                    UserApiClient.instance.loginWithKakaoAccount(activityContext, callback = callback)
+                } else if (token != null) {
+                    continuation.resume(Result.success(token.accessToken))
+                }
+            }
         } else {
-            UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
+            // 2. 카카오톡이 설치되어 있지 않다면 바로 웹 브라우저로 로그인
+            UserApiClient.instance.loginWithKakaoAccount(activityContext, callback = callback)
         }
     }
-
     // ✅ [FCM 토큰 획득]
     override suspend fun getFcmToken(): String? = runCatching {
         FirebaseMessaging.getInstance().token.await()
@@ -125,22 +149,48 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun withdrawAccount(): Flow<String> {
-        return authRemoteDataSource.withdrawAccount()
-            .onEach { result ->
-                // ✅ Flow를 통해 들어온 서버 응답이 성공인지 확인
-                // (서버가 성공 시 "SUCCESS" 같은 문자열을 보낸다고 가정)
-                if (result == "SUCCESS") {
-                    Log.d("AuthRepo", "회원탈퇴 성공: 로컬 토큰 삭제")
-                    tokenManager.clearTokens()
-                    clearCache()
+    override suspend fun withdrawAccount(): Flow<ApiResult<String>> = flow {
+        // 1. 서버 회원탈퇴 API 호출
+        authRemoteDataSource.withdrawAccount().collect { apiResult ->
+            // ✅ ApiResult가 Success인 경우를 먼저 체크해야 함
+            when (apiResult) {
+                is ApiResult.Success -> {
+                    if (apiResult.data == "SUCCESS") {
+                        // 2. 카카오 연결 끊기 수행
+                        val isKakaoUnlinkSuccess = suspendCoroutine<Boolean> { continuation ->
+                            UserApiClient.instance.unlink { error ->
+                                if (error != null) {
+                                    Log.e("AuthRepo", "카카오 연결 끊기 실패: ${error.message}")
+                                    continuation.resume(false)
+                                } else {
+                                    Log.d("AuthRepo", "카카오 연결 끊기 성공")
+                                    continuation.resume(true)
+                                }
+                            }
+                        }
+
+                        if (isKakaoUnlinkSuccess) {
+                            // 3. 모든 단계 성공 시 로컬 토큰 삭제
+                            tokenManager.clearTokens()
+                            emit(ApiResult.Success("SUCCESS"))
+                        } else {
+                            emit(ApiResult.Error(Throwable("KAKAO_UNLINK_FAIL")))
+                        }
+                    } else {
+                        emit(ApiResult.Error(Throwable("SERVER_FAIL")))
+                    }
+                }
+                is ApiResult.Error -> {
+                    // 서버 통신 자체가 실패한 경우
+                    emit(ApiResult.Error(apiResult.throwable))
                 }
             }
-            .catch { e ->
-                // ✅ 여기서 예외 처리를 하여 스트림이 끊기지 않게 하거나 로그를 남깁니다.
-                Log.e("AuthRepo", "회원탈퇴 Flow 에러: ${e.message}")
-                throw e // ViewModel에서 catch할 수 있게 던져줌
-            }
+        }
+    }.catch { e ->
+        emit(ApiResult.Error(e))
     }
+
+
+
 
 }
