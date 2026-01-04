@@ -3,11 +3,18 @@
 package com.example.foodkeeper
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import com.kakao.sdk.common.KakaoSdk
 import dagger.hilt.android.HiltAndroidApp
+import okhttp3.OkHttpClient
+import javax.inject.Inject
 
 @HiltAndroidApp
-class MyApplication : Application() {
+class MyApplication : Application(), ImageLoaderFactory {
+    @Inject
+    lateinit var imageLoader: ImageLoader
+    override fun newImageLoader(): ImageLoader = imageLoader
     override fun onCreate() {
         super.onCreate()
 

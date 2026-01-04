@@ -20,7 +20,6 @@ data class AuthTokenDTO(
     @SerialName("refreshToken")
     val refreshToken: String?
 )
-
 @Serializable
 data class ApiResponse<T>(
     val result: String?=null,

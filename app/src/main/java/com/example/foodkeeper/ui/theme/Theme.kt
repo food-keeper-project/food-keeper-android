@@ -51,18 +51,27 @@ fun FoodKeeperTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    // 상태바 컬러 설정 (디폴트 테마에 포함되는 로직)
+    // 상태바 컬러 설정 (Scaffold의 topBar 영역과 일치시키기)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+
+            // ✅ 1. 상태바 배경색을 투명하게 설정 (Scaffold 배경색이 보이도록 함)
+            // 또는 android.graphics.Color.WHITE로 고정 가능
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+
+            // ✅ 2. 상태바 아이콘 색상 설정
+            // 배경이 흰색일 때 아이콘이 보여야 하므로,
+            // 다크모드가 아닐 때(!darkTheme) 아이콘을 어둡게(LightStatusBars) 설정합니다.
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+
+            // ✅ 3. (선택사항) 상태바 영역까지 화면이 꽉 차게 그리려면 아래 코드 추가
+            // WindowCompat.setDecorFitsSystemWindows(window, false)
         }
     }
 
@@ -72,3 +81,4 @@ fun FoodKeeperTheme(
         content = content
     )
 }
+

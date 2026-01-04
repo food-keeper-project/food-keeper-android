@@ -15,12 +15,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.PhotoCameraBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +44,6 @@ import com.foodkeeper.core.domain.model.StorageMethod
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -296,7 +291,7 @@ fun foodFieldColors() = OutlinedTextFieldDefaults.colors(
 @Composable
 fun FoodNameField(value: String, onValueChange: (String) -> Unit) {
     Column {
-        Text(text = "식재료명", style = AppFonts.size16Body1B, color = AppColors.text)
+        Text(text = "식재료명", style = AppFonts.size16Body1B, color = AppColors.black)
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = value,
@@ -331,7 +326,7 @@ fun ImageUploadSection(
         Text(
             text = "사진",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
@@ -404,7 +399,7 @@ fun CategorySection(
         Text(
             text = "카테고리",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -478,7 +473,7 @@ fun StorageSection(
         Text(
             text = "보관 방식",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
@@ -509,7 +504,7 @@ fun ExpiryDateSection(date: Date?, onCalendarClick: () -> Unit) {
         Text(
             text = "유통 기한",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
@@ -548,7 +543,7 @@ fun AlarmSection(selected: ExpiryAlarm?, onClick: () -> Unit) {
     Column {
         Text(text = "알림 일시",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
         Box(
@@ -575,7 +570,7 @@ fun MemoSection(value: String, onValueChange: (String) -> Unit) {
     Column {
         Text(text = "메모",
             style = AppFonts.size16Body1B,
-            color = AppColors.text
+            color = AppColors.black
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(

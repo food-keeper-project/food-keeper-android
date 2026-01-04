@@ -10,7 +10,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 
@@ -45,7 +44,7 @@ fun CategoryTabs(
                     selectedContainerColor = AppColors.main,
                     selectedLabelColor = AppColors.white,
                     containerColor = AppColors.light6Gray,
-                    labelColor = AppColors.text
+                    labelColor = AppColors.black
                 )
             )
         }

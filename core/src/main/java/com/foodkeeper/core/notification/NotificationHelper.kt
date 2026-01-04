@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+// R 파일 임포트 확인 (core 모듈의 R)
+import com.foodkeeper.core.R
 
 // Hilt 주입을 위해 @Inject constructor가 필요할 수 있습니다.
 class NotificationHelper(private val context: Context) {
@@ -17,49 +19,70 @@ class NotificationHelper(private val context: Context) {
         private const val SUMMARY_ID = 0 // 요약 알림의 고유 ID
     }
 
-    fun showNotification(title: String, body: String) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    // ... 상단 import 생략
 
+    fun showNotification(title: String, body: String) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // 1. 알림 채널 설정 (Android 8.0 이상 대응)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "식자재 유통기한 및 서비스 알림을 제공합니다."
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                enableLights(true)
+                enableVibration(true)
+            }
             notificationManager.createNotificationChannel(channel)
         }
 
-        // MainActivity를 실행하도록 설정 (알림 클릭 시)
+        // ✅ 2. PendingIntent 설정 (빨간 줄 해결)
+        // 앱의 런처 인텐트를 가져와서 메인 화면으로 연결합니다.
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra("navigate_to", "home")
+            // 필요 시 특정 화면 이동을 위한 데이터 전달 가능
+            putExtra("navigate_to", "main")
         }
 
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            context,
+            0,
+            intent,
+            // Android 12 이상 대응을 위해 IMMUTABLE 또는 MUTABLE 플래그 필수
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // 1. 개별 식자재 알림 생성
+        // 3. 개별 식자재 알림 생성
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.app_icon)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setGroup(GROUP_KEY) // ✅ 같은 그룹 키를 지정
+            .setContentIntent(pendingIntent) // ✅ 이제 에러가 발생하지 않습니다.
+            .setGroup(GROUP_KEY)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
-        // 2. 요약 알림(Summary) 생성
-        // 알림이 2개 이상 쌓일 때 "식자재 알림 3개" 처럼 묶어주는 역할을 합니다.
+        // 4. 요약 알림(Summary) 생성
         val summaryNotification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.app_icon)
             .setContentTitle("식자재 유통기한 알림")
             .setContentText("확인하지 않은 알림이 있습니다.")
-            .setStyle(NotificationCompat.InboxStyle() // 여러 줄로 보여주기 위한 스타일
-                .setSummaryText("유통기한 마감 임박"))
-            .setGroup(GROUP_KEY) // ✅ 개별 알림과 같은 그룹 키
-            .setGroupSummary(true) // ✅ 이 알림이 요약본임을 명시
+            .setStyle(NotificationCompat.InboxStyle().setSummaryText("유통기한 마감 임박"))
+            .setGroup(GROUP_KEY)
+            .setGroupSummary(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
+            .setContentIntent(pendingIntent) // 요약 알림 클릭 시에도 이동하도록 추가
             .build()
 
-        // 각각의 알림은 고유 ID로 띄우고
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-        // 요약 알림은 항상 같은 고유 ID(0)로 업데이트하여 하나로 묶이게 함
-        notificationManager.notify(SUMMARY_ID, summaryNotification)    }
+        notificationManager.notify(SUMMARY_ID, summaryNotification)
+    }
 }

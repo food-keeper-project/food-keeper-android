@@ -1,6 +1,5 @@
 package com.foodkeeper.feature.home.component.dialog
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -31,8 +29,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,14 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.foodkeeper.core.R
@@ -59,7 +51,6 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 import com.foodkeeper.core.ui.util.getDDay
-import com.foodkeeper.feature.home.HomeViewModel
 import kotlin.collections.filter
 
 /**
@@ -110,7 +101,7 @@ fun RecipeRecommendationDialog(
                     Text(
                         text = "레시피 추천",
                         style = AppFonts.size19Title3,
-                        color = AppColors.text,
+                        color = AppColors.black,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Start
                     )
@@ -123,7 +114,7 @@ fun RecipeRecommendationDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "닫기",
-                            tint = AppColors.text
+                            tint = AppColors.black
                         )
                     }
                 }
@@ -275,7 +266,7 @@ fun RecipeFoodItem(
                 Text(
                     text = food.name,
                     style = AppFonts.size16Body1,
-                    color = AppColors.text,
+                    color = AppColors.black,
                 )
 
                 Text(

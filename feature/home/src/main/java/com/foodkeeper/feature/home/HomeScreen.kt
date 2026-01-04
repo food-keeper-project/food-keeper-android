@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -50,7 +48,7 @@ import com.foodkeeper.feature.home.component.allFoodsSection.FoodListItem
 import com.foodkeeper.feature.home.component.dialog.FoodDetailDialog
 import com.foodkeeper.feature.home.component.dialog.RecipeRecommendationDialog
 import com.foodkeeper.feature.home.component.expiringFoodsSection.ExpiringFoodsSection
-import kotlinx.coroutines.flow.MutableSharedFlow
+
 /**
  * 메인 홈 화면
  * 유통기한 임박 식품 + 나의 식재료 리스트
@@ -229,7 +227,7 @@ private fun HomeContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(AppColors.white)
     ) {
 
         // 1. 유통기한 임박 식품
@@ -252,7 +250,7 @@ private fun HomeContent(
                     text = "나의 식재료 리스트",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = AppColors.text
+                    color = AppColors.black
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -263,7 +261,7 @@ private fun HomeContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(AppColors.white)
             ) {
                 CategoryTabs(
                     tabs = tabs,

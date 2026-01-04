@@ -1,6 +1,5 @@
 package com.foodkeeper.feature.home.component.dialog
 
-import android.view.Surface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,10 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
@@ -46,7 +43,6 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 import com.foodkeeper.core.ui.util.getDDay
-import com.foodkeeper.core.ui.util.toyyMMddString
 import com.foodkeeper.core.ui.util.toyyMMddWithDay
 
 /**
@@ -100,7 +96,7 @@ fun FoodDetailDialog(
                     Text(
                         text = "식재료 상세보기",
                         style = AppFonts.size16Body1,
-                        color = AppColors.text,
+                        color = AppColors.black,
                         modifier = Modifier.align(Alignment.Center)
                     )
 
@@ -114,7 +110,7 @@ fun FoodDetailDialog(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "닫기",
-                            tint = AppColors.text
+                            tint = AppColors.black
                         )
                     }
                 }
@@ -231,7 +227,7 @@ fun FoodDetailDialog(
 fun DetailRow(
     label: String,
     value: String,
-    valueColor: Color = AppColors.text,
+    valueColor: Color = AppColors.black,
     valueBackground: Color? = null,
     showBadge: Boolean = false,
     dDay: Int = 0

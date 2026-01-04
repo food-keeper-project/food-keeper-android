@@ -13,10 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
@@ -98,7 +96,7 @@ fun OnboardingScreen(
                             Text(
                                 text = "건너뛰기",
                                 style = AppFonts.size19Title3,
-                                color = AppColors.text
+                                color = AppColors.black
                             )
                         }
                     } else {

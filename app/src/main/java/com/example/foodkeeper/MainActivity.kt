@@ -1,5 +1,6 @@
 package com.example.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
+import AiRecipeHistoryDetailScreen
 import WithdrawalRoute
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -26,13 +27,13 @@ import androidx.navigation.navArgument
 import com.example.add_food.AddFoodScreen
 import com.foodkeeper.feature.kakaologin.LoginScreen
 import com.example.foodkeeper.ui.theme.FoodKeeperTheme
-import com.foodkeeper.feature.airecipe.AiRecipeDetailScreen
 import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
 import com.foodkeeper.core.data.network.SessionManager
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.feature.airecipe.AiRecipeGeneratorScreen
 import com.foodkeeper.feature.home.HomeScreen
 import com.foodkeeper.feature.home.HomeViewModel
 import com.foodkeeper.feature.profile.ProfileRoute
@@ -151,9 +152,8 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             var currentTab by rememberSaveable { mutableStateOf(MainTab.Home) }
             var selectedRecipeId by rememberSaveable { mutableStateOf(0L) }
             var selectedIngredients by rememberSaveable { mutableStateOf<List<Food>>(emptyList()) }
-            var isFromHistory by rememberSaveable { mutableStateOf(false) }
             var isWithdrawalMode by rememberSaveable { mutableStateOf(false) }
-
+            Log.d("TAG", "FoodKeeperNavHost: selectedRecipeId $selectedRecipeId")
             MainScaffoldScreen(
                 currentTab = currentTab,
                 showTopBar = (selectedRecipeId == 0L && !isWithdrawalMode), // 상세페이지면 상단바 숨김
@@ -165,7 +165,6 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                         // 이렇게 해야 마이페이지 갔다가 홈 눌렀을 때 상세페이지가 안 뜹니다.
                         currentTab = tab
                         selectedRecipeId = 0L
-                        isFromHistory = false
                         isWithdrawalMode = false
                     }
                 }
@@ -173,9 +172,9 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                 when (currentTab) {
                     MainTab.Home -> {
                         if (selectedRecipeId != 0L) {
-                            AiRecipeDetailScreen(
+                            // 홈에서 생성하기 버튼 누른 경우 -> 생성 화면
+                            AiRecipeGeneratorScreen(
                                 ingredients = selectedIngredients,
-                                isFromHistory = false,
                                 onBackClick = { selectedRecipeId = 0L }
                             )
                         } else {
@@ -183,25 +182,20 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                                 onRecipeRecommendFoods = { ingredients ->
                                     selectedIngredients = ingredients
                                     selectedRecipeId = 1L // 생성 트리거
-                                    isFromHistory = false
                                 }
                             )
                         }
                     }
 
                     MainTab.Recipe -> {
-                        if (selectedRecipeId != 0L) {
-                            AiRecipeDetailScreen(
-                                ingredients = emptyList(),
-                                isFromHistory = true,
+                        if (selectedRecipeId != 0L) {// 목록에서 클릭해서 들어온 경우 -> 히스토리 상세 화면
+                            AiRecipeHistoryDetailScreen(
+                                recipeId = selectedRecipeId,
                                 onBackClick = { selectedRecipeId = 0L }
                             )
                         } else {
                             AiRecipeHistoryScreen(
-                                onRecipeClick = { id ->
-                                    selectedRecipeId = id
-                                    isFromHistory = true
-                                }
+                                onRecipeClick = { id -> selectedRecipeId = id }
                             )
                         }
                     }
@@ -236,43 +230,43 @@ fun FoodKeeperNavHost(navController: NavHostController) {
         composable("addFood") {
             AddFoodScreen(onBackClick = { navController.popBackStack() })
         }
-        //프로필 화면
-        composable("profile") {
-            ProfileRoute(
-                onLogoutSuccess = {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onWithdrawalClick = {
-                    // ✅ 회원탈퇴 스크린으로 이동
-                    navController.navigate("withdrawal")
-                }
-            )
-        }
-        //회원탈퇴 화면
-        composable("withdrawal") {
-            // ✅ 회원탈퇴 전용 Route 호출
-            WithdrawalRoute(
-                onBackClick = {
-                    navController.popBackStack() // 뒤로가기
-                },
-                onWithdrawalSuccess = {
-                    // ✅ 탈퇴 성공 시 로그인 화면으로 이동
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-        //레시피 목록 화면
-        composable("ai_recipe_history") {
-            AiRecipeHistoryScreen(
-                onRecipeClick = { recipeId ->
-                    navController.navigate("ai_recipe_detail/$recipeId")
-                }
-            )
-        }
+//        //프로필 화면
+//        composable("profile") {
+//            ProfileRoute(
+//                onLogoutSuccess = {
+//                    navController.navigate("login") {
+//                        popUpTo(0) { inclusive = true }
+//                    }
+//                },
+//                onWithdrawalClick = {
+//                    // ✅ 회원탈퇴 스크린으로 이동
+//                    navController.navigate("withdrawal")
+//                }
+//            )
+//        }
+//        //회원탈퇴 화면
+//        composable("withdrawal") {
+//            // ✅ 회원탈퇴 전용 Route 호출
+//            WithdrawalRoute(
+//                onBackClick = {
+//                    navController.popBackStack() // 뒤로가기
+//                },
+//                onWithdrawalSuccess = {
+//                    // ✅ 탈퇴 성공 시 로그인 화면으로 이동
+//                    navController.navigate("login") {
+//                        popUpTo(0) { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
+//        //레시피 목록 화면
+//        composable("ai_recipe_history") {
+//            AiRecipeHistoryScreen(
+//                onRecipeClick = { recipeId ->
+//                    navController.navigate("ai_recipe_detail/$recipeId")
+//                }
+//            )
+//        }
 
 //        // 레시피 디테일(상세) 화면
 //        composable(

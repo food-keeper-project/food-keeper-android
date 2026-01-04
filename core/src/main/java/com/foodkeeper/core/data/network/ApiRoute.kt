@@ -51,6 +51,8 @@ sealed class ApiRoute {
     object Logout: ApiRoute()
     object WithdrawAccount: ApiRoute()
 
+    object GetMyRecipeCount: ApiRoute()
+
 
     // ========== 식자재 관련 정의 ==========
     data class AllFoodList(
@@ -63,9 +65,11 @@ sealed class ApiRoute {
         val request: FoodCreateRequestDTO,
         val imageBytes: ByteArray?,              // 이미지 선택 안 하면 null
     ) : ApiRoute()
+
     data class ConsumptionFood(
         val foodId: Long
     ) : ApiRoute()
+    object GetMyFoodCount: ApiRoute()
     // ========== 카테고리 관련 정의 ==========
     object Categories: ApiRoute()
 
@@ -93,11 +97,14 @@ sealed class ApiRoute {
             is ImminentFoodList -> "api/v1/foods/imminent"
             is AddFood -> "api/v1/foods"
             is ConsumptionFood -> "api/v1/foods/${this.foodId}"
+            is GetMyFoodCount -> "api/v1/foods/count/me"
+
             // Categorie
             is Categories -> "api/v1/categories"
             // AI-Recipe
             is RecommendRecipe -> "api/v1/recipes/recommend"
             is PostRecipe, is GetFavoriteRecipe -> "api/v1/recipes"
+            is GetMyRecipeCount -> "api/v1/recipes/count/me"
             // ApiRoute.kt의 path 부분
             is GetDetailedRecipe -> "api/v1/recipes/${this.recipeId}"
             is DeleteFavoriteRecipe -> "api/v1/recipes/${this.recipeId}"
@@ -112,10 +119,7 @@ sealed class ApiRoute {
             is Logout -> HttpMethod.Delete
             is AddFood -> HttpMethod.Post
             is ConsumptionFood -> HttpMethod.Delete
-            is RecommendRecipe -> HttpMethod.Get
             is PostRecipe -> HttpMethod.Post
-            is GetFavoriteRecipe -> HttpMethod.Get
-            is GetDetailedRecipe -> HttpMethod.Get
             is DeleteFavoriteRecipe -> HttpMethod.Delete
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET

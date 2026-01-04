@@ -1,6 +1,7 @@
 package com.foodkeeper.feature.airecipe
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,7 +51,7 @@ fun AiRecipeHistoryScreen(
                         text = "내가 저장한 AI 레시피 목록",
                         style = AppFonts.size19Title3,
                         fontWeight = FontWeight.Bold,
-                        color= AppColors.text
+                        color= AppColors.black
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -138,7 +139,7 @@ fun SavedRecipeCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
+                .padding(horizontal = 22.dp, vertical = 16.dp)
                 .height(IntrinsicSize.Min) // 고정 높이 80.dp보다 내용에 맞게 조정하는 것이 안전함
         ) {
             Column(
@@ -152,26 +153,35 @@ fun SavedRecipeCard(
                     fontWeight = FontWeight.ExtraBold,
                     maxLines = 1
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = recipe.description,
                     style = AppFonts.size12Caption1,
-                    color = AppColors.text,
+                    color = AppColors.black,
                     maxLines = 2
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .background(
+                            color = AppColors.light6Gray, // 또는 원하는 다크그레이 색상 (ex: Color(0xFF424242))
+                            shape = RoundedCornerShape(4.dp) // 모서리를 살짝 둥글게
+                        )
+                        .padding(horizontal = 2.dp, vertical = 2.dp), // 배경 안쪽 여백
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(2.dp))
                     Icon(
                         painter = painterResource(id = R.drawable.history_timer),
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(11.dp),
                         tint = Color(0xFF1C274C) // ✅ 색상 코드 괄호 및 값 수정 (0xFF... 형식)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "요리 예상 소요시간",
                         style = AppFonts.size10Caption2,
-                        color = AppColors.light3Gray
+                        color = AppColors.black
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -180,6 +190,7 @@ fun SavedRecipeCard(
                         color = AppColors.main,
                         fontWeight = FontWeight.ExtraBold
                     )
+                    Spacer(modifier = Modifier.width(2.dp))
                 }
             }
         }

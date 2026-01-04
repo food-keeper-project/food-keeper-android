@@ -30,7 +30,10 @@ data class Ingredient(
     val name: String?,
     val quantity: String?
 )
-
+@Serializable
+data class RecipeCountDTO(
+    val recipeCount:Long?
+)
 @Serializable
 data class Step(
     val title: String?,

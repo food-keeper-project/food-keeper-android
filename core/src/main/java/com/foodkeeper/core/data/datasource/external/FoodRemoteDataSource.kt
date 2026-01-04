@@ -1,6 +1,8 @@
 package com.foodkeeper.core.data.datasource.external
 
+import com.foodkeeper.core.data.mapper.external.ApiResponse
 import com.foodkeeper.core.data.mapper.external.CategoryDTO
+import com.foodkeeper.core.data.mapper.external.FoodCountDTO
 import com.foodkeeper.core.data.mapper.external.FoodDTO
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
 import com.foodkeeper.core.data.mapper.external.ResultDTO
@@ -48,6 +50,11 @@ class FoodRemoteDataSource @Inject constructor(
             ApiRoute.ConsumptionFood(
                 foodId = foodId
             )
+        )
+    }
+    fun getFoodCount(): Flow<FoodCountDTO> {
+        return apiService.request(
+            ApiRoute.GetMyFoodCount // ApiRoute에 해당 경로가 정의되어 있어야 합니다.
         )
     }
 

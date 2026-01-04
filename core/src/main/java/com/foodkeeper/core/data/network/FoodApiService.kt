@@ -10,6 +10,7 @@ import com.foodkeeper.core.data.mapper.external.ResultDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.request
@@ -142,29 +143,40 @@ class FoodApiService @Inject constructor(
                 emit(extractedId as T)
             }
 
-            // ✅ Case 2: 201 Created 이지만 String 타입이 아닌 경우 (기존 유지)
+            // ✅ Case 2: 201 Created 응답 처리
             httpStatus == HttpStatusCode.Created -> {
                 @Suppress("UNCHECKED_CAST")
                 val result = when (T::class) {
                     Unit::class -> Unit as T
+                    String::class -> "SUCCESS" as T // 🚀 추가
                     else -> ResultDTO(result = "SUCCESS") as T
                 }
                 emit(result)
             }
 
-            // ✅ Case 2: 200 OK with data
+            // ✅ Case 3: 200 OK - 데이터가 포함된 경우
             apiResponse.data != null -> {
                 Log.d("FoodApiService", "200 OK 응답 - data 포함")
-                emit(apiResponse.data)
+
+                @Suppress("UNCHECKED_CAST")
+                val result = when {
+                    // 서버 data는 String인데 나는 ResultDTO를 원할 때 (확장 고려)
+                    T::class == ResultDTO::class && apiResponse.data is String -> {
+                        ResultDTO(result = apiResponse.data as String) as T
+                    }
+                    else -> apiResponse.data as T
+                }
+                emit(result)
             }
 
-            // ✅ Case 3: 200 OK without data (but SUCCESS)
+            // ✅ Case 4: 200 OK - 데이터가 없는 경우
             else -> {
-                Log.d("FoodApiService", "200 OK 응답 - data 없음, SuccessResponse 반환")
+                Log.d("FoodApiService", "200 OK 응답 - data 없음")
 
                 @Suppress("UNCHECKED_CAST")
                 val result = when (T::class) {
                     Unit::class -> Unit as T
+                    String::class -> "SUCCESS" as T // 🚀 추가
                     else -> ResultDTO(result = "SUCCESS") as T
                 }
                 emit(result)
@@ -249,8 +261,17 @@ class FoodApiService @Inject constructor(
                 route.headers.forEach { (key, value) -> header(key, value) }
             }
 
-            // 쿼리 및 바디 설정
-            route.body?.let { setBody(it) }
+            // 3. 바디 설정 (여기가 중요 ⭐)
+            route.body?.let {
+                if (route.multiPartRequest) {
+                    // ✅ 멀티파트일 때는 ContentType을 명시적으로 세팅하지 않음 (Ktor가 자동 생성)
+                    setBody(it)
+                } else {
+                    // 일반 JSON 요청일 때만 ContentType 설정
+                    contentType(ContentType.Application.Json)
+                    setBody(it)
+                }
+            }
             route.queryParameters.forEach { (key, value) -> parameter(key, value) }
 
             route.timeoutMillis?.let {

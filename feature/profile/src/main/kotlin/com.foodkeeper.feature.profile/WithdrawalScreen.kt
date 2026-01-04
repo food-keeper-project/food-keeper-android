@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,11 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.core.ui.util.AppFonts
 
@@ -52,6 +53,12 @@ fun WithdrawalRoute(
     viewModel: WithdrawalViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val recipeCount by viewModel.recipeCount.collectAsStateWithLifecycle()
+    val foodCount by viewModel.foodCount.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchAllCounts()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.withdrawalSuccess.collectLatest { success ->
@@ -63,6 +70,8 @@ fun WithdrawalRoute(
     }
 
     WithdrawalScreen(
+        foodCount = foodCount,
+        recipeCount = recipeCount,
         onBackClick = onBackClick,
         onConfirmClick = { viewModel.withdraw() }
     )
@@ -71,6 +80,8 @@ fun WithdrawalRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WithdrawalScreen(
+    recipeCount: Long,
+    foodCount: Long,
     onBackClick: () -> Unit,
     onConfirmClick: () -> Unit
 ) {
@@ -78,8 +89,10 @@ fun WithdrawalScreen(
 
     Scaffold(
         topBar = {
-            // ✅ 상단바 및 뒤로가기 버튼 구현
             CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = AppColors.white
+                ),
                 title = {
                     Text(
                         text = "회원탈퇴",
@@ -99,115 +112,122 @@ fun WithdrawalScreen(
         },
         containerColor = AppColors.white
     ) { padding ->
-        Column(
+        // ✅ 전체 레이아웃을 LazyColumn으로 변경하여 스크롤 대응
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Text(
-                text = "정말 탈퇴하시겠어요?",
-                style = AppFonts.size22Title2,
-                color = AppColors.text,
-                modifier = Modifier.padding(top = 24.dp)
-            )
-            //Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "탈퇴 시 저장한 식재료, 레시피, 알림 정보는 모두 삭제돼요.",
-                style = AppFonts.size12Caption1,
-                color = AppColors.main,
-                modifier = Modifier.padding(top = 24.dp)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            // 피그마에 있던 유의사항 리스트 박스
-            //WithdrawalNoticeBox()
-            // 1. 등록된 정보 카드 섹션 (Border: Main, Bg: White)
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                WithdrawalDataCard(label = "등록된 식재료", count = 23)
-                WithdrawalDataCard(label = "저장한 레시피", count = 11)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 2. 유의사항 블록 (Bg: lightGray5/gray1)
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = AppColors.light5Gray, // lightGray5가 없는 경우 gray1 사용
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    WithdrawalNoticeItem("재가입 시 이전에 저장된 식재료, 레시피 등 이용 내역은 복원되지 않습니다.")
-                    WithdrawalNoticeItem("탈퇴 후 개인정보는 관련 법령에 따라 일정 기간 안전하게 보관되며, 이후 자동 파기됩니다.")
-                }
-            }
-            // 동의 체크박스
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { isAgreed = !isAgreed }
-            ) {
-                Checkbox(
-                    checked = isAgreed,
-                    onCheckedChange = { isAgreed = it },
-                    colors = CheckboxDefaults.colors(checkedColor = AppColors.main)
+            item {
+                Text(
+                    text = "정말 탈퇴하시겠어요?",
+                    style = AppFonts.size22Title2,
+                    color = AppColors.black,
+                    modifier = Modifier.padding(top = 24.dp)
                 )
-                Text("위 유의사항을 모두 숙지했고 탈퇴에 동의합니다.")
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 16.dp), // 하단 여백 추가
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // ✅ 더 써볼래요 버튼: 항상 활성화 상태여야 함
-                Button(
-                    onClick = onBackClick,
-                    enabled = true, // 동의 여부와 상관없이 항상 뒤로 갈 수 있음
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        // 동의 전에는 Main색, 동의 후에는 회색(light3Gray)으로 변경
-                        containerColor = if (isAgreed) AppColors.light3Gray else AppColors.main,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("더 써볼래요", style = AppFonts.size16Body1)
-                }
+            item {
+                Text(
+                    text = "탈퇴 시 저장한 식재료, 레시피, 알림 정보는 모두 삭제돼요.",
+                    style = AppFonts.size12Caption1,
+                    color = AppColors.main,
+                    modifier = Modifier.padding(top = 24.dp)
+                )
+            }
 
-                Spacer(modifier = Modifier.width(12.dp)) // 버튼 사이 간격 조절
+            item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                // ✅ 탈퇴하기 버튼: 동의해야만 활성화됨
-                Button(
-                    onClick = onConfirmClick,
-                    enabled = isAgreed, // 동의했을 때만 클릭 가능
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        // 동의 시 Main색, 동의 전에는 회색(light3Gray)
-                        containerColor = if (isAgreed) AppColors.main else AppColors.light3Gray,
-                        // 버튼이 비활성화(enabled=false)일 때 보여줄 색상
-                        disabledContainerColor = AppColors.light3Gray,
-                        contentColor = Color.White,
-                        disabledContentColor = Color.White.copy(alpha = 0.5f)
-                    )
-                ) {
-                    Text("탈퇴하기", style = AppFonts.size16Body1)
+            // 데이터 카드 섹션
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    WithdrawalDataCard(label = "등록된 식재료", count = foodCount)
+                    WithdrawalDataCard(label = "저장한 레시피", count = recipeCount)
                 }
             }
 
+            item { Spacer(modifier = Modifier.height(60.dp)) } // 간격 조정
 
+            // 유의사항 블록
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = AppColors.light5Gray,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        WithdrawalNoticeItem("재가입 시 이전에 저장된 식재료, 레시피 등 이용 내역은 복원되지 않습니다.")
+                        WithdrawalNoticeItem("탈퇴 후 개인정보는 관련 법령에 따라 일정 기간 안전하게 보관되며, 이후 자동 파기됩니다.")
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(40.dp)) }
+
+            // 동의 체크박스
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { isAgreed = !isAgreed }
+                ) {
+                    Checkbox(
+                        checked = isAgreed,
+                        onCheckedChange = { isAgreed = it },
+                        colors = CheckboxDefaults.colors(checkedColor = AppColors.main)
+                    )
+                    Text("위 유의사항을 모두 숙지했고 탈퇴에 동의합니다.")
+                }
+            }
+
+            // 하단 버튼 섹션
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp, bottom = 32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isAgreed) AppColors.light4Gray else AppColors.main,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("더 써볼래요", style = AppFonts.size16Body1)
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Button(
+                        onClick = onConfirmClick,
+                        enabled = isAgreed,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isAgreed) AppColors.main else AppColors.light4Gray,
+                            disabledContainerColor = AppColors.light4Gray,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("탈퇴하기", style = AppFonts.size16Body1)
+                    }
+                }
+            }
         }
     }
 }
+
 @Composable
 fun WithdrawalNoticeItem(text: String) {
     Row(
@@ -222,43 +242,54 @@ fun WithdrawalNoticeItem(text: String) {
         Text(
             text = text,
             style = AppFonts.size10Caption2,
-            color = AppColors.text,
+            color = AppColors.black,
             lineHeight = 20.sp // 줄간격 추가로 가독성 향상
         )
     }
 }
 @Composable
-fun WithdrawalDataCard(label: String, count: Int) { // count 타입을 Int로 수정
+fun WithdrawalDataCard(label: String, count: Long) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(1.dp, AppColors.main), // 테두리 main 컬러
-        color = AppColors.white // 배경색 화이트
+        border = androidx.compose.foundation.BorderStroke(1.dp, AppColors.main),
+        color = AppColors.white
     ) {
         Row(
             modifier = Modifier
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 1. 레이블 (등록된 식재료)
             Text(
                 text = label,
                 style = AppFonts.size16Body1,
-                color = AppColors.text
+                color = AppColors.black
             )
+
+            // 2. 개수 (레이블 바로 옆에 배치)
+            Spacer(modifier = Modifier.width(8.dp)) // 레이블과 숫자 사이 간격
             Text(
                 text = "${count}개",
                 style = AppFonts.size16Body1,
                 color = AppColors.main,
                 fontWeight = FontWeight.ExtraBold
+            )
 
-            )
-            Text(
-                text = "즉시 소멸",
-                style = AppFonts.size16Body1,
-                color = AppColors.main // "즉시 소멸" 강조 색상
-            )
+            // 3. 중간 여백 (남은 공간을 다 채워서 '즉시 소멸'을 오른쪽 끝으로 밀어냄)
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 4. 즉시 소멸 (count가 0보다 클 때만 오른쪽 끝에 표시)
+            if (count > 0) {
+                Text(
+                    text = "즉시 소멸",
+                    style = AppFonts.size12Caption1,
+                    color = AppColors.main,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
+
 
