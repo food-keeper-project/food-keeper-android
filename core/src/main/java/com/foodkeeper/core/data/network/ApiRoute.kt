@@ -121,6 +121,7 @@ sealed class ApiRoute {
             is ConsumptionFood -> HttpMethod.Delete
             is PostRecipe -> HttpMethod.Post
             is DeleteFavoriteRecipe -> HttpMethod.Delete
+            is WithdrawAccount -> HttpMethod.Delete
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }

@@ -25,7 +25,7 @@ interface AuthRepository {
     // 6. 로그아웃
     suspend fun logout(): Result<Unit>
 
-    suspend fun withdrawAccount(): Flow<ApiResult<String>>
+    suspend fun withdrawAccount(): Flow<String>
     // ✅ 온보딩 완료 상태 저장
     suspend fun saveOnboardingStatus(completed: Boolean)
 

@@ -142,6 +142,7 @@ class AiRecipeDetailViewModel @Inject constructor(
             it.copy(
                 isSaved = false,
                 recipeId = 0L,
+                isError = false,  // 에러 초기화
                 isLoading = true, // 로딩을 즉시 true로
                 title = "",       // 이전 제목 제거
                 description = "", // 이전 설명 제거

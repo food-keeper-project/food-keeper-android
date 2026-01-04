@@ -1,17 +1,26 @@
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.R
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -20,10 +29,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.foodkeeper.core.ui.util.AppColors
+import com.foodkeeper.core.ui.util.AppFonts
 
 import com.foodkeeper.feature.airecipe.AiRecipeDetailViewModel
 import com.foodkeeper.feature.airecipe.RecipeDetailContent
@@ -68,36 +81,103 @@ fun AiRecipeHistoryDetailScreen(
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(padding)) {
-            if (uiState.isLoading) {
-                // 히스토리 로딩은 스피너로 표시
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = AppColors.main)
-                }
-            } else {
-                RecipeDetailContent(uiState, viewModel)
-
-                // ✅ 생성 스크린의 버튼 크기와 동일하게 맞추기 위해 Row 사용
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // 1. 왼쪽 빈 공간 (버튼을 중앙으로 밀어줌)
-                    Spacer(modifier = Modifier.weight(0.5f))
-
-                    // 왼쪽 절반만 저장 버튼이 차지하게 함 (생성 스크린과 동일한 weight 값 부여)
-                    SaveFloatingButton(
-                        uiState = uiState,
-                        viewModel = viewModel,
-                        modifier = Modifier.weight(1f)
+            when {
+                // 1. 에러 발생 시 에러 화면 표시
+                uiState.isError -> {
+                    // 앞서 만든 공통 에러 화면(HomeErrorScreen 등)이나
+                    // 레시피 전용 에러 화면을 호출하세요.
+                    AiHistoryErrorScreen(
+                        onRetry = { viewModel.fetchRecipeDetail(recipeId) }
                     )
+                }
 
-                    // 오른쪽 절반은 비워둠으로써 버튼 크기를 고정 (생성 스크린의 '다시 생성' 버튼 자리)
-                    Spacer(modifier = Modifier.weight(0.5f))
+                // 2. 로딩 중이거나, 로딩은 끝났지만 데이터(제목)가 아직 없는 경우 (깜빡임 방지)
+                uiState.isLoading || uiState.title.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = AppColors.main)
+                    }
+                }
+
+                // 3. 데이터가 확실히 로드된 경우에만 UI 노출
+                else -> {
+                    RecipeDetailContent(uiState, viewModel)
+
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // 생성 스크린과 동일한 비율을 맞추기 위해 0.5f 사용
+                        Spacer(modifier = Modifier.weight(0.5f))
+
+                        SaveFloatingButton(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.weight(0.5f))
+                    }
                 }
             }
+
+        }
+    }
+}
+
+@Composable
+fun AiHistoryErrorScreen(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppColors.white)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "레시피를 불러오지 못했습니다",
+            style = AppFonts.size19Title3,
+            fontWeight = FontWeight.Bold,
+            color = AppColors.black
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "서버 오류가 발생하였습니다.\n잠시 후 다시 시도해주세요.",
+            style = AppFonts.size14Body2,
+            color = AppColors.light2Gray,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // 다시 시도 버튼
+        Button(
+            onClick = onRetry,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AppColors.main,
+                contentColor = AppColors.white
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = "다시 시도하기",
+                style = AppFonts.size16Body1,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

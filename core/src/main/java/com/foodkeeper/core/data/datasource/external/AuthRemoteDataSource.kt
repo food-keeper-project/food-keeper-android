@@ -10,7 +10,7 @@ import javax.inject.Inject
 interface AuthRemoteDataSource {
     fun signInWithKakao(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
     fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
-    fun withdrawAccount(): Flow<ApiResult<String>>
+    fun withdrawAccount(): Flow<String>
     // ✅ 로그아웃 추가
     fun logOut(): Flow<String>
 }
@@ -41,7 +41,7 @@ class DefaultAuthRemoteDataSource @Inject constructor(
         )
     }
 
-    override fun withdrawAccount(): Flow<ApiResult<String>> {
+    override fun withdrawAccount(): Flow<String> {
         return apiService.request(ApiRoute.WithdrawAccount)
     }
 

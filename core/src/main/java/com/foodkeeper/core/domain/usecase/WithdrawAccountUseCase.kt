@@ -9,7 +9,7 @@ class WithdrawAccountUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
     // ✅ ViewModel에서 ApiResult를 사용하므로, 반환 타입을 Flow<ApiResult<String>>으로 변경
-    suspend operator fun invoke(): Flow<ApiResult<String>> {
+    suspend operator fun invoke(): Flow<String> {
         return repository.withdrawAccount()
     }
 }
