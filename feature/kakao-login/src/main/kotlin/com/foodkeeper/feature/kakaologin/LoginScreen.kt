@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,82 +42,116 @@ fun LoginScreen(
     // 1. hiltViewModel()을 사용하여 뷰모델 주입
     viewModel: LoginViewModel = hiltViewModel(),
     // 2. 외부(app 모듈)에서 넘겨줄 성공 콜백
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    // ✅ 자체 로그인 및 회원가입 화면 이동을 위한 콜백 추가 가능
+    onIdLoginClick: () -> Unit = {},
+    onSignUpClick: () -> Unit = {}
 ) {
     // ViewModel의 uiState를 구독하여 상태가 변경될 때마다 리컴포지션을 트리거합니다.
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     Box(
-        modifier = Modifier.fillMaxSize(),
-
-        contentAlignment = Alignment.Center){
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppColors.white),
+        contentAlignment = Alignment.Center
+    ) {
         if (uiState is LoginUiState.Loading) {
-            // 로딩 상태일 때 화면 중앙에 원형 프로그레스 바를 표시합니다.
             CircularProgressIndicator()
         } else {
+            // ✅ 수직 배치를 SpaceBetween으로 설정하여 상단과 하단을 양 끝으로 밀어냄
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(AppColors.white) // 배경색 (이미지와 유사한 연한 회색/흰색)
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 40.dp, bottom = 20.dp), // 상하 최소 여백
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(160.dp)
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                // 상단 여백 (로고를 약간 위쪽에 배치)
-
-                // 2. 푸드키퍼 타이틀
-                Text(
-                    text = AppString.appName,
-                    style = AppFonts.size50Title0,
-                    color = AppColors.main
-                )
-                Spacer(modifier = Modifier.height(100.dp))
-
-                // 로딩 상태가 아닐 때 카카오 로그인 버튼을 표시합니다.
-                // 3. 카카오로 시작하기 버튼
-                Button(
-                    onClick = { viewModel.login(context) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(23.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFEE500), // 카카오 공식 노란색
-                        contentColor = Color(0xFF191919)    // 카카오 공식 텍스트색
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                // [1. 상단 로고 영역] - weight(1f)를 주어 남는 공간을 다 차지하게 함
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center // ✅ 상단 영역의 정중앙에 배치
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-//                     Icon(
-//                         painter = painterResource(id = R.drawable.kakao_logo),
-//                         contentDescription = null,
-//                         modifier = Modifier.size(24.dp)
-//                     )
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "카카오로 시작하기",
-                            style = AppFonts.size19Title3,
-                            color= AppColors.black
-                        )
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.app_icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(160.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = AppString.appName,
+                        style = AppFonts.size50Title0,
+                        color = AppColors.main
+                    )
                 }
 
+                // [2. 하단 버튼 및 링크 영역]
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 카카오로 시작하기
+                    Button(
+                        onClick = { viewModel.login(context) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFEE500),
+                            contentColor = Color(0xFF191919)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Text(
+                            text = "카카오로 시작하기",
+                            style = AppFonts.size16Body1,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
 
+                    // 아이디로 시작하기
+                    Button(
+                        onClick = onIdLoginClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.light4Gray,
+                            contentColor = AppColors.black
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                    ) {
+                        Text(
+                            text = "아이디로 시작하기",
+                            style = AppFonts.size16Body1,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 회원가입 링크
+                    Text(
+                        text = "회원가입하여 시작하기",
+                        style = AppFonts.size14Body2.copy(
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        color = AppColors.light2Gray,
+                        modifier = Modifier
+                            .clickable { onSignUpClick() }
+                            .padding(8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp)) // 최하단 바닥 여백
+                }
             }
         }
-
     }
-
 
     // UI 상태가 변경될 때마다 특정 액션(Side Effect)을 수행합니다.
     // LaunchedEffect는 Composable의 생명주기 내에서 코루틴을 안전하게 실행하는 역할을 합니다.

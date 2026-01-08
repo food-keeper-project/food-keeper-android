@@ -36,6 +36,7 @@ import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.feature.airecipe.AiRecipeGeneratorScreen
 import com.foodkeeper.feature.home.HomeScreen
 import com.foodkeeper.feature.home.HomeViewModel
+import com.foodkeeper.feature.kakaologin.SignUpScreen
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
@@ -137,6 +138,21 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
+                },
+                onSignUpClick = {
+                    navController.navigate("signUp")
+                },
+                onIdLoginClick = {
+
+                }
+            )
+        }
+        //로그인 화면
+        composable("signUp") {
+            SignUpScreen(
+                onBackToLogin = {
+                    // ✅ 회원가입 창에서 뒤로가기 누르면 로그인 화면으로 복귀
+                    navController.popBackStack()
                 }
             )
         }
@@ -226,58 +242,8 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             }
         }
 
-        // ✅ 메인 바깥 (하단바 없는 전체 화면)
-        composable("addFood") {
-            AddFoodScreen(onBackClick = { navController.popBackStack() })
-        }
-//        //프로필 화면
-//        composable("profile") {
-//            ProfileRoute(
-//                onLogoutSuccess = {
-//                    navController.navigate("login") {
-//                        popUpTo(0) { inclusive = true }
-//                    }
-//                },
-//                onWithdrawalClick = {
-//                    // ✅ 회원탈퇴 스크린으로 이동
-//                    navController.navigate("withdrawal")
-//                }
-//            )
-//        }
-//        //회원탈퇴 화면
-//        composable("withdrawal") {
-//            // ✅ 회원탈퇴 전용 Route 호출
-//            WithdrawalRoute(
-//                onBackClick = {
-//                    navController.popBackStack() // 뒤로가기
-//                },
-//                onWithdrawalSuccess = {
-//                    // ✅ 탈퇴 성공 시 로그인 화면으로 이동
-//                    navController.navigate("login") {
-//                        popUpTo(0) { inclusive = true }
-//                    }
-//                }
-//            )
-//        }
-//        //레시피 목록 화면
-//        composable("ai_recipe_history") {
-//            AiRecipeHistoryScreen(
-//                onRecipeClick = { recipeId ->
-//                    navController.navigate("ai_recipe_detail/$recipeId")
-//                }
-//            )
-//        }
 
-//        // 레시피 디테일(상세) 화면
-//        composable(
-//            route = "ai_recipe_detail/{recipeId}",
-//            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
-//        ) {
-//            AiRecipeDetailScreen(
-//                onBackClick = { navController.popBackStack() },
-//                // 필요한 다른 콜백들...
-//            )
-//        }
+
         // ✨ 4. 식재료 추가 화면 (새로 추가)
         composable("addFood") {
             AddFoodScreen(

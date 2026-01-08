@@ -1,7 +1,9 @@
 package com.foodkeeper.core.data.network
 
+import com.foodkeeper.core.data.mapper.request.AccountRequestDTO
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.data.mapper.request.RecipeCreateRequest
+import com.foodkeeper.core.data.mapper.request.SignUpRequestDTO
 import io.ktor.client.request.forms.FormBuilder
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -27,7 +29,11 @@ sealed class ApiRoute {
         val kakaoAccessToken: String, // 카카오에서 받은 토큰
         val mFcmToken: String?         // FCM 토큰
     ) : ApiRoute()
-
+    data class LocalLogin(
+        val account: String, // 카카오에서 받은 토큰
+        val pw: String,
+        val fcmToken:String?// FCM 토큰
+    ) : ApiRoute()
     data class RefreshToken(
         val curAccessToken:String,
         val curRefreshToken:String
@@ -52,6 +58,11 @@ sealed class ApiRoute {
     object WithdrawAccount: ApiRoute()
 
     object GetMyRecipeCount: ApiRoute()
+
+    data class PostCheckAccount(val request: AccountRequestDTO) : ApiRoute()
+    data class PostSignUp(val request: SignUpRequestDTO): ApiRoute()
+    data class PostVerifyEmail(val email: String): ApiRoute()
+    data class PostVerifyEmailCode(val email: String, val code: String): ApiRoute()
 
 
     // ========== 식자재 관련 정의 ==========
@@ -87,7 +98,11 @@ sealed class ApiRoute {
             is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
-
+            is PostCheckAccount -> "api/v1/auth/check/account" // 중복확인 api
+            is PostVerifyEmail -> "api/v1/auth/verify/email" // 이메일 인증 api
+            is PostVerifyEmailCode -> "api/v1/auth/verify/email-code" // 이메일 인증 코드 확인 api
+            is PostSignUp -> "api/v1/auth/sign-up" // 회원가입 api
+            is LocalLogin -> "api/v1/auth/sign-in/local" //로컬로그인 API
             // User
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
             is WithdrawAccount -> "api/v1/members/me/withdraw" // 회원탈퇴 api
@@ -122,6 +137,13 @@ sealed class ApiRoute {
             is PostRecipe -> HttpMethod.Post
             is DeleteFavoriteRecipe -> HttpMethod.Delete
             is WithdrawAccount -> HttpMethod.Delete
+
+            is PostCheckAccount->HttpMethod.Post
+            is PostSignUp->HttpMethod.Post
+            is PostVerifyEmail->HttpMethod.Post
+            is PostVerifyEmailCode->HttpMethod.Post
+            is LocalLogin->HttpMethod.Post
+
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }
@@ -129,7 +151,7 @@ sealed class ApiRoute {
     // ========== 인증 필요 여부 ==========
     val requiresAuth: Boolean
         get() = when (this) {
-            is KakaoLogin, is RefreshToken -> false
+            is KakaoLogin, is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail -> false
             else -> true
         }
 
@@ -153,7 +175,15 @@ sealed class ApiRoute {
                 imageBytes = imageBytes,
                 imageFileName = request.expiryDate
             )
+            is LocalLogin -> mapOf(
+                "account" to account,
+                "password" to pw,
+                "fcmToken" to fcmToken)
+            is PostSignUp -> request
             is PostRecipe -> request
+            is PostCheckAccount -> request
+            is PostVerifyEmail -> mapOf("email" to email)
+            is PostVerifyEmailCode -> mapOf("email" to email, "code" to code)
             else -> null
         }
     // ✅ 빨간 줄 해결: private 함수들을 companion object 안으로 이동하여 스코프를 명확히 함

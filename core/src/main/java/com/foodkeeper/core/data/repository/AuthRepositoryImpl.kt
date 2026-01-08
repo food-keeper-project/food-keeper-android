@@ -4,7 +4,10 @@ import android.content.Context
 import android.util.Log
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
+import com.foodkeeper.core.data.mapper.external.ApiResponse
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.mapper.external.respone.AccountResponseDTO
+import com.foodkeeper.core.data.mapper.request.AccountRequestDTO
 import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.domain.repository.AuthRepository
 import com.kakao.sdk.user.UserApiClient
@@ -39,6 +42,39 @@ class AuthRepositoryImpl @Inject constructor(
     // 더미 context.dataStore 대신 주입받은 tokenManager를 사용합니다.
     override fun hasSeenOnboarding(): Flow<Boolean> {
         return tokenManager.hasSeenOnboarding
+    }
+
+    override suspend fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO> {
+        return authRemoteDataSource.checkIdDuplicate(userId)
+    }
+
+    override suspend fun signUp(
+        userId: String,
+        userPw: String,
+        email: String,
+        nickname: String,
+        gender: String
+    ): Flow<String> {
+        return authRemoteDataSource.signUp(userId,userPw,email,gender,nickname)
+    }
+
+    override suspend fun verifyEmail(email: String): Flow<String> {
+        return authRemoteDataSource.verifyEmail(email)
+    }
+
+    override suspend fun verifyEmailCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyEmailCode(email,code)
+    }
+
+    override suspend fun signIn(
+        userId: String,
+        userPw: String,
+        fcmToken: String?
+    ): Flow<AuthTokenDTO> {
+        return authRemoteDataSource.signIn(userId=userId,userPw=userPw,fcmToken=fcmToken)
     }
 
     override suspend fun refreshToken(): Result<AuthTokenDTO> {
