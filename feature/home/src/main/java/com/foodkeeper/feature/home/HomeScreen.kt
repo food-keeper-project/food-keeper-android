@@ -218,13 +218,13 @@ fun HomeErrorScreen(
     ) {
         // 에러를 시각적으로 보여줄 아이콘 (AiHistory와 통일감 유지)
         Icon(
-            painter = painterResource(id = R.drawable.foodplaceholder), // 혹은 알맞은 경고 아이콘
+            painter = painterResource(id = R.drawable.foodplaceholder),
             contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = AppColors.light4Gray
+            modifier = Modifier.size(160.dp),
+            tint = Color.Unspecified // ✅ 이 설정을 하면 이미지 본래 색상이 나옵니다.
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "데이터를 불러오지 못했습니다",
@@ -293,16 +293,23 @@ private fun HomeContent(
     ) {
 
         // 1. 유통기한 임박 식품
-        item {
-            ExpiringFoodsSection(
-                expiringCount = expiringFoodList.size,
-                foodItems = expiringFoodList
-            )
+        if (expiringFoodList.isNotEmpty()) {
+            item {
+                ExpiringFoodsSection(
+                    expiringCount = expiringFoodList.size,
+                    foodItems = expiringFoodList
+                )
+            }
+
+            // ✅ Spacer를 별도의 item으로 완전히 분리
+            // 임박 식품 리스트가 있을 때만 이 30.dp 공간이 생성됩니다.
+            item {
+                Spacer(modifier = Modifier.height(30.dp))
+            }
         }
 
         // 2. 타이틀
         item {
-            Spacer(modifier = Modifier.height(30.dp))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -338,16 +345,26 @@ private fun HomeContent(
         // 4. 식재료 리스트
         if (filteredFoodList.isEmpty()) {
             item {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth() // 가로를 꽉 채워야 중앙 정렬이 보입니다.
+                        .padding(vertical = 60.dp), // 상하 여백을 충분히 주어 시원하게 보이게 합니다.
+                    verticalArrangement = Arrangement.Center, // 세로 방향 중앙 정렬
+                    horizontalAlignment = Alignment.CenterHorizontally // 가로 방향 중앙 정렬 (핵심!)
                 ) {
+                    // 1. 이미지 (Icon 대신 Image 권장하지만, 색상 유지를 위해 Unspecified 사용 유지)
+                    Icon(
+                        painter = painterResource(id = R.drawable.foodplaceholder),
+                        contentDescription = null,
+                        modifier = Modifier.size(150.dp),
+                        tint = Color.Unspecified
+                    )
+
+                    // 3. 텍스트
                     Text(
-                        text = "식재료가 없습니다",
-                        fontSize = 16.sp,
-                        color = Color.Gray
+                        text = "식재료를 등록해보세요!",
+                        style = AppFonts.size22Title2,
+                        color = AppColors.light4Gray
                     )
                 }
             }
