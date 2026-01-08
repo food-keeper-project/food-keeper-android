@@ -270,7 +270,11 @@ fun RecipeFoodItem(
                 )
 
                 Text(
-                    text = "D+${food.expiryDate.getDDay()}",
+                    text = if (food.expiryDate.getDDay() >= 0) {
+                        "D+${food.expiryDate.getDDay()}"
+                    } else {
+                        "D${food.expiryDate.getDDay()}"
+                    },
                     style = AppFonts.size14Body2,
                     color = AppColors.main,
                 )
