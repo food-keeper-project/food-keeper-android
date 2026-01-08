@@ -40,4 +40,7 @@ interface AuthRepository {
     suspend fun verifyEmail(email: String): Flow<String>
     suspend fun verifyEmailCode(email: String, code: String): Flow<String>
     suspend fun signIn(userId: String, userPw: String, fcmToken: String?): Flow<AuthTokenDTO>
+
+    suspend fun verifyAccount(email: String): Flow<String>
+    suspend fun verifyAccountCode(email: String, code: String): Flow<String>
 }

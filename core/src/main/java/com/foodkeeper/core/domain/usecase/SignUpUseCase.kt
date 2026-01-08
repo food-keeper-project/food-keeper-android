@@ -1,12 +1,11 @@
 package com.foodkeeper.core.domain.usecase
 
-import android.accounts.Account
-import com.foodkeeper.core.data.mapper.external.ApiResponse
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
 import com.foodkeeper.core.data.mapper.external.respone.AccountResponseDTO
 import com.foodkeeper.core.data.mapper.request.SignUpRequestDTO
 import com.foodkeeper.core.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 
@@ -19,10 +18,11 @@ interface SignUpUseCase {
 
     // 3. 이메일 인증번호 확인
     suspend fun verifyEmailCode(email: String, code: String): Flow<String>
-
+    suspend fun verifyAccount(email: String): Flow<String>
+    suspend fun verifyAccountCode(email: String, code: String): Flow<String>
     // 4. 최종 회원가입 요청
     suspend fun signUp(signUpInfo: SignUpRequestDTO): Flow<String>
-    suspend fun signIn(userId: String, userPw: String, fcmToken: String?): Flow<AuthTokenDTO>
+    suspend fun signIn(userId: String, userPw: String): Flow<AuthTokenDTO>
 }
 
 class DefaultSignUpUseCase @Inject constructor(
@@ -41,16 +41,40 @@ class DefaultSignUpUseCase @Inject constructor(
         return authRepository.verifyEmailCode(email, code)
     }
 
+    override suspend fun verifyAccount(email: String): Flow<String> {
+        return authRepository.verifyAccount(email)
+    }
+
+    override suspend fun verifyAccountCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRepository.verifyAccountCode(email, code)
+    }
+
     override suspend fun signUp(signUpInfo: SignUpRequestDTO): Flow<String> {
         return authRepository.signUp(signUpInfo.account, signUpInfo.password, signUpInfo.email, signUpInfo.nickname, signUpInfo.gender)
     }
 
     override suspend fun signIn(
         userId: String,
-        userPw: String,
-        fcmToken: String?
+        userPw: String
     ): Flow<AuthTokenDTO> {
-        return authRepository.signIn(userId=userId,userPw=userPw,fcmToken=fcmToken)
+        val fcmToken = authRepository.getFcmToken()
+
+        return authRepository.signIn(userId = userId, userPw = userPw, fcmToken = fcmToken)
+            .map { authTokenDto ->
+                // ✅ 서버로부터 받은 토큰이 유효한지 확인
+                if (!authTokenDto.accessToken.isNullOrEmpty()) {
+                    // ✅ AuthRepository를 통해 토큰 저장
+                    authRepository.saveTokens(
+                        accessToken = authTokenDto.accessToken,
+                        refreshToken = authTokenDto.refreshToken ?: ""
+                    )
+                }
+                // 받은 DTO를 그대로 ViewModel로 전달
+                authTokenDto
+            }
     }
 }
 

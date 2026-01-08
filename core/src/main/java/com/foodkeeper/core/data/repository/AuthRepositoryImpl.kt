@@ -77,6 +77,17 @@ class AuthRepositoryImpl @Inject constructor(
         return authRemoteDataSource.signIn(userId=userId,userPw=userPw,fcmToken=fcmToken)
     }
 
+    override suspend fun verifyAccount(email: String): Flow<String> {
+        return authRemoteDataSource.verifyAccount(email)
+    }
+
+    override suspend fun verifyAccountCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyAccountCode(email,code)
+    }
+
     override suspend fun refreshToken(): Result<AuthTokenDTO> {
         Log.d("AuthRepo", "1. refreshToken 진입") // 이게 찍히는지 확인
         return runCatching {

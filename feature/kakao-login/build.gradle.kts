@@ -36,7 +36,8 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
 
     
-    implementation(libs.hilt.android) // <-- 이 줄 추가
+    implementation(libs.hilt.android)
+    implementation(libs.firebase.messaging.ktx) // <-- 이 줄 추가
     kapt(libs.hilt.compiler) // <-- 이 줄 추가
     implementation(libs.androidx.hilt.navigation.compose)
 

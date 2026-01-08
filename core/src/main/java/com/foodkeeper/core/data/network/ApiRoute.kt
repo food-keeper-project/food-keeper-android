@@ -64,6 +64,10 @@ sealed class ApiRoute {
     data class PostVerifyEmail(val email: String): ApiRoute()
     data class PostVerifyEmailCode(val email: String, val code: String): ApiRoute()
 
+    data class PostAccountVerify(val email: String) : ApiRoute()
+    data class PostAccountCodeVerify(val email: String,val code:String) : ApiRoute()
+   // data class PostPwVerify(val request: AccountRequestDTO) : ApiRoute()
+   // data class PostPwCodeVerify(val request: AccountRequestDTO) : ApiRoute()
 
     // ========== 식자재 관련 정의 ==========
     data class AllFoodList(
@@ -99,10 +103,13 @@ sealed class ApiRoute {
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
             is PostCheckAccount -> "api/v1/auth/check/account" // 중복확인 api
-            is PostVerifyEmail -> "api/v1/auth/verify/email" // 이메일 인증 api
-            is PostVerifyEmailCode -> "api/v1/auth/verify/email-code" // 이메일 인증 코드 확인 api
+            is PostVerifyEmail -> "api/v1/auth/email/verify" // 이메일 인증 api
+            is PostVerifyEmailCode -> "api/v1/auth/email-code/verify" // 이메일 인증 코드 확인 api
             is PostSignUp -> "api/v1/auth/sign-up" // 회원가입 api
             is LocalLogin -> "api/v1/auth/sign-in/local" //로컬로그인 API
+            is PostAccountVerify -> "api/v1/auth/account/verify" // 이메일 인증 api
+            is PostAccountCodeVerify -> "api/v1/auth/account-code/verify" // 이메일 인증 코드 확인 api
+
             // User
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
             is WithdrawAccount -> "api/v1/members/me/withdraw" // 회원탈퇴 api
@@ -142,6 +149,8 @@ sealed class ApiRoute {
             is PostSignUp->HttpMethod.Post
             is PostVerifyEmail->HttpMethod.Post
             is PostVerifyEmailCode->HttpMethod.Post
+            is PostAccountVerify->HttpMethod.Post
+            is PostAccountCodeVerify->HttpMethod.Post
             is LocalLogin->HttpMethod.Post
 
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
@@ -151,7 +160,7 @@ sealed class ApiRoute {
     // ========== 인증 필요 여부 ==========
     val requiresAuth: Boolean
         get() = when (this) {
-            is KakaoLogin, is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail -> false
+            is KakaoLogin, is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail -> false
             else -> true
         }
 
@@ -184,6 +193,8 @@ sealed class ApiRoute {
             is PostCheckAccount -> request
             is PostVerifyEmail -> mapOf("email" to email)
             is PostVerifyEmailCode -> mapOf("email" to email, "code" to code)
+            is PostAccountVerify -> mapOf("email" to email)
+            is PostAccountCodeVerify -> mapOf("email" to email, "code" to code)
             else -> null
         }
     // ✅ 빨간 줄 해결: private 함수들을 companion object 안으로 이동하여 스코프를 명확히 함

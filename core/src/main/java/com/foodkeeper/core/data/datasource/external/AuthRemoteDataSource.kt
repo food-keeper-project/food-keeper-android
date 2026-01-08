@@ -22,6 +22,8 @@ interface AuthRemoteDataSource {
     fun verifyEmail(email: String): Flow<String>
     fun verifyEmailCode(email: String, code: String): Flow<String>
     fun signIn(userId: String, userPw: String, fcmToken: String?): Flow<AuthTokenDTO>
+    fun verifyAccount(email: String): Flow<String>
+    fun verifyAccountCode(email: String, code: String): Flow<String>
 }
 
 class DefaultAuthRemoteDataSource @Inject constructor(
@@ -91,6 +93,17 @@ class DefaultAuthRemoteDataSource @Inject constructor(
         fcmToken: String?
     ): Flow<AuthTokenDTO> {
         return apiService.request(ApiRoute.LocalLogin(userId,userPw,fcmToken))
+    }
+
+    override fun verifyAccount(email: String): Flow<String> {
+        return apiService.request(ApiRoute.PostAccountVerify(email))
+    }
+
+    override fun verifyAccountCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return apiService.request(ApiRoute.PostAccountCodeVerify(email, code))
     }
 
 }

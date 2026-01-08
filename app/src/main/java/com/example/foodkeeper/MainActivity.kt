@@ -36,6 +36,7 @@ import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.feature.airecipe.AiRecipeGeneratorScreen
 import com.foodkeeper.feature.home.HomeScreen
 import com.foodkeeper.feature.home.HomeViewModel
+import com.foodkeeper.feature.kakaologin.SignInScreen
 import com.foodkeeper.feature.kakaologin.SignUpScreen
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
@@ -143,10 +144,28 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                     navController.navigate("signUp")
                 },
                 onIdLoginClick = {
-
+                    // ✅ "아이디로 시작하기" 버튼 클릭 시 signIn 화면으로 이동
+                    navController.navigate("signIn")
                 }
             )
         }
+        // ✅ 아이디/비밀번호 입력 로그인 화면 (새로 추가)
+        composable("signIn") {
+            SignInScreen(
+                onNavigateToMain = {
+                    // 로그인 성공 시 메인 화면으로 이동
+                    navController.navigate("main") {
+                        // 로그인과 관련된 모든 화면(signIn, login)을 스택에서 제거
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onBackToLoginSelect = {
+                    // 뒤로가기 시 로그인 선택 화면으로 이동
+                    navController.popBackStack()
+                }
+            )
+        }
+
         //로그인 화면
         composable("signUp") {
             SignUpScreen(
