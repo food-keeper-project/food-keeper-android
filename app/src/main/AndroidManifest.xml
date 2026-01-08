@@ -4,6 +4,8 @@
 
     <!-- 1. 인터넷 사용 권한 추가 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 알림 사용 권한 추가 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config"

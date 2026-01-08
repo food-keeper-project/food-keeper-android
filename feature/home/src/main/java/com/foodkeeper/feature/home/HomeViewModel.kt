@@ -1,5 +1,6 @@
 package com.foodkeeper.feature.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.domain.model.Food
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.onEach
 import com.foodkeeper.core.domain.usecase.FoodUseCase
 import com.foodkeeper.core.ui.base.BaseUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,11 +55,13 @@ class HomeViewModel @Inject constructor(
     // 토스트 메시지를 위한 일회성 이벤트 Flow
     private val _toastMessage = MutableSharedFlow<String>()
     val toastMessage = _toastMessage.asSharedFlow()
+    // 푸시 알림 권한 여부
+    private val _permissionEvent = Channel<NotificationPermissionEvent>() // SharedFlow 대신 Channel
+    val permissionEvent = _permissionEvent.receiveAsFlow() // Flow로 노출
 
     // --------------------
     // 화면 진입
     // --------------------
-
     fun onScreenEnter() {
         viewModelScope.launch {
             _uiState.value = BaseUiState.Loading
@@ -78,6 +83,36 @@ class HomeViewModel @Inject constructor(
                     _foodCategories.value = categories
                     _uiState.value = BaseUiState.Content
                 }
+        }
+    }
+
+    // --------------------
+    // 알림 권한 체크 로직
+    // --------------------
+    fun checkNotificationPermission(
+        isGranted: Boolean,
+        shouldShowRationale: Boolean,
+        isFirstRequest: Boolean
+    ) {
+        viewModelScope.launch {
+            // 디버깅을 위한 로그 추가
+            Log.d("Permission", "Check - Granted: $isGranted, Rationale: $shouldShowRationale, First: $isFirstRequest")
+
+            when {
+                isGranted -> { /* 권한 있음: 처리 불필요 */ }
+
+                isFirstRequest -> {
+                    _permissionEvent.send(NotificationPermissionEvent.RequestPermission)
+                }
+
+                shouldShowRationale -> {
+                    _permissionEvent.send(NotificationPermissionEvent.ShowRationale)
+                }
+
+                else -> {
+                    _permissionEvent.send(NotificationPermissionEvent.GoToSettings)
+                }
+            }
         }
     }
 
