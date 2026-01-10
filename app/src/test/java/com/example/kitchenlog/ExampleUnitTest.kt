@@ -1,4 +1,4 @@
-package com.example.foodkeeper
+package com.example.kitchenlog
 
 import org.junit.Test
 

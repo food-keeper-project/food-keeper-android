@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.foodkeeper",
+  "applicationId": "com.swyp.kitchenlog",
   "variantName": "release",
   "elements": [
     {

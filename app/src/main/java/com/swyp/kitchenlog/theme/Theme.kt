@@ -1,6 +1,7 @@
-package com.example.foodkeeper.ui.theme
+package com.swyp.kitchenlog.theme
 
 import android.app.Activity
+import android.graphics.Color
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,7 +11,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -63,7 +63,7 @@ fun FoodKeeperTheme(
 
             // ✅ 1. 상태바 배경색을 투명하게 설정 (Scaffold 배경색이 보이도록 함)
             // 또는 android.graphics.Color.WHITE로 고정 가능
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.statusBarColor = Color.TRANSPARENT
 
             // ✅ 2. 상태바 아이콘 색상 설정
             // 배경이 흰색일 때 아이콘이 보여야 하므로,

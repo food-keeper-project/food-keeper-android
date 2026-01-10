@@ -1,4 +1,4 @@
-// feature/splash/src/main/kotlin/com/foodkeeper/feature/splash/SplashScreen.kt
+// feature/splash/src/main/kotlin/com/com.swyp.com.swyp.com.swyp.kitchenlog/feature/splash/SplashScreen.kt
 package com.foodkeeper.feature.splash
 
 import androidx.compose.foundation.Image

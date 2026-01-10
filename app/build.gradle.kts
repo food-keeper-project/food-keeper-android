@@ -11,11 +11,11 @@ kotlin {
     jvmToolchain(17)
 }
 android {
-    namespace = "com.example.foodkeeper"
+    namespace = "com.swyp.kitchenlog"
     compileSdk = 36
-
+//텟
     defaultConfig {
-        applicationId = "com.example.foodkeeper"
+        applicationId = "com.swyp.kitchenlog"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

@@ -2,7 +2,7 @@
 
 // 안드로이드 라이브러리 플러그인을 적용합니다.
 plugins {
-    id("foodkeeper.android.library")
+    id("com.swyp.com.swyp.com.swyp.kitchenlog.android.library")
     // 아래와 같이 alias를 사용하는 것이 관리에 용이합니다.
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)

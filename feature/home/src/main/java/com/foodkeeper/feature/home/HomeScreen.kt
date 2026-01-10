@@ -356,7 +356,7 @@ private fun HomeContent(
                     Icon(
                         painter = painterResource(id = R.drawable.foodplaceholder),
                         contentDescription = null,
-                        modifier = Modifier.size(150.dp),
+                        modifier = Modifier.size(160.dp),
                         tint = Color.Unspecified
                     )
 

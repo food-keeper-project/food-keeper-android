@@ -2,7 +2,7 @@
 
 plugins {
     // 공통 라이브러리 설정을 적용합니다. (Android 설정, Compose 기초 등 포함되어 있을 것임)
-    id("foodkeeper.android.library")
+    id("com.swyp.com.swyp.com.swyp.kitchenlog.android.library")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)

@@ -13,7 +13,7 @@ repositories {
     gradlePluginPortal()
 }
 // Gradle이 이 모듈의 플러그인을 찾을 수 있도록 그룹 ID 설정
-group = "com.foodkeeper.buildlogic"
+group = "com.com.swyp.com.swyp.com.swyp.kitchenlog.buildlogic"
 // 버전 카탈로그(libs.versions.toml)에 접근하기 위한 변수 선언
 val libs = extensions.getByType<org.gradle.accessors.dm.LibrariesForLibs>()
 
@@ -38,11 +38,11 @@ gradlePlugin {
     plugins {
         // "플러그인 이름" to (id = "ID", implementationClass = "클래스 경로")
         register("androidApplication") {
-            id = "foodkeeper.android.application"
+            id = "com.swyp.com.swyp.com.swyp.kitchenlog.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
         register("androidLibrary") {
-            id = "foodkeeper.android.library"
+            id = "com.swyp.com.swyp.com.swyp.kitchenlog.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
     }
