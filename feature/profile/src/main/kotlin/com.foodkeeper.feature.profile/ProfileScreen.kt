@@ -35,6 +35,10 @@ fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
+//    // ✅✅✅ 핵심 수정: 화면이 보일 때마다 프로필 정보를 새로고침합니다. ✅✅✅
+   LaunchedEffect(Unit) {
+       viewModel.fetchUserProfile()
+  }
 
     LaunchedEffect(Unit) {
         viewModel.logoutSuccess.collectLatest { success ->

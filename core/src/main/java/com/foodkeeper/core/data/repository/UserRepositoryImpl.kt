@@ -1,33 +1,34 @@
 package com.foodkeeper.core.data.repository
 
+import android.util.Log
 import com.foodkeeper.core.data.datasource.external.UserRemoteDataSource
+import com.foodkeeper.core.data.datasource.local.TokenManager
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
+import com.kakao.sdk.user.UserApiClient
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @Singleton // 앱이 켜져 있는 동안 이 객체는 하나만 유지됩니다.
 class UserRepositoryImpl @Inject constructor(
-    private val userRemoteDataSource: UserRemoteDataSource
+    private val userRemoteDataSource: UserRemoteDataSource,
+    private val tokenManager: TokenManager
 ) : UserRepository {
 
-    // ✅ 앱 프로세스가 살아있는 동안만 유지되는 메모리 캐시 변수
-    private var cachedProfile: ProfileDTO? = null
 
     override suspend fun getMyProfile(): Result<ProfileDTO> {
         // 1. 이미 이번 세션에서 한 번 불러온 적이 있다면? (캐시 존재)
         // 서버에 가지 않고 즉시 메모리에 있는 값을 반환합니다.
-        cachedProfile?.let {
-            return Result.success(it)
-        }
-
         // 2. 캐시가 없다면(앱을 새로 켰거나 처음 호출한 경우)? 서버에서 가져옵니다.
         return try {
             val remoteProfile = userRemoteDataSource.getMyProfile().first()
 
             // 3. 서버에서 받은 데이터를 메모리에 저장합니다.
             // 이제 앱을 끌 때까지 1번 로직에 의해 서버 통신이 발생하지 않습니다.
-            cachedProfile = remoteProfile
 
             Result.success(remoteProfile)
         } catch (e: Exception) {
@@ -35,25 +36,56 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-//    // ✅ 로그아웃 구현
-//    override suspend fun logout(): Result<String> {
-//        return try {
-//            // 1. 서버 로그아웃 요청
-//            val response = userRemoteDataSource.logOut().first()
-//
-//            // 2. 로그아웃 성공 시(또는 실패와 상관없이) 메모리 캐시 비우기
-//            clearCache()
-//
-//            Result.success(response)
-//        } catch (e: Exception) {
-//            // 서버 통신에 실패하더라도 로컬 캐시는 비워주는 것이 안전합니다.
-//            clearCache()
-//            Result.failure(e)
-//        }
-//    }
+    // ✅✅✅ 핵심 수정: 로그인 타입에 따라 분기하는 로그아웃 로직 ✅✅✅
+    override suspend fun logout(): Result<Unit> {
+        return try {
+            // 1. 저장된 마지막 로그인 방식을 가져옵니다.
+            val lastLoginType = tokenManager.loginType.first()
 
-    // 로그아웃 시 캐시를 비워줘야 다음 로그인 때 이전 사용자 정보가 안 보입니다.
-    fun clearCache() {
-        cachedProfile = null
+            // 2. 로그인 방식이 'KAKAO'일 경우, 카카오 로그아웃을 먼저 시도합니다.
+            if (lastLoginType == TokenManager.LoginType.KAKAO) {
+                // suspendCoroutine을 사용하여 콜백 기반의 카카오 SDK를 코루틴으로 변환합니다.
+                suspendCoroutine { continuation ->
+                    UserApiClient.instance.logout { error ->
+                        if (error != null) {
+                            // 카카오 로그아웃이 실패하더라도 (예: 오프라인 상태)
+                            // 우리 앱의 로그아웃 절차는 계속 진행해야 하므로 에러를 로깅만 하고 무시합니다.
+                            Log.w("AuthRepoImpl", "Kakao SDK logout failed, but proceeding. Error: ${error.message}")
+                        } else {
+                            Log.d("AuthRepoImpl", "Kakao SDK logout successful.")
+                        }
+                        // 성공/실패 여부와 관계없이 코루틴을 재개하여 다음 단계를 진행합니다.
+                        continuation.resume(Unit)
+                    }
+                }
+            }
+
+            // 3. (공통) 우리 서버에 로그아웃 API를 호출합니다. (선택적이지만 권장)
+            // 서버에 FCM 토큰을 삭제해달라고 요청하는 등의 역할을 합니다.
+            // 실패하더라도 로컬 토큰은 반드시 지워야 하므로 collect는 비워둡니다.
+            userRemoteDataSource.logOut().catch { e ->
+                Log.w("AuthRepoImpl", "Server logout API failed: ${e.message}")
+            }.collect()
+
+            // 4. (가장 중요) 기기에 저장된 모든 로컬 토큰을 삭제합니다.
+            tokenManager.clearTokens()
+
+
+            // 5. 모든 절차가 끝나면 최종 성공을 반환합니다.
+            Result.success(Unit)
+
+        } catch (e: Exception) {
+            // 위 과정 중 예기치 못한 에러(e.g., DataStore 접근 실패) 발생 시
+            Log.e("AuthRepoImpl", "Logout failed with an unexpected exception.", e)
+            // 방어적으로 한 번 더 토큰 삭제를 시도합니다.
+            try {
+                tokenManager.clearTokens()
+
+            } catch (clearError: Exception) {
+                Log.e("AuthRepoImpl", "Failed to clear tokens in catch block.", clearError)
+            }
+            Result.failure(e)
+        }
     }
+
 }

@@ -25,8 +25,7 @@ interface AuthRepository {
     // 5. 토큰 저장
     suspend fun saveTokens(accessToken: String, refreshToken: String)
 
-    // 6. 로그아웃
-    suspend fun logout(): Result<Unit>
+
     suspend fun withdrawAccount(): Flow<String>
     // ✅ 온보딩 완료 상태 저장
     suspend fun saveOnboardingStatus(completed: Boolean)

@@ -167,7 +167,6 @@ sealed class ApiRoute {
         get() = when (this) {
             is KakaoLogin, is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail
                 ,is PostPwVerify, is PostPwCodeVerify, is PostPwReset -> false
-            is WithdrawAccount -> false
             else -> true
         }
 

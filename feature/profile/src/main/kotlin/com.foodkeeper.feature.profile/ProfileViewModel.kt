@@ -30,7 +30,7 @@ class ProfileViewModel @Inject constructor(
         fetchUserProfile()
     }
 
-    private fun fetchUserProfile() {
+    fun fetchUserProfile() {
         viewModelScope.launch {
             getUserProfileUseCase().onSuccess { profile ->
                 _userProfile.value = profile

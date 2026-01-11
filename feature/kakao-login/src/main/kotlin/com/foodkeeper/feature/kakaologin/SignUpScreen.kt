@@ -65,12 +65,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import com.foodkeeper.core.ui.util.isEmailValid
 import com.foodkeeper.core.ui.util.isPasswordValid
 //import androidx.compose.ui.text.intl.Locale
 import kotlin.text.format
@@ -393,7 +396,16 @@ fun PasswordSection(
             OutlinedTextField(
                 enabled = isEnabled,
                 value = pwCheck,
-                onValueChange = onPwCheckChange,
+                // ✅✅✅ 핵심 수정 ✅✅✅
+                onValueChange = { newPwCheck ->
+                    // 1. ViewModel에 새로운 값을 업데이트하도록 요청합니다.
+                    onPwCheckChange(newPwCheck)
+                    // 2. 만약 비밀번호가 유효하고, 새로 입력된 값이 비밀번호와 일치하면
+                    if (isPasswordValid && newPwCheck == pw) {
+                        // 3. 즉시 다음 단계로 넘어가는 함수를 호출합니다.
+                        onDone()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("비밀번호 다시 입력") },
                 visualTransformation = PasswordVisualTransformation(),
@@ -472,14 +484,22 @@ fun EmailSection(
                         unfocusedContainerColor = AppColors.white, // 포커스 아닐 때 배경색
                         focusedIndicatorColor = AppColors.point, // 포커스 됐을 때 테두리 색
                         unfocusedIndicatorColor =  AppColors.main // 포커스 아닐 때 테두리 색
-                    )
+                    ),
+                    supportingText = {
+                        if (email.isNotBlank() && !email.isEmailValid()) {
+                            Text(
+                                text = "올바른 이메일 형식을 입력해주세요.",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
                 )
                 Button(
                     onClick = {
                         onSendClick()
                     },
                     // ✅ 로딩 중이거나 타이머 작동 중이면 클릭 불가
-                    enabled = isEnabled && email.isNotBlank() && !isTimerRunning && !isVerified && !isLoading,
+                    enabled = isEnabled && email.isNotBlank() &&email.isEmailValid()&& !isTimerRunning && !isVerified && !isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isTimerRunning) AppColors.light3Gray else AppColors.main
                     )
@@ -513,6 +533,8 @@ fun EmailSection(
                         placeholder = { Text("인증코드 입력") },
                         enabled = !isVerified,
                         singleLine = true,
+                        // ✅✅✅ 핵심 수정: 키보드 타입을 숫자 전용으로 변경 ✅✅✅
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         trailingIcon = {
                             val minutes = timeLeft / 60
                             val seconds = timeLeft % 60
@@ -534,7 +556,10 @@ fun EmailSection(
                         onClick = {
                             onVerifyClick(code)
                         },
-                        enabled = code.length >= 4 && timeLeft > 0&& !isVerified
+                        enabled = code.length >= 4 && timeLeft > 0&& !isVerified,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.main
+                        )
                     ) {
                         Text("확인")
                     }
@@ -582,7 +607,10 @@ fun NicknameSection(
                     onNext(text)
                 },
                 modifier = Modifier.align(Alignment.End)
-                    .background(AppColors.main),
+                ,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.main
+                ),
                 enabled = text.isNotBlank() // ✅ 비어있으면 클릭 불가
             ) {
                 Text("다음")

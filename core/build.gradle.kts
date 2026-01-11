@@ -12,6 +12,10 @@ plugins {
 }
 android {
     namespace = "com.foodkeeper.core"
+    // ✅✅✅ 이 부분을 추가해주세요 ✅✅✅
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

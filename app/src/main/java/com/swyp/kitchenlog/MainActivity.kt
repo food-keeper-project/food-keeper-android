@@ -51,20 +51,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ 키 해시 추출 코드 (수정본)
-//        try {
-//            val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-//            for (signature in info.signatures!!) {
-//                val md = MessageDigest.getInstance("SHA")
-//                md.update(signature.toByteArray())
-//
-//                // android.util.Base64를 사용하여 오류 해결
-//                val keyHash = android.util.Base64.encodeToString(md.digest(), android.util.Base64.DEFAULT)
-//                Log.d("KeyHash", "현재 앱의 키 해시: ${keyHash.trim()}")
-//            }
-//        } catch (e: Exception) {
-//            Log.e("KeyHash", "해시 키를 가져올 수 없습니다.", e)
-//        }
+
+
+
         setContent {
             FoodKeeperTheme {
                 navController = rememberNavController()

@@ -19,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodKeeper">
 
+
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="true" />
