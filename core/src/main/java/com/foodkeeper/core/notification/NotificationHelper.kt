@@ -15,7 +15,7 @@ class NotificationHelper(private val context: Context) {
     companion object {
         private const val CHANNEL_ID = "food_keeper_channel"
         private const val CHANNEL_NAME = "식자재 알림"
-        private const val GROUP_KEY = "com.foodkeeper.NOTIF_GROUP" // 그룹화를 위한 키
+        private const val GROUP_KEY = "com.com.swyp.com.swyp.com.swyp.kitchenlog.NOTIF_GROUP" // 그룹화를 위한 키
         private const val SUMMARY_ID = 0 // 요약 알림의 고유 ID
     }
 

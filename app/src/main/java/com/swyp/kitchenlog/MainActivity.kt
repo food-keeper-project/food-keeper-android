@@ -1,4 +1,4 @@
-package com.example.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
+package com.swyp.kitchenlog // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
 import AiRecipeHistoryDetailScreen
 import WithdrawalRoute
@@ -26,7 +26,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.add_food.AddFoodScreen
 import com.foodkeeper.feature.kakaologin.LoginScreen
-import com.example.foodkeeper.ui.theme.FoodKeeperTheme
 import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
@@ -41,6 +40,7 @@ import com.foodkeeper.feature.kakaologin.SignUpScreen
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
+import com.swyp.kitchenlog.theme.FoodKeeperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
 
@@ -52,19 +52,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // ✅ 키 해시 추출 코드 (수정본)
-        try {
-            val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-            for (signature in info.signatures!!) {
-                val md = MessageDigest.getInstance("SHA")
-                md.update(signature.toByteArray())
-
-                // android.util.Base64를 사용하여 오류 해결
-                val keyHash = android.util.Base64.encodeToString(md.digest(), android.util.Base64.DEFAULT)
-                Log.d("KeyHash", "현재 앱의 키 해시: ${keyHash.trim()}")
-            }
-        } catch (e: Exception) {
-            Log.e("KeyHash", "해시 키를 가져올 수 없습니다.", e)
-        }
+//        try {
+//            val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+//            for (signature in info.signatures!!) {
+//                val md = MessageDigest.getInstance("SHA")
+//                md.update(signature.toByteArray())
+//
+//                // android.util.Base64를 사용하여 오류 해결
+//                val keyHash = android.util.Base64.encodeToString(md.digest(), android.util.Base64.DEFAULT)
+//                Log.d("KeyHash", "현재 앱의 키 해시: ${keyHash.trim()}")
+//            }
+//        } catch (e: Exception) {
+//            Log.e("KeyHash", "해시 키를 가져올 수 없습니다.", e)
+//        }
         setContent {
             FoodKeeperTheme {
                 navController = rememberNavController()

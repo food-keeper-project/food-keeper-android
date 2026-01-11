@@ -1,4 +1,5 @@
 package com.foodkeeper.feature.kakaologin
+
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -57,6 +58,7 @@ fun LoginScreen(
         contentAlignment = Alignment.Center
     ) {
         if (uiState is LoginUiState.Loading) {
+            // 로딩 상태일 때 화면 중앙에 원형 프로그레스 바를 표시합니다.
             CircularProgressIndicator()
         } else {
             // ✅ 수직 배치를 SpaceBetween으로 설정하여 상단과 하단을 양 끝으로 밀어냄

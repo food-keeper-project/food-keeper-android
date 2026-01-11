@@ -207,6 +207,7 @@ fun RecipeFoodItem(
     onToggle: () -> Unit
 ) {
     val imageShape = RoundedCornerShape(8.dp)
+    val  dDay = food.expiryDate.getDDay()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -270,7 +271,7 @@ fun RecipeFoodItem(
                 )
 
                 Text(
-                    text = "D+${food.expiryDate.getDDay()}",
+                    text = if (dDay >= 0) "D-$dDay" else "D+${kotlin.math.abs(dDay)}",
                     style = AppFonts.size14Body2,
                     color = AppColors.main,
                 )

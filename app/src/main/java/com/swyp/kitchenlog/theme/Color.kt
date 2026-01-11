@@ -1,4 +1,4 @@
-package com.example.foodkeeper.ui.theme
+package com.swyp.kitchenlog.theme
 
 import androidx.compose.ui.graphics.Color
 

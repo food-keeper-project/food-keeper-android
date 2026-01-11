@@ -91,7 +91,7 @@ fun AiRecipeHistoryScreen(
                         Image(
                             painter = painterResource(id = R.drawable.empty_favorite_recipe),
                             contentDescription = "저장된 레시피 없음",
-                            modifier = Modifier.size(200.dp)
+                            modifier =Modifier.size(160.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 //                    Text(

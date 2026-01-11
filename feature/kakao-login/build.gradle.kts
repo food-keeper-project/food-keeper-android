@@ -2,7 +2,7 @@
 
 plugins {
     // build-logic에 정의한 공통 라이브러리 플러그인을 적용합니다.
-    id("foodkeeper.android.library")
+    id("com.swyp.com.swyp.com.swyp.kitchenlog.android.library")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)

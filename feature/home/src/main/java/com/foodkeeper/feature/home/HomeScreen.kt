@@ -1,7 +1,13 @@
 package com.foodkeeper.feature.home
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foodkeeper.core.R
 import com.foodkeeper.core.domain.model.Food
@@ -53,7 +62,11 @@ import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
 import com.foodkeeper.feature.home.component.allFoodsSection.FoodListItem
 import com.foodkeeper.feature.home.component.dialog.FoodDetailDialog
 import com.foodkeeper.feature.home.component.dialog.RecipeRecommendationDialog
+import com.foodkeeper.feature.home.component.dialog.findActivity
+import com.foodkeeper.feature.home.component.dialog.showGoToSettingsDialog
+import com.foodkeeper.feature.home.component.dialog.showNotificationRationaleDialog
 import com.foodkeeper.feature.home.component.expiringFoodsSection.ExpiringFoodsSection
+import kotlinx.coroutines.launch
 
 /**
  * 메인 홈 화면
@@ -65,6 +78,16 @@ fun HomeScreen(
     onRecipeRecommendFoods: (List<Food>) -> Unit,
 ) {
     val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
+
+    var isFirstPermissionRequest by rememberSaveable { mutableStateOf(true) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        isFirstPermissionRequest = false
+        // 권한 요청 후 상태 업데이트가 필요하다면 코드 작성 필요
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val expiringFoodList by viewModel.expiringFoodList.collectAsState()
@@ -74,101 +97,94 @@ fun HomeScreen(
     val selectedRecipeRecommend by viewModel.selectedRecipeRecommend.collectAsState()
 
     LaunchedEffect(Unit) {
+        // 토스트 메시지 수집
+        launch {
+            viewModel.toastMessage.collect { message ->
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 권한 이벤트 수집
+        launch {
+            viewModel.permissionEvent.collect { event ->
+                when (event) {
+                    NotificationPermissionEvent.RequestPermission -> {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                    NotificationPermissionEvent.ShowRationale -> {
+                        showNotificationRationaleDialog(context) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                    NotificationPermissionEvent.GoToSettings -> {
+                        showGoToSettingsDialog(context)
+                    }
+                }
+            }
+        }
+
+        // 데이터 로딩
         viewModel.onScreenEnter()
-        viewModel.toastMessage.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+        // 권한 체크 실행 (안드로이드 13 이상)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && activity != null) {
+            val isGranted = ContextCompat.checkSelfPermission(
+                context, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                activity, Manifest.permission.POST_NOTIFICATIONS
+            )
+
+            viewModel.checkNotificationPermission(
+                isGranted = isGranted,
+                shouldShowRationale = shouldShowRationale,
+                isFirstRequest = isFirstPermissionRequest
+            )
         }
     }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(AppColors.white)
-    ) {
-
-        // --------------------
-        // 메인 UI
-        // --------------------
+    Box(modifier = Modifier.fillMaxSize().background(AppColors.white)) {
         when (uiState) {
-            is BaseUiState.Init -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("초기화 중...")
-                }
-            }
-
+            is BaseUiState.Init -> { /* 초기화 UI */ }
             is BaseUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator(color = Color(0xFFFF9500))
                 }
             }
-
-            is BaseUiState.Content,
-            is BaseUiState.Processing -> {
+            is BaseUiState.Content, is BaseUiState.Processing -> {
                 HomeContent(
                     expiringFoodList = expiringFoodList,
                     foodCategorys = foodCategorys,
                     foodList = foodList,
-                    onFoodItemClick = { food ->
-                        viewModel.onFoodItemClick(food)
-                    }
+                    onFoodItemClick = viewModel::onFoodItemClick
                 )
                 FloatingActionButton(
-                    onClick = {
-                        viewModel.onRecipeRecommendClick(foodList)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 30.dp, bottom = 30.dp)
-                        .size(60.dp),
+                    onClick = { viewModel.onRecipeRecommendClick(foodList) },
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(30.dp).size(60.dp),
                     shape = CircleShape,
-                    containerColor = AppColors.main,
-                    contentColor = Color.White
+                    containerColor = AppColors.main
                 ) {
-                    Text(
-                        text = "AI",
-                        style = AppFonts.size22Title2,
-                        color = AppColors.white
-                    )
+                    Text("AI", style = AppFonts.size22Title2, color = AppColors.white)
                 }
             }
-
             is BaseUiState.ErrorState -> {
-                // ✅ 에러 발생 시 호출
-                HomeErrorScreen(
-                    onRetry = { viewModel.onScreenEnter() }
-                )
+                HomeErrorScreen(onRetry = viewModel::onScreenEnter)
             }
         }
 
-        // --------------------
-        // Processing 오버레이
-        // --------------------
         if (uiState is BaseUiState.Processing) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
-                    .clickable(
-                        enabled = true,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { /* 아무 것도 안 함 */ },
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f))
+                    .clickable(enabled = true, indication = null, interactionSource = remember { MutableInteractionSource() }) {},
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Color(0xFFFF9500))
             }
         }
-
     }
 
-    // --------------------
-    // 다이얼로그
-    // --------------------
+    // 다이얼로그 처리
     selectedFood?.let { food ->
         FoodDetailDialog(
             food = food,
@@ -176,20 +192,18 @@ fun HomeScreen(
             onConsumption = viewModel::onConsumptionFood
         )
     }
-    selectedRecipeRecommend?.let { foodList ->
-        //유통기한 임박 정렬
-        val sortedList = foodList.sortedBy { it.expiryDate.getDDay() }//.filter { it.expiryDate.getDDay() >= 0 } //유통기한 지난 식재료 제외 필요 시 주석 해제
+    selectedRecipeRecommend?.let { list ->
         RecipeRecommendationDialog(
-            sortedList,
+            list.sortedBy { it.expiryDate.getDDay() },
             onDismiss = viewModel::onDismissDialog,
             onGenerateRecipe = { selectFoods ->
                 onRecipeRecommendFoods(selectFoods)
-                Log.d("TAG", "HomeScreen: ")
                 viewModel.onDismissDialog()
             }
         )
     }
 }
+
 @Composable
 fun HomeErrorScreen(
     onRetry: () -> Unit,modifier: Modifier = Modifier
@@ -204,13 +218,13 @@ fun HomeErrorScreen(
     ) {
         // 에러를 시각적으로 보여줄 아이콘 (AiHistory와 통일감 유지)
         Icon(
-            painter = painterResource(id = R.drawable.foodplaceholder), // 혹은 알맞은 경고 아이콘
+            painter = painterResource(id = R.drawable.foodplaceholder),
             contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = AppColors.light4Gray
+            modifier = Modifier.size(160.dp),
+            tint = Color.Unspecified // ✅ 이 설정을 하면 이미지 본래 색상이 나옵니다.
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "데이터를 불러오지 못했습니다",
@@ -279,16 +293,23 @@ private fun HomeContent(
     ) {
 
         // 1. 유통기한 임박 식품
-        item {
-            ExpiringFoodsSection(
-                expiringCount = expiringFoodList.size,
-                foodItems = expiringFoodList
-            )
+        if (expiringFoodList.isNotEmpty()) {
+            item {
+                ExpiringFoodsSection(
+                    expiringCount = expiringFoodList.size,
+                    foodItems = expiringFoodList
+                )
+            }
+
+            // ✅ Spacer를 별도의 item으로 완전히 분리
+            // 임박 식품 리스트가 있을 때만 이 30.dp 공간이 생성됩니다.
+            item {
+                Spacer(modifier = Modifier.height(30.dp))
+            }
         }
 
         // 2. 타이틀
         item {
-            Spacer(modifier = Modifier.height(30.dp))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -324,16 +345,26 @@ private fun HomeContent(
         // 4. 식재료 리스트
         if (filteredFoodList.isEmpty()) {
             item {
-                Box(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth() // 가로를 꽉 채워야 중앙 정렬이 보입니다.
+                        .padding(vertical = 60.dp), // 상하 여백을 충분히 주어 시원하게 보이게 합니다.
+                    verticalArrangement = Arrangement.Center, // 세로 방향 중앙 정렬
+                    horizontalAlignment = Alignment.CenterHorizontally // 가로 방향 중앙 정렬 (핵심!)
                 ) {
+                    // 1. 이미지 (Icon 대신 Image 권장하지만, 색상 유지를 위해 Unspecified 사용 유지)
+                    Icon(
+                        painter = painterResource(id = R.drawable.foodplaceholder),
+                        contentDescription = null,
+                        modifier = Modifier.size(160.dp),
+                        tint = Color.Unspecified
+                    )
+
+                    // 3. 텍스트
                     Text(
-                        text = "식재료가 없습니다",
-                        fontSize = 16.sp,
-                        color = Color.Gray
+                        text = "식재료를 등록해보세요!",
+                        style = AppFonts.size22Title2,
+                        color = AppColors.light4Gray
                     )
                 }
             }

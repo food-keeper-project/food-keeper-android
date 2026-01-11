@@ -4,7 +4,8 @@ object ApiKey {
 
 //    const val BASE_URL = "http://prod.foodkeeper.shop/" //실서버
 
-    const val BASE_URL = "https://dev.kitchenlog.shop/" //테스트서버
+    //const val BASE_URL = "https://dev.kitchenlog.shop/" //테스트서버
 
+    const val BASE_URL = "https://prod.kitchenlog.shop/" //실서버
     const val KAKAO_KEY = ""
 }

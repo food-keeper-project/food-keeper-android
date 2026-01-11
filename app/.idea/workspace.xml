@@ -5,44 +5,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="09f7364f-da9f-4785-ba04-394515428d94" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/proguard-rules.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/androidTest/java/com/example/foodkeeper/ExampleInstrumentedTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/AndroidManifest.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/MainActivity.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Color.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Theme.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Type.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/drawable/ic_launcher_foreground.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-hdpi/ic_launcher.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-hdpi/ic_launcher_round.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-mdpi/ic_launcher.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-mdpi/ic_launcher_round.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xhdpi/ic_launcher.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxhdpi/ic_launcher.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/values/colors.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/values/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/values/themes.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/xml/backup_rules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/res/xml/data_extraction_rules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/example/foodkeeper/ExampleUnitTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../build.gradle.kts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradle.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradle/libs.versions.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../settings.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/swyp/kitchenlog/KitchenLogApplication.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/google-services.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/androidTest/java/com/example/foodkeeper/ExampleInstrumentedTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/androidTest/java/com/example/kitchenlog/ExampleInstrumentedTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/swyp/kitchenlog/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/MyApplication.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/swyp/kitchenlog/theme/Color.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Theme.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/swyp/kitchenlog/theme/Theme.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/foodkeeper/ui/theme/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/swyp/kitchenlog/theme/Type.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/example/foodkeeper/ExampleUnitTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/example/kitchenlog/ExampleUnitTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../build-logic/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../build-logic/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../build-logic/src/main/kotlin/AndroidApplicationConventionPlugin.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../build-logic/src/main/kotlin/AndroidApplicationConventionPlugin.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../core/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/data/network/SessionManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/data/network/SessionManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/di/NetworkModule.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/di/NetworkModule.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/domain/usecase/CheckLoginStatusUseCase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/domain/usecase/CheckLoginStatusUseCase.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/notification/NotificationHelper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/notification/NotificationHelper.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/ui/theme/Shape.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../core/src/main/java/com/foodkeeper/core/ui/theme/Shape.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/add-Food/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/add-Food/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/ai-recipe/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/ai-recipe/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/ai-recipe/src/main/kotlin/com/foodkeeper/feature/airecipe/AiRecipeHistoryScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/ai-recipe/src/main/kotlin/com/foodkeeper/feature/airecipe/AiRecipeHistoryScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/foodKeeper-Main/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/foodKeeper-Main/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/home/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/home/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/home/src/main/java/com/foodkeeper/feature/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/home/src/main/java/com/foodkeeper/feature/home/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/kakao-login/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/kakao-login/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/kakao-login/src/main/kotlin/com/foodkeeper/feature/kakaologin/LoginScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/kakao-login/src/main/kotlin/com/foodkeeper/feature/kakaologin/LoginScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/profile/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/profile/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/splash/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/splash/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/splash/src/main/kotlin/com.foodkeeper.feature.splash/SplashScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/splash/src/main/kotlin/com.foodkeeper.feature.splash/SplashScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../feature/splash/src/main/kotlin/com.foodkeeper.feature.splash/SplashViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../feature/splash/src/main/kotlin/com.foodkeeper.feature.splash/SplashViewModel.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,21 +52,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "9mean"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;9mean&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/food-keeper-project/food-keeper-android.git",
-    "accountId": "1a062b77-57b6-4783-a6a1-a3c9a5981f74"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/food-keeper-project/food-keeper-android.git&quot;,
+    &quot;accountId&quot;: &quot;1a062b77-57b6-4783-a6a1-a3c9a5981f74&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="36n380X4y97C3iUpqxDKNpilvb0" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -80,11 +77,12 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "android.gradle.sync.needed": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "dev",
     "last_opened_file_path": "C:/Users/kanggm/Documents/food-keeper-android/app"
   }
 }]]></component>

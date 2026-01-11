@@ -1,4 +1,4 @@
-// core/src/main/kotlin/com/foodkeeper/core/domain/usecase/CheckLoginStatusUseCase.kt
+// core/src/main/kotlin/com/com.swyp.com.swyp.com.swyp.kitchenlog/core/domain/usecase/CheckLoginStatusUseCase.kt
 package com.foodkeeper.core.domain.usecase
 
 import com.foodkeeper.core.domain.repository.AuthRepository
