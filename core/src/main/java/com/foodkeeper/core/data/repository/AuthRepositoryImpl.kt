@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
-import com.foodkeeper.core.data.mapper.external.ApiResponse
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
 import com.foodkeeper.core.data.mapper.external.respone.AccountResponseDTO
 import com.foodkeeper.core.data.mapper.request.AccountRequestDTO
@@ -88,6 +87,29 @@ class AuthRepositoryImpl @Inject constructor(
         return authRemoteDataSource.verifyAccountCode(email,code)
     }
 
+    override suspend fun verifyPassword(
+        email: String,
+        account: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyPassword(email,account)
+    }
+
+    override suspend fun verifyPasswordCode(
+        email: String,
+        account: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyPasswordCode(email,account,code)
+    }
+
+    override suspend fun resetPassword(
+        email: String,
+        account: String,
+        password: String
+    ): Flow<String> {
+        return authRemoteDataSource.resetPassword(email,account,password)
+    }
+
     override suspend fun refreshToken(): Result<AuthTokenDTO> {
         Log.d("AuthRepo", "1. refreshToken 진입") // 이게 찍히는지 확인
         return runCatching {
@@ -117,7 +139,9 @@ class AuthRepositoryImpl @Inject constructor(
     // 더미 emit(false) 대신 실제 저장된 accessToken이 비어있지 않은지 확인합니다.
     override fun hasToken(): Flow<Boolean> {
         return tokenManager.accessToken.map { token ->
+            Log.d("TAG", "hasToken: $token")
             !token.isNullOrBlank()
+
         }
     }
 

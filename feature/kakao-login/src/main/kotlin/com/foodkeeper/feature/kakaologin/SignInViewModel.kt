@@ -4,7 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.domain.usecase.SignUpUseCase // TODO: 로그인 전용 SignInUseCase로 교체하는 것을 권장합니다.
+import com.foodkeeper.core.ui.util.isEmailValid
+import com.foodkeeper.core.ui.util.isPasswordValid
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,38 +19,57 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// ✅ 계정 찾기 화면의 상세 상태를 관리
-data class FindAccountUiState(
-    val selectedTab: FindAccountTab = FindAccountTab.ID, // 현재 선택된 탭 (아이디/비밀번호)
-    val findId: String = "", // ✅ '비밀번호 찾기' 시 사용할 아이디 필드 추가
-    val email: String = "",
-    val code: String = "",
-    val isCodeSent: Boolean = false, // 인증번호 발송 여부
-    val isCodeVerified: Boolean = false, // 인증번호 확인 여부
-    val foundUserId: String? = null, // ✅ 아이디 찾기 성공 시 결과 저장
-    val newPassword: String = "",
-    val newPasswordConfirm: String = ""
-)
-
-// ✅ 탭 종류를 Enum으로 정의
+// ✅ 아이디/비밀번호 찾기 탭 종류
 enum class FindAccountTab {
     ID, PASSWORD
 }
 
-// ✅ 로그인/계정찾기 단계를 나타내는 Enum (SignInStep -> AuthStep으로 이름 변경)
+// ✅ 로그인/계정찾기 화면 단계
 enum class AuthStep {
     ID_INPUT, PW_INPUT, FIND_ACCOUNT
 }
 
-// ✅ 기존 SignInUiState에 FindAccountUiState 통합
+// --- 상태(State) 정의 ---
+
+// ✅ 아이디 찾기 상세 상태
+data class FindIdState(
+    val email: String = "",
+    val code: String = "",
+    val isCodeSent: Boolean = false,
+    val isVerified: Boolean = false,
+    val foundId: String? = null,
+    val timerSeconds: Int = 0
+)
+
+// ✅ 비밀번호 찾기 상세 상태
+data class FindPasswordState(
+    val id: String = "",
+    val email: String = "",
+    val code: String = "",
+    val isCodeSent: Boolean = false,
+    val isVerified: Boolean = false,
+    val newPassword: String = "",
+    val newPasswordConfirm: String = "",
+    val timerSeconds: Int = 0
+)
+
+// ✅ 계정 찾기 전체 상태 (탭 + 각 탭의 상세 상태)
+data class FindAccountUiState(
+    val selectedTab: FindAccountTab = FindAccountTab.ID,
+    val findIdState: FindIdState = FindIdState(),
+    val findPasswordState: FindPasswordState = FindPasswordState()
+)
+
+// ✅ 로그인 화면의 최상위 상태
 data class SignInUiState(
     val userId: String = "",
     val userPw: String = "",
-    val currentStep: AuthStep = AuthStep.ID_INPUT, // ✅ AuthStep으로 타입 변경
+    val currentStep: AuthStep = AuthStep.ID_INPUT,
     val isLoading: Boolean = false,
     val isSignInSuccess: Boolean = false,
     val errorMessage: String? = null,
-    val findAccountState: FindAccountUiState = FindAccountUiState() // 계정 찾기 상태 추가
+    val findAccountState: FindAccountUiState = FindAccountUiState(),
+    val resetPasswordSuccess: Boolean = false // ✅ 비밀번호 재설정 성공 상태 추가
 )
 
 @HiltViewModel
@@ -56,7 +79,7 @@ class SignInViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
-
+    private var timerJob: Job? = null
     // --- 일반 로그인 관련 함수 ---
 
     fun updateId(id: String) { _uiState.update { it.copy(userId = id) } }
@@ -66,9 +89,50 @@ class SignInViewModel @Inject constructor(
      * 화면 단계를 변경합니다 (ID_INPUT, PW_INPUT, FIND_ACCOUNT).
      */
     fun setStep(step: AuthStep) { // ✅ 파라미터 타입 AuthStep으로 변경
+        timerJob?.cancel() // 화면 단계 변경 시 타이머 취소
         _uiState.update { it.copy(currentStep = step) }
     }
+    private fun startTimer(tab: FindAccountTab) {
+        timerJob?.cancel()
+        timerJob=viewModelScope.launch {
+            val initialTime = 300 // 5분 = 300초
 
+            // 타이머 시작 시 초기 시간 설정
+            if (tab == FindAccountTab.ID) {
+                _uiState.update {
+                    it.copy(findAccountState = it.findAccountState.copy(
+                        findIdState = it.findAccountState.findIdState.copy(timerSeconds = initialTime)
+                    ))
+                }
+            } else {
+                _uiState.update {
+                    it.copy(findAccountState = it.findAccountState.copy(
+                        findPasswordState = it.findAccountState.findPasswordState.copy(timerSeconds = initialTime)
+                    ))
+                }
+            }
+
+            // 1초마다 시간 감소
+            for (i in initialTime downTo 1) {
+                delay(1000)
+                if (tab == FindAccountTab.ID) {
+                    _uiState.update {
+                        val newTime = it.findAccountState.findIdState.timerSeconds - 1
+                        it.copy(findAccountState = it.findAccountState.copy(
+                            findIdState = it.findAccountState.findIdState.copy(timerSeconds = newTime)
+                        ))
+                    }
+                } else {
+                    _uiState.update {
+                        val newTime = it.findAccountState.findPasswordState.timerSeconds - 1
+                        it.copy(findAccountState = it.findAccountState.copy(
+                            findPasswordState = it.findAccountState.findPasswordState.copy(timerSeconds = newTime)
+                        ))
+                    }
+                }
+            }
+        }
+    }
     /**
      * 최종 로그인 로직
      */
@@ -94,128 +158,248 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    // --- 계정 찾기 관련 함수 ---
-
-    /**
-     * '아이디 찾기' / '비밀번호 찾기' 탭을 변경합니다.
-     */
+    // --- 계정 찾기 공통 함수 ---
     fun onTabSelected(tab: FindAccountTab) {
-        // 탭을 변경할 때 관련 상태 초기화
+        // 탭 변경 시 모든 하위 상태 초기화
+        _uiState.update {
+            it.copy(findAccountState = FindAccountUiState(selectedTab = tab))
+        }
+    }
+
+    // --- 아이디 찾기(Find ID) 관련 함수 ---
+    fun onFindIdEmailChange(email: String) {
         _uiState.update {
             it.copy(
-                findAccountState = FindAccountUiState(selectedTab = tab)
+                findAccountState = it.findAccountState.copy(
+                    findIdState = it.findAccountState.findIdState.copy(email = email)
+                )
             )
         }
     }
 
-    /**
-     * '비밀번호 찾기' 시 아이디 입력값을 변경합니다.
-     */
-    fun onFindAccountIdChange(id: String) {
-        _uiState.update { it.copy(findAccountState = it.findAccountState.copy(findId = id)) }
-    }
-
-
-    /**
-     * 계정 찾기 화면의 이메일 입력값을 변경합니다.
-     */
-    fun onFindAccountEmailChange(email: String) {
-        _uiState.update { it.copy(findAccountState = it.findAccountState.copy(email = email)) }
-    }
-
-    /**
-     * 계정 찾기 화면의 인증코드 입력값을 변경합니다.
-     */
-    fun onFindAccountCodeChange(code: String) {
-        _uiState.update { it.copy(findAccountState = it.findAccountState.copy(code = code)) }
-    }
-
-    /**
-     * 계정 찾기를 위한 인증코드를 발송합니다.
-     */
-    fun sendFindAccountCode() {
-        viewModelScope.launch {
-            val findState = uiState.value.findAccountState
-            // UseCase에 적절한 함수가 있다고 가정 (예: sendEmailVerification)
-            // 실제 함수 이름은 UseCase에 맞게 수정해야 합니다.
-            signInUseCase.sendEmailVerification(findState.email)
-                .onStart { _uiState.update { it.copy(isLoading = true) } }
-                .onCompletion { _uiState.update { it.copy(isLoading = false) } }
-                .catch { e ->
-                    _uiState.update { it.copy(errorMessage = e.message ?: "인증번호 발송에 실패했습니다.") }
-                }
-                .collect { message -> // 성공 메시지 또는 결과를 처리
-                    Log.d("AUTH", "인증번호 발송 성공: $message")
-                    _uiState.update {
-                        it.copy(
-                            findAccountState = it.findAccountState.copy(isCodeSent = true),
-                            errorMessage = message // 성공 메시지를 사용자에게 보여줄 수 있음
-                        )
-                    }
-                }
+    fun onFindIdCodeChange(code: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findIdState = it.findAccountState.findIdState.copy(code = code)
+                )
+            )
         }
     }
 
+    fun sendFindIdCode() {
+        val email = uiState.value.findAccountState.findIdState.email
+        // ✅ 이메일 형식 검사 추가
+        if (email.isBlank() || !email.isEmailValid()) {
+            _uiState.update { it.copy(errorMessage = "올바른 이메일 형식을 입력해주세요.") }
+            return
+        }
 
-    /**
-     * 발송된 인증코드가 맞는지 확인합니다.
-     */
-    fun verifyFindAccountCode() {
         viewModelScope.launch {
-            val findState = uiState.value.findAccountState
-            // UseCase에 적절한 함수가 있다고 가정 (예: verifyEmailCode)
-            // 실제 함수 이름은 UseCase에 맞게 수정해야 합니다.
-            signInUseCase.verifyEmailCode(findState.email, findState.code)
+            signInUseCase.verifyAccount(email) // UseCase가 이제 Flow<ApiResponse<String>>을 반환합니다.
                 .onStart { _uiState.update { it.copy(isLoading = true) } }
                 .onCompletion { _uiState.update { it.copy(isLoading = false) } }
                 .catch { e ->
-                    _uiState.update { it.copy(errorMessage = e.message ?: "인증번호가 일치하지 않습니다.") }
+                    // 네트워크 자체의 문제나 예상치 못한 에러 처리
+                    _uiState.update { it.copy(errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다.") }
                 }
-                .collect { message -> // 성공 시, 아이디 찾기라면 찾은 아이디를 포함할 수 있음
-                    Log.d("AUTH", "인증번호 확인 성공: $message")
-
-                    // 아이디 찾기인 경우, message에 찾은 아이디가 포함되어 있다고 가정
-                    val foundId = if (findState.selectedTab == FindAccountTab.ID) message else null
-
-                    _uiState.update {
-                        it.copy(
-                            findAccountState = it.findAccountState.copy(
-                                isCodeVerified = true,
-                                foundUserId = foundId
+                .collect { res -> // 'res'는 이제 ApiResponse<String> 타입입니다.
+                    if (!res.isEmpty()) {
+                        // 성공적으로 발송되었을 때의 로직
+                        Log.d("AUTH", "아이디 찾기 인증번호 발송 성공: $email")
+                        _uiState.update {
+                            it.copy(
+                                findAccountState = it.findAccountState.copy(
+                                    findIdState = it.findAccountState.findIdState.copy(isCodeSent = true)
+                                )
                             )
-                        )
+                        }
+                        startTimer(FindAccountTab.ID) // 타이머 시작!
+                    } else {
+                        // API는 성공했으나, 서버 비즈니스 로직상 실패 (예: 가입되지 않은 이메일)
+                        _uiState.update { it.copy(errorMessage = "인증번호 발송에 실패했습니다.") }
                     }
                 }
         }
     }
 
-    // ✅ 새 비밀번호 입력값 변경
-    fun onNewPasswordChange(pw: String) {
-        _uiState.update { it.copy(findAccountState = it.findAccountState.copy(newPassword = pw)) }
-    }
 
-    // ✅ 새 비밀번호 확인 입력값 변경
-    fun onNewPasswordConfirmChange(pw: String) {
-        _uiState.update { it.copy(findAccountState = it.findAccountState.copy(newPasswordConfirm = pw)) }
-    }
+    fun verifyFindIdCode() {
+        val state = uiState.value.findAccountState.findIdState
+        if (state.email.isBlank() || state.code.isBlank()) return
 
-    /**
-     * 새 비밀번호로 재설정을 요청합니다.
-     */
-    fun resetPassword() {
         viewModelScope.launch {
-            val findState = uiState.value.findAccountState
-            if (findState.newPassword != findState.newPasswordConfirm || findState.newPassword.isBlank()) {
-                _uiState.update { it.copy(errorMessage = "비밀번호가 일치하지 않거나 유효하지 않습니다.") }
-                return@launch
-            }
-
-            _uiState.update { it.copy(isLoading = true) }
-            // TODO: 비밀번호 재설정 API 호출 (id, email, newPassword 필요)
-            _uiState.update { it.copy(isLoading = false) }
-            // 성공 시 로그인 화면으로 돌려보내는 로직 등 추가 가능
+            signInUseCase.verifyAccountCode(state.email, state.code) // Flow<ApiResponse<AccountResponseDTO>> 반환
+                .onStart { _uiState.update { it.copy(isLoading = true) } }
+                .onCompletion { _uiState.update { it.copy(isLoading = false) } }
+                .catch { e ->
+                    _uiState.update { it.copy(errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다.") }
+                }
+                .collect { res -> // 'res'는 이제 ApiResponse<AccountResponseDTO> 타입입니다.
+                    // ✅ 서버 응답의 result와 data를 모두 확인
+                    if (!res.isEmpty()) {
+                        // 성공 처리
+                        _uiState.update {
+                            it.copy(
+                                findAccountState = it.findAccountState.copy(
+                                    findIdState = it.findAccountState.findIdState.copy(
+                                        isVerified = true,
+                                        //foundId = res.data.account // ✅ 실제 찾은 아이디를 상태에 저장
+                                    )
+                                )
+                            )
+                        }
+                    } else {
+                        // 실패 처리
+                        _uiState.update { it.copy(errorMessage = "인증번호가 일치하지 않습니다.") }
+                    }
+                }
         }
     }
 
-    fun clearErrorMessage() { _uiState.update { it.copy(errorMessage = null) } }
-}
+
+
+    // --- 비밀번호 찾기(Find Password) 관련 함수 ---
+    fun onFindPwIdChange(id: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findPasswordState = it.findAccountState.findPasswordState.copy(id = id)
+                )
+            )
+        }
+    }
+
+    fun onFindPwEmailChange(email: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findPasswordState = it.findAccountState.findPasswordState.copy(email = email)
+                )
+            )
+        }
+    }
+
+    fun onFindPwCodeChange(code: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findPasswordState = it.findAccountState.findPasswordState.copy(code = code)
+                )
+            )
+        }
+    }
+
+    fun onNewPasswordChange(pw: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findPasswordState = it.findAccountState.findPasswordState.copy(newPassword = pw)
+                )
+            )
+        }
+    }
+
+    fun onNewPasswordConfirmChange(pw: String) {
+        _uiState.update {
+            it.copy(
+                findAccountState = it.findAccountState.copy(
+                    findPasswordState = it.findAccountState.findPasswordState.copy(newPasswordConfirm = pw)
+                )
+            )
+        }
+    }
+
+    // ✅✅✅ 핵심 수정 1: 비밀번호 찾기 인증번호 발송 API 연결
+    fun sendFindPwCode() {
+        val state = uiState.value.findAccountState.findPasswordState
+        if (state.id.isBlank() || state.email.isBlank() || !state.email.isEmailValid()) {
+            _uiState.update { it.copy(errorMessage = "아이디를 입력하고 올바른 이메일 형식을 입력해주세요.") }
+            return
+        }
+
+        viewModelScope.launch {
+            signInUseCase.verifyPassword(state.email, state.id)
+                .onStart { _uiState.update { it.copy(isLoading = true) } }
+                .onCompletion { _uiState.update { it.copy(isLoading = false) } }
+                .catch { e ->
+                    _uiState.update { it.copy(errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다.") }
+                }
+                .collect { res ->
+                    if (!res.isEmpty()) {
+                        _uiState.update {
+                            it.copy(findAccountState = it.findAccountState.copy(
+                                findPasswordState = it.findAccountState.findPasswordState.copy(isCodeSent = true))
+                            )
+                        }
+                        startTimer(FindAccountTab.PASSWORD) // 타이머 시작! (PASSWORD 탭으로 수정)
+                    } else {
+                        _uiState.update { it.copy(errorMessage = "일치하는 사용자 정보가 없습니다.") }
+                    }
+                }
+        }
+    }
+
+    // ✅✅✅ 핵심 수정 2: 비밀번호 찾기 인증번호 확인 API 연결
+    fun verifyFindPwCode() {
+        val state = uiState.value.findAccountState.findPasswordState
+        if (state.code.isBlank() || state.id.isBlank() || state.email.isBlank()) return
+
+        viewModelScope.launch {
+            signInUseCase.verifyPasswordCode(state.email, state.id, state.code)
+                .onStart { _uiState.update { it.copy(isLoading = true) } }
+                .onCompletion { _uiState.update { it.copy(isLoading = false) } }
+                .catch { e ->
+                    _uiState.update { it.copy(errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다.") }
+                }
+                .collect { res ->
+                    if (!res.isEmpty()) {
+                        timerJob?.cancel() // 인증 성공 시 타이머 중지
+                        _uiState.update {
+                            it.copy(findAccountState = it.findAccountState.copy(
+                                findPasswordState = it.findAccountState.findPasswordState.copy(isVerified = true))
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(errorMessage = "인증번호가 일치하지 않습니다.") }
+                    }
+                }
+        }
+    }
+
+    // ✅✅✅ 핵심 수정 3: 비밀번호 재설정 API 연결
+    fun resetPassword() {
+        val state = uiState.value.findAccountState.findPasswordState
+        if (state.newPassword != state.newPasswordConfirm || state.newPassword.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "새 비밀번호가 일치하지 않습니다.") }
+            return
+        }
+        // ✅ 새로 추가된 유효성 검사 로직
+        if (!state.newPassword.isPasswordValid()) {
+            _uiState.update { it.copy(errorMessage = "비밀번호는 영문, 숫자를 포함하여 8~20자여야 합니다.") }
+            return
+        }
+        if (!state.isVerified) {
+            _uiState.update { it.copy(errorMessage = "이메일 인증이 완료되지 않았습니다.") }
+            return
+        }
+
+        viewModelScope.launch {
+           signInUseCase.resetPassword(state.email, state.id, state.newPassword)
+                .onStart { _uiState.update { it.copy(isLoading = true) } }
+                .onCompletion { _uiState.update { it.copy(isLoading = false) } }
+                .catch { e ->
+                    _uiState.update { it.copy(errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다.") }
+                }
+                .collect { res ->
+                    if (!res.isEmpty()) {
+                        _uiState.update { it.copy(resetPasswordSuccess = true) } // 성공 상태 true로 변경
+                        setStep(AuthStep.ID_INPUT) // 성공 시 로그인 화면으로 전환
+                    } else {
+                        _uiState.update { it.copy(errorMessage = "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.") }
+                    }
+                }
+        }
+    }
+
+    fun clearErrorMessage() { _uiState.update { it.copy(errorMessage = null) } }}

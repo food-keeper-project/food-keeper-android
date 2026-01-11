@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.data.mapper.request.SignUpRequestDTO
 import com.foodkeeper.core.domain.usecase.SignUpUseCase
+import com.foodkeeper.core.ui.util.isPasswordValid
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -98,14 +99,11 @@ class SignUpViewModel @Inject constructor(
     }
 
 
-    fun isPasswordValid(password: String): Boolean {
-        return passwordRegex.matches(password)
-    }
 
     // 비밀번호 체크 완료 시 호출되는 함수 수정
     fun checkPasswordMatch() {
         val state = _uiState.value
-        if (isPasswordValid(state.userPw) && state.userPw == state.userPwCheck) {
+        if (state.userPw.isPasswordValid() && state.userPw == state.userPwCheck) {
             _uiState.update { it.copy(currentStep = 3) } // 유효하고 일치하면 다음 단계로
         }
     }
@@ -139,7 +137,7 @@ class SignUpViewModel @Inject constructor(
                     Log.d("SIGNUP_DEBUG", "Collect 진입성공! 전체 응답: $res")
                     //Log.d("SIGNUP_DEBUG", "서버 결과값(result): ${res.result}")
 
-                    if (res=="SUCCESS") {
+                    if (!res.isEmpty()) {
                         Log.d("SIGNUP_DEBUG", "성공 판정: UI 상태 업데이트 실행")
                         _uiState.update { it.copy(
                             isEmailSent = true,
@@ -169,7 +167,7 @@ class SignUpViewModel @Inject constructor(
                     _uiState.update { it.copy(errorMessage = e.message,isLoading = false) }
                 }
                 .collect { response->
-                    if (response=="SUCCESS") {
+                    if (!response.isEmpty()) {
                         // 인증 성공 시 다음 단계(닉네임)로 이동
                         _uiState.update { it.copy(
                             currentStep = 4,

@@ -23,6 +23,9 @@ interface SignUpUseCase {
     // 4. 최종 회원가입 요청
     suspend fun signUp(signUpInfo: SignUpRequestDTO): Flow<String>
     suspend fun signIn(userId: String, userPw: String): Flow<AuthTokenDTO>
+    suspend fun resetPassword(email: String, account: String, password: String): Flow<String>
+    suspend fun verifyPassword(email: String, account: String): Flow<String>
+    suspend fun verifyPasswordCode(email: String, account: String, code: String): Flow<String>
 }
 
 class DefaultSignUpUseCase @Inject constructor(
@@ -33,7 +36,7 @@ class DefaultSignUpUseCase @Inject constructor(
         return authRepository.checkIdDuplicate(userId)
     }
 
-    override suspend fun sendEmailVerification(email: String): Flow<String> {
+    override suspend fun sendEmailVerification(email: String):Flow<String> {
         return authRepository.verifyEmail(email)
     }
 
@@ -75,6 +78,29 @@ class DefaultSignUpUseCase @Inject constructor(
                 // 받은 DTO를 그대로 ViewModel로 전달
                 authTokenDto
             }
+    }
+
+    override suspend fun resetPassword(
+        email: String,
+        account: String,
+        password: String
+    ): Flow<String> {
+        return authRepository.resetPassword(email, account, password)
+    }
+
+    override suspend fun verifyPassword(
+        email: String,
+        account: String
+    ): Flow<String> {
+        return authRepository.verifyPassword(email, account)
+    }
+
+    override suspend fun verifyPasswordCode(
+        email: String,
+        account: String,
+        code: String
+    ): Flow<String> {
+        return authRepository.verifyPasswordCode(email, account, code)
     }
 }
 

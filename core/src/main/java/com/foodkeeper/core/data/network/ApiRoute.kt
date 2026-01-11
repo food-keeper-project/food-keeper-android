@@ -66,9 +66,9 @@ sealed class ApiRoute {
 
     data class PostAccountVerify(val email: String) : ApiRoute()
     data class PostAccountCodeVerify(val email: String,val code:String) : ApiRoute()
-   // data class PostPwVerify(val request: AccountRequestDTO) : ApiRoute()
-   // data class PostPwCodeVerify(val request: AccountRequestDTO) : ApiRoute()
-
+    data class PostPwVerify(val email:String,val account:String) : ApiRoute()
+    data class PostPwCodeVerify(val email:String,val account:String,val code:String) : ApiRoute()
+    data class PostPwReset(val email:String,val account:String,val password:String) : ApiRoute()
     // ========== 식자재 관련 정의 ==========
     data class AllFoodList(
         val categoryId: Long?,
@@ -109,7 +109,9 @@ sealed class ApiRoute {
             is LocalLogin -> "api/v1/auth/sign-in/local" //로컬로그인 API
             is PostAccountVerify -> "api/v1/auth/account/verify" // 이메일 인증 api
             is PostAccountCodeVerify -> "api/v1/auth/account-code/verify" // 이메일 인증 코드 확인 api
-
+            is PostPwVerify -> "api/v1/auth/password/verify"
+            is PostPwCodeVerify -> "api/v1/auth/password-code/verify"
+            is PostPwReset -> "api/v1/auth/password/change"
             // User
             is MyProfile -> "api/v1/members/me" // 내 카톡 프로필 사진,이름을 가져오는 API
             is WithdrawAccount -> "api/v1/members/me/withdraw" // 회원탈퇴 api
@@ -151,6 +153,9 @@ sealed class ApiRoute {
             is PostVerifyEmailCode->HttpMethod.Post
             is PostAccountVerify->HttpMethod.Post
             is PostAccountCodeVerify->HttpMethod.Post
+            is PostPwVerify->HttpMethod.Post
+            is PostPwCodeVerify->HttpMethod.Post
+            is PostPwReset->HttpMethod.Post
             is LocalLogin->HttpMethod.Post
 
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
@@ -160,7 +165,9 @@ sealed class ApiRoute {
     // ========== 인증 필요 여부 ==========
     val requiresAuth: Boolean
         get() = when (this) {
-            is KakaoLogin, is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail -> false
+            is KakaoLogin, is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail
+                ,is PostPwVerify, is PostPwCodeVerify, is PostPwReset -> false
+            is WithdrawAccount -> false
             else -> true
         }
 
@@ -195,6 +202,9 @@ sealed class ApiRoute {
             is PostVerifyEmailCode -> mapOf("email" to email, "code" to code)
             is PostAccountVerify -> mapOf("email" to email)
             is PostAccountCodeVerify -> mapOf("email" to email, "code" to code)
+            is PostPwVerify -> mapOf("email" to email, "account" to account)
+            is PostPwCodeVerify -> mapOf("email" to email, "account" to account, "code" to code)
+            is PostPwReset -> mapOf("email" to email, "account" to account, "newPassword" to password)
             else -> null
         }
     // ✅ 빨간 줄 해결: private 함수들을 companion object 안으로 이동하여 스코프를 명확히 함
