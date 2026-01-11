@@ -15,10 +15,12 @@ import javax.inject.Singleton
 class TokenManager @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
+    enum class LoginType { KAKAO, EMAIL }
     companion object {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("accessToken")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refreshToken")
         private val USER_ID_KEY = stringPreferencesKey("userID")
+        private val KEY_LOGIN_TYPE = stringPreferencesKey("loginType")
         val HAS_SEEN_ONBOARDING_KEY = booleanPreferencesKey("hasSeenOnboarding")
     }
     // 함수가 아니라 'Flow 프로퍼티'로 정의하는 것이 일반적입니다.
@@ -26,7 +28,16 @@ class TokenManager @Inject constructor(
     val refreshToken: Flow<String?> = dataStore.data.map { it[REFRESH_TOKEN_KEY] } // 이 줄이 있는지 확인하세요!
     // 온보딩 상태 읽기
     val hasSeenOnboarding: Flow<Boolean> = dataStore.data.map { it[HAS_SEEN_ONBOARDING_KEY] == true }
+    // ✅✅✅ 핵심 추가 1: 마지막 로그인 타입을 Flow로 읽어오기 ✅✅✅
+    val loginType: Flow<LoginType?> = dataStore.data.map { preferences ->
+        preferences[KEY_LOGIN_TYPE]?.let { LoginType.valueOf(it) }
+    }
 
+    suspend fun saveLoginType(type: LoginType) {
+        dataStore.edit { preferences ->
+            preferences[KEY_LOGIN_TYPE] = type.name
+        }
+    }
     // 온보딩 완료 처리
     suspend fun saveOnboardingCompleted(completed: Boolean) {
         dataStore.edit { preferences ->
@@ -95,6 +106,7 @@ class TokenManager @Inject constructor(
             prefs.remove(ACCESS_TOKEN_KEY)
             prefs.remove(REFRESH_TOKEN_KEY)
             prefs.remove(USER_ID_KEY)
+            prefs.remove(KEY_LOGIN_TYPE)
         }
     }
 

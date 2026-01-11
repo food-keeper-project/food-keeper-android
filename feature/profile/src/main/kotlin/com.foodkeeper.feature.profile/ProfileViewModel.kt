@@ -1,5 +1,6 @@
 package com.foodkeeper.feature.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
@@ -42,9 +43,11 @@ class ProfileViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             logoutUseCase().onSuccess {
+                Log.d("TAG", "logout: 성공")
                 _logoutSuccess.emit(true)
             }
                 .onFailure {
+                    Log.d("TAG", "logout: 실패")
                     // 실패해도 로컬 토큰은 지워졌으므로 로그아웃 처리 가능
                     _logoutSuccess.emit(true)
                 }

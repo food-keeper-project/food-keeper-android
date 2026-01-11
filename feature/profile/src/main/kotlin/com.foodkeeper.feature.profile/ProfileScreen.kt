@@ -1,8 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.foodkeeper.feature.profile
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,10 +35,6 @@ fun ProfileRoute(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
-// ✅ LocalContext를 가져옵니다.
-    val context = LocalContext.current
-    // ✅ 열고 싶은 URL을 정의합니다.
-    val termsUrl = "https://doc-hosting.flycricket.io/kicinrogeu-iyongyaggwan-gaeinjeongboceoribangcim/eff196bc-7dc6-427a-9875-8a3ec243dbcc/terms"
 
     LaunchedEffect(Unit) {
         viewModel.logoutSuccess.collectLatest { success ->
@@ -53,9 +47,7 @@ fun ProfileRoute(
     ProfileScreen(
         profile = profile,
         onLogoutClick = { viewModel.logout() },
-        onTermsClick = {  // ✅ ACTION_VIEW 인텐트를 사용하여 외부 브라우저를 엽니다.
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(termsUrl))
-            context.startActivity(intent) },
+        onTermsClick = { /* 이용약관 이동 로직 */ },
         onWithdrawalClick = onWithdrawalClick
     )
 }
@@ -67,6 +59,11 @@ internal fun ProfileScreen(
     onTermsClick: () -> Unit,
     onWithdrawalClick: () -> Unit
 ) {
+    // ✅ 웹 링크를 열기 위한 UriHandler 가져오기
+    val uriHandler = LocalUriHandler.current
+    val termsUrl = "https://doc-hosting.flycricket.io/kicinrogeu-iyongyaggwan-gaeinjeongboceoribangcim/eff196bc-7dc6-427a-9875-8a3ec243dbcc/terms" // 여기에 실제 약관 주소를 넣으세요
+
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = AppColors.white
@@ -121,7 +118,10 @@ internal fun ProfileScreen(
                     )
                     ProfileMenuItem(
                         title = "이용약관 확인하기",
-                        onClick = onTermsClick
+                        onClick = {
+                            // ✅ 클릭 시 외부 브라우저로 링크 열기
+                            uriHandler.openUri(termsUrl)
+                        }
                     )
                 }
 

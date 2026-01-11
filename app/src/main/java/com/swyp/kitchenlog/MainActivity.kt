@@ -4,11 +4,12 @@ import AiRecipeHistoryDetailScreen
 import WithdrawalRoute
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,12 +19,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.add_food.AddFoodScreen
 import com.foodkeeper.feature.kakaologin.LoginScreen
-import com.swyp.kitchenlog.theme.FoodKeeperTheme
 import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
@@ -32,9 +34,13 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.feature.airecipe.AiRecipeGeneratorScreen
 import com.foodkeeper.feature.home.HomeScreen
+import com.foodkeeper.feature.home.HomeViewModel
+import com.foodkeeper.feature.kakaologin.SignInScreen
+import com.foodkeeper.feature.kakaologin.SignUpScreen
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
+import com.swyp.kitchenlog.theme.FoodKeeperTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
 
@@ -46,19 +52,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // ✅ 키 해시 추출 코드 (수정본)
-        try {
-            val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-            for (signature in info.signatures!!) {
-                val md = MessageDigest.getInstance("SHA")
-                md.update(signature.toByteArray())
-
-                // android.util.Base64를 사용하여 오류 해결
-                val keyHash = Base64.encodeToString(md.digest(), Base64.DEFAULT)
-                Log.d("KeyHash", "현재 앱의 키 해시: ${keyHash.trim()}")
-            }
-        } catch (e: Exception) {
-            Log.e("KeyHash", "해시 키를 가져올 수 없습니다.", e)
-        }
+//        try {
+//            val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+//            for (signature in info.signatures!!) {
+//                val md = MessageDigest.getInstance("SHA")
+//                md.update(signature.toByteArray())
+//
+//                // android.util.Base64를 사용하여 오류 해결
+//                val keyHash = android.util.Base64.encodeToString(md.digest(), android.util.Base64.DEFAULT)
+//                Log.d("KeyHash", "현재 앱의 키 해시: ${keyHash.trim()}")
+//            }
+//        } catch (e: Exception) {
+//            Log.e("KeyHash", "해시 키를 가져올 수 없습니다.", e)
+//        }
         setContent {
             FoodKeeperTheme {
                 navController = rememberNavController()
@@ -133,6 +139,39 @@ fun FoodKeeperNavHost(navController: NavHostController) {
                     navController.navigate("main") {
                         popUpTo("login") { inclusive = true }
                     }
+                },
+                onSignUpClick = {
+                    navController.navigate("signUp")
+                },
+                onIdLoginClick = {
+                    // ✅ "아이디로 시작하기" 버튼 클릭 시 signIn 화면으로 이동
+                    navController.navigate("signIn")
+                }
+            )
+        }
+        // ✅ 아이디/비밀번호 입력 로그인 화면 (새로 추가)
+        composable("signIn") {
+            SignInScreen(
+                onNavigateToMain = {
+                    // 로그인 성공 시 메인 화면으로 이동
+                    navController.navigate("main") {
+                        // 로그인과 관련된 모든 화면(signIn, login)을 스택에서 제거
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onBackToLoginSelect = {
+                    // 뒤로가기 시 로그인 선택 화면으로 이동
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        //로그인 화면
+        composable("signUp") {
+            SignUpScreen(
+                onBackToLogin = {
+                    // ✅ 회원가입 창에서 뒤로가기 누르면 로그인 화면으로 복귀
+                    navController.popBackStack()
                 }
             )
         }
@@ -222,58 +261,8 @@ fun FoodKeeperNavHost(navController: NavHostController) {
             }
         }
 
-        // ✅ 메인 바깥 (하단바 없는 전체 화면)
-        composable("addFood") {
-            AddFoodScreen(onBackClick = { navController.popBackStack() })
-        }
-//        //프로필 화면
-//        composable("profile") {
-//            ProfileRoute(
-//                onLogoutSuccess = {
-//                    navController.navigate("login") {
-//                        popUpTo(0) { inclusive = true }
-//                    }
-//                },
-//                onWithdrawalClick = {
-//                    // ✅ 회원탈퇴 스크린으로 이동
-//                    navController.navigate("withdrawal")
-//                }
-//            )
-//        }
-//        //회원탈퇴 화면
-//        composable("withdrawal") {
-//            // ✅ 회원탈퇴 전용 Route 호출
-//            WithdrawalRoute(
-//                onBackClick = {
-//                    navController.popBackStack() // 뒤로가기
-//                },
-//                onWithdrawalSuccess = {
-//                    // ✅ 탈퇴 성공 시 로그인 화면으로 이동
-//                    navController.navigate("login") {
-//                        popUpTo(0) { inclusive = true }
-//                    }
-//                }
-//            )
-//        }
-//        //레시피 목록 화면
-//        composable("ai_recipe_history") {
-//            AiRecipeHistoryScreen(
-//                onRecipeClick = { recipeId ->
-//                    navController.navigate("ai_recipe_detail/$recipeId")
-//                }
-//            )
-//        }
 
-//        // 레시피 디테일(상세) 화면
-//        composable(
-//            route = "ai_recipe_detail/{recipeId}",
-//            arguments = listOf(navArgument("recipeId") { type = NavType.StringType })
-//        ) {
-//            AiRecipeDetailScreen(
-//                onBackClick = { navController.popBackStack() },
-//                // 필요한 다른 콜백들...
-//            )
-//        }
+
         // ✨ 4. 식재료 추가 화면 (새로 추가)
         composable("addFood") {
             AddFoodScreen(

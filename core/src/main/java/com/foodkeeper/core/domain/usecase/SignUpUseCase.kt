@@ -1,0 +1,106 @@
+package com.foodkeeper.core.domain.usecase
+
+import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.mapper.external.respone.AccountResponseDTO
+import com.foodkeeper.core.data.mapper.request.SignUpRequestDTO
+import com.foodkeeper.core.domain.repository.AuthRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+
+interface SignUpUseCase {
+    // 1. 아이디 중복 확인 (중복이면 true, 사용가능이면 false 반환)
+    suspend fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO>
+
+    // 2. 이메일 중복확인 및 인증번호 발송
+    suspend fun sendEmailVerification(email: String): Flow<String>
+
+    // 3. 이메일 인증번호 확인
+    suspend fun verifyEmailCode(email: String, code: String): Flow<String>
+    suspend fun verifyAccount(email: String): Flow<String>
+    suspend fun verifyAccountCode(email: String, code: String): Flow<String>
+    // 4. 최종 회원가입 요청
+    suspend fun signUp(signUpInfo: SignUpRequestDTO): Flow<String>
+    suspend fun signIn(userId: String, userPw: String): Flow<AuthTokenDTO>
+    suspend fun resetPassword(email: String, account: String, password: String): Flow<String>
+    suspend fun verifyPassword(email: String, account: String): Flow<String>
+    suspend fun verifyPasswordCode(email: String, account: String, code: String): Flow<String>
+}
+
+class DefaultSignUpUseCase @Inject constructor(
+    private val authRepository: AuthRepository // Repository 인터페이스 필요
+) : SignUpUseCase {
+
+    override suspend fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO> {
+        return authRepository.checkIdDuplicate(userId)
+    }
+
+    override suspend fun sendEmailVerification(email: String):Flow<String> {
+        return authRepository.verifyEmail(email)
+    }
+
+    override suspend fun verifyEmailCode(email: String, code: String): Flow<String> {
+        return authRepository.verifyEmailCode(email, code)
+    }
+
+    override suspend fun verifyAccount(email: String): Flow<String> {
+        return authRepository.verifyAccount(email)
+    }
+
+    override suspend fun verifyAccountCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRepository.verifyAccountCode(email, code)
+    }
+
+    override suspend fun signUp(signUpInfo: SignUpRequestDTO): Flow<String> {
+        return authRepository.signUp(signUpInfo.account, signUpInfo.password, signUpInfo.email, signUpInfo.nickname, signUpInfo.gender)
+    }
+
+    override suspend fun signIn(
+        userId: String,
+        userPw: String
+    ): Flow<AuthTokenDTO> {
+        val fcmToken = authRepository.getFcmToken()
+
+        return authRepository.signIn(userId = userId, userPw = userPw, fcmToken = fcmToken)
+            .map { authTokenDto ->
+                // ✅ 서버로부터 받은 토큰이 유효한지 확인
+                if (!authTokenDto.accessToken.isNullOrEmpty()) {
+                    // ✅ AuthRepository를 통해 토큰 저장
+                    authRepository.saveTokens(
+                        accessToken = authTokenDto.accessToken,
+                        refreshToken = authTokenDto.refreshToken ?: ""
+                    )
+                }
+                // 받은 DTO를 그대로 ViewModel로 전달
+                authTokenDto
+            }
+    }
+
+    override suspend fun resetPassword(
+        email: String,
+        account: String,
+        password: String
+    ): Flow<String> {
+        return authRepository.resetPassword(email, account, password)
+    }
+
+    override suspend fun verifyPassword(
+        email: String,
+        account: String
+    ): Flow<String> {
+        return authRepository.verifyPassword(email, account)
+    }
+
+    override suspend fun verifyPasswordCode(
+        email: String,
+        account: String,
+        code: String
+    ): Flow<String> {
+        return authRepository.verifyPasswordCode(email, account, code)
+    }
+}
+

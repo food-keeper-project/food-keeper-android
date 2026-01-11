@@ -5,6 +5,8 @@ import android.util.Log
 import com.foodkeeper.core.data.datasource.external.AuthRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
 import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.mapper.external.respone.AccountResponseDTO
+import com.foodkeeper.core.data.mapper.request.AccountRequestDTO
 import com.foodkeeper.core.data.network.ApiResult
 import com.foodkeeper.core.domain.repository.AuthRepository
 import com.kakao.sdk.user.UserApiClient
@@ -12,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -39,6 +42,86 @@ class AuthRepositoryImpl @Inject constructor(
     // 더미 context.dataStore 대신 주입받은 tokenManager를 사용합니다.
     override fun hasSeenOnboarding(): Flow<Boolean> {
         return tokenManager.hasSeenOnboarding
+    }
+
+    override suspend fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO> {
+        return authRemoteDataSource.checkIdDuplicate(userId)
+    }
+
+    override suspend fun signUp(
+        userId: String,
+        userPw: String,
+        email: String,
+        nickname: String,
+        gender: String
+    ): Flow<String> {
+        return authRemoteDataSource.signUp(userId,userPw,email,gender,nickname)
+    }
+
+    override suspend fun verifyEmail(email: String): Flow<String> {
+        return authRemoteDataSource.verifyEmail(email)
+    }
+
+    override suspend fun verifyEmailCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyEmailCode(email,code)
+    }
+
+    override suspend fun signIn(
+        userId: String,
+        userPw: String,
+        fcmToken: String?
+    ): Flow<AuthTokenDTO> {
+        return authRemoteDataSource.signIn(userId = userId, userPw = userPw, fcmToken = fcmToken)
+            .onEach {
+                // ✅ 로그인 성공 시 토큰과 함께 로그인 타입 저장
+                tokenManager.saveTokens(it.accessToken!!, it.refreshToken!!)
+                tokenManager.saveLoginType(TokenManager.LoginType.EMAIL) // 예시
+            }
+    }
+
+    override suspend fun verifyAccount(email: String): Flow<String> {
+        return authRemoteDataSource.verifyAccount(email)
+    }
+
+    override suspend fun verifyAccountCode(
+        email: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyAccountCode(email,code)
+    }
+
+    override suspend fun verifyPassword(
+        email: String,
+        account: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyPassword(email,account)
+    }
+
+    override suspend fun verifyPasswordCode(
+        email: String,
+        account: String,
+        code: String
+    ): Flow<String> {
+        return authRemoteDataSource.verifyPasswordCode(email,account,code)
+    }
+
+    override suspend fun resetPassword(
+        email: String,
+        account: String,
+        password: String
+    ): Flow<String> {
+        return authRemoteDataSource.resetPassword(email,account,password)
+    }
+
+    override suspend fun saveLoginType(type: AuthRepository.LoginType) {        // ✅ TokenManager의 LoginType enum으로 변환하여 저장
+        val tokenManagerType = when (type) {
+            AuthRepository.LoginType.KAKAO -> TokenManager.LoginType.KAKAO
+            AuthRepository.LoginType.EMAIL -> TokenManager.LoginType.EMAIL
+        }
+        tokenManager.saveLoginType(tokenManagerType)
     }
 
     override suspend fun refreshToken(): Result<AuthTokenDTO> {
@@ -70,7 +153,9 @@ class AuthRepositoryImpl @Inject constructor(
     // 더미 emit(false) 대신 실제 저장된 accessToken이 비어있지 않은지 확인합니다.
     override fun hasToken(): Flow<Boolean> {
         return tokenManager.accessToken.map { token ->
+            Log.d("TAG", "hasToken: $token")
             !token.isNullOrBlank()
+
         }
     }
 
@@ -128,26 +213,55 @@ class AuthRepositoryImpl @Inject constructor(
         tokenManager.saveTokens(accessToken, refreshToken)
     }
 
-    // ✅ [로그아웃]
+    // ✅✅✅ 핵심 수정: 로그인 타입에 따라 분기하는 로그아웃 로직 ✅✅✅
     override suspend fun logout(): Result<Unit> {
         return try {
-            // 1. 카카오 로그아웃 수행 (콜백을 suspend로 변환)
-            suspendCoroutine{ continuation ->
-                UserApiClient.instance.logout { error ->
-                    if (error != null) continuation.resumeWith(Result.failure(error))
-                    else continuation.resumeWith(Result.success(Unit))
+            // 1. 저장된 마지막 로그인 방식을 가져옵니다.
+            val lastLoginType = tokenManager.loginType.first()
+
+            // 2. 로그인 방식이 'KAKAO'일 경우, 카카오 로그아웃을 먼저 시도합니다.
+            if (lastLoginType == TokenManager.LoginType.KAKAO) {
+                // suspendCoroutine을 사용하여 콜백 기반의 카카오 SDK를 코루틴으로 변환합니다.
+                suspendCoroutine { continuation ->
+                    UserApiClient.instance.logout { error ->
+                        if (error != null) {
+                            // 카카오 로그아웃이 실패하더라도 (예: 오프라인 상태)
+                            // 우리 앱의 로그아웃 절차는 계속 진행해야 하므로 에러를 로깅만 하고 무시합니다.
+                            Log.w("AuthRepoImpl", "Kakao SDK logout failed, but proceeding. Error: ${error.message}")
+                        } else {
+                            Log.d("AuthRepoImpl", "Kakao SDK logout successful.")
+                        }
+                        // 성공/실패 여부와 관계없이 코루틴을 재개하여 다음 단계를 진행합니다.
+                        continuation.resume(Unit)
+                    }
                 }
             }
 
-            // 2. 카카오 로그아웃 성공 시 로컬 토큰 비우기 (suspend 함수 호출 가능)
+            // 3. (공통) 우리 서버에 로그아웃 API를 호출합니다. (선택적이지만 권장)
+            // 서버에 FCM 토큰을 삭제해달라고 요청하는 등의 역할을 합니다.
+            // 실패하더라도 로컬 토큰은 반드시 지워야 하므로 collect는 비워둡니다.
+            authRemoteDataSource.logOut().catch { e ->
+                Log.w("AuthRepoImpl", "Server logout API failed: ${e.message}")
+            }.collect()
+
+            // 4. (가장 중요) 기기에 저장된 모든 로컬 토큰을 삭제합니다.
             tokenManager.clearTokens()
 
+            // 5. 모든 절차가 끝나면 최종 성공을 반환합니다.
             Result.success(Unit)
+
         } catch (e: Exception) {
+            // 위 과정 중 예기치 못한 에러(e.g., DataStore 접근 실패) 발생 시
+            Log.e("AuthRepoImpl", "Logout failed with an unexpected exception.", e)
+            // 방어적으로 한 번 더 토큰 삭제를 시도합니다.
+            try {
+                tokenManager.clearTokens()
+            } catch (clearError: Exception) {
+                Log.e("AuthRepoImpl", "Failed to clear tokens in catch block.", clearError)
+            }
             Result.failure(e)
         }
     }
-
 
     override suspend fun withdrawAccount(): Flow<String> = flow {
         // 1. 서버 회원탈퇴 API 호출
