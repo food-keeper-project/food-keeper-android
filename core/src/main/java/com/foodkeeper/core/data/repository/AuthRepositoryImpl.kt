@@ -213,92 +213,58 @@ class AuthRepositoryImpl @Inject constructor(
         tokenManager.saveTokens(accessToken, refreshToken)
     }
 
-    // ✅✅✅ 핵심 수정: 로그인 타입에 따라 분기하는 로그아웃 로직 ✅✅✅
-    override suspend fun logout(): Result<Unit> {
-        return try {
-            // 1. 저장된 마지막 로그인 방식을 가져옵니다.
-            val lastLoginType = tokenManager.loginType.first()
 
-            // 2. 로그인 방식이 'KAKAO'일 경우, 카카오 로그아웃을 먼저 시도합니다.
-            if (lastLoginType == TokenManager.LoginType.KAKAO) {
-                // suspendCoroutine을 사용하여 콜백 기반의 카카오 SDK를 코루틴으로 변환합니다.
-                suspendCoroutine { continuation ->
-                    UserApiClient.instance.logout { error ->
-                        if (error != null) {
-                            // 카카오 로그아웃이 실패하더라도 (예: 오프라인 상태)
-                            // 우리 앱의 로그아웃 절차는 계속 진행해야 하므로 에러를 로깅만 하고 무시합니다.
-                            Log.w("AuthRepoImpl", "Kakao SDK logout failed, but proceeding. Error: ${error.message}")
-                        } else {
-                            Log.d("AuthRepoImpl", "Kakao SDK logout successful.")
-                        }
-                        // 성공/실패 여부와 관계없이 코루틴을 재개하여 다음 단계를 진행합니다.
-                        continuation.resume(Unit)
-                    }
-                }
-            }
 
-            // 3. (공통) 우리 서버에 로그아웃 API를 호출합니다. (선택적이지만 권장)
-            // 서버에 FCM 토큰을 삭제해달라고 요청하는 등의 역할을 합니다.
-            // 실패하더라도 로컬 토큰은 반드시 지워야 하므로 collect는 비워둡니다.
-            authRemoteDataSource.logOut().catch { e ->
-                Log.w("AuthRepoImpl", "Server logout API failed: ${e.message}")
-            }.collect()
-
-            // 4. (가장 중요) 기기에 저장된 모든 로컬 토큰을 삭제합니다.
-            tokenManager.clearTokens()
-
-            // 5. 모든 절차가 끝나면 최종 성공을 반환합니다.
-            Result.success(Unit)
-
-        } catch (e: Exception) {
-            // 위 과정 중 예기치 못한 에러(e.g., DataStore 접근 실패) 발생 시
-            Log.e("AuthRepoImpl", "Logout failed with an unexpected exception.", e)
-            // 방어적으로 한 번 더 토큰 삭제를 시도합니다.
-            try {
-                tokenManager.clearTokens()
-            } catch (clearError: Exception) {
-                Log.e("AuthRepoImpl", "Failed to clear tokens in catch block.", clearError)
-            }
-            Result.failure(e)
-        }
-    }
+    // ... (다른 함수들은 동일)
 
     override suspend fun withdrawAccount(): Flow<String> = flow {
-        // 1. 서버 회원탈퇴 API 호출
-        // 여기서 collect되는 'response'는 순수 String입니다.
+        // 1. 서버 회원탈퇴 API를 먼저 호출합니다.
         authRemoteDataSource.withdrawAccount().collect { response ->
 
-            // ✅ 서버 응답이 성공인지 확인 (보통 "SUCCESS" 또는 빈 문자열이 아님을 체크)
-            if (response=="SUCCESS") {
+            // 서버 응답이 성공적인지 확인합니다.
+            if (response == "SUCCESS") {
 
-                // 2. 카카오 연결 끊기 수행
-                val isKakaoUnlinkSuccess = suspendCoroutine{ continuation ->
-                    UserApiClient.instance.unlink { error ->
-                        if (error != null) {
-                            Log.e("AuthRepo", "카카오 연결 끊기 실패: ${error.message}")
-                            continuation.resume(false)
-                        } else {
-                            Log.d("AuthRepo", "카카오 연결 끊기 성공")
-                            continuation.resume(true)
+                // ✅ 2. 마지막 로그인 타입을 확인합니다.
+                val lastLoginType = tokenManager.loginType.first()
+
+                // ✅ 3. 카카오 로그인 사용자일 경우에만 연결 끊기를 수행합니다.
+                if (lastLoginType == TokenManager.LoginType.KAKAO) {
+                    val isKakaoUnlinkSuccess = suspendCoroutine { continuation ->
+                        UserApiClient.instance.unlink { error ->
+                            if (error != null) {
+                                Log.e("AuthRepo", "카카오 연결 끊기 실패: ${error.message}")
+                                // 연결 끊기에 실패하더라도 로컬 토큰은 삭제해야 하므로,
+                                // 실패를 로깅만 하고 계속 진행하도록 true를 반환할 수도 있습니다.
+                                // 여기서는 일단 엄격하게 false로 처리합니다.
+                                continuation.resume(false)
+                            } else {
+                                Log.d("AuthRepo", "카카오 연결 끊기 성공")
+                                continuation.resume(true)
+                            }
                         }
+                    }
+
+                    // 카카오 연결 끊기에 실패했다면, 전체 탈퇴 프로세스를 중단합니다.
+                    if (!isKakaoUnlinkSuccess) {
+                        throw Exception("KAKAO_UNLINK_FAIL")
                     }
                 }
 
-                if (isKakaoUnlinkSuccess) {
-                    // 3. 모든 단계 성공 시 로컬 토큰 삭제
-                    tokenManager.clearTokens()
-                    emit("SUCCESS")
-                } else {
-                    throw Exception("KAKAO_UNLINK_FAIL")
-                }
+                // ✅ 4. (공통) 모든 단계 성공 시 로컬 토큰을 완전히 삭제합니다.
+                tokenManager.clearTokens()
+                emit("SUCCESS")
+
             } else {
-                throw Exception("SERVER_RESPONSE_EMPTY")
+                // 서버 응답이 실패한 경우
+                throw Exception("SERVER_WITHDRAW_FAIL")
             }
         }
     }.catch { e ->
         Log.e("AuthRepo", "회원탈퇴 실패: ${e.message}")
-        throw e
+        throw e // 에러를 상위로 전파하여 ViewModel에서 처리하도록 함
     }
+
+// ... (이하 함수들은 동일)
 
 
 

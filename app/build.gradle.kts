@@ -14,16 +14,21 @@ kotlin {
 android {
     namespace = "com.swyp.kitchenlog"
     compileSdk = 36
+    // ✅✅✅ 이 부분을 추가해주세요 ✅✅✅
+    buildFeatures {
+        buildConfig = true
+    }
 //텟
     defaultConfig {
         applicationId = "com.swyp.kitchenlog"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode =6
+        versionName = "6.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
 
     buildTypes {
         release {

@@ -14,7 +14,7 @@ interface AuthRemoteDataSource {
     fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
     fun withdrawAccount(): Flow<String>
     // ✅ 로그아웃 추가
-    fun logOut(): Flow<String>
+
     fun signIn(userId: String, userPw: String, fcmToken: String?): Flow<AuthTokenDTO>
     fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO>
     fun signUp(userId: String, userPw: String, email: String, gender:String, nickname:String): Flow<String>
@@ -68,11 +68,7 @@ class DefaultAuthRemoteDataSource @Inject constructor(
         return apiService.request(ApiRoute.WithdrawAccount)
     }
 
-    override fun logOut(): Flow<String> {
-            // FoodApiService.request<T>가 내부적으로 <T>를 파싱해서
-            // data(T)만 내보내도록 구현되어 있다면 아래와 같이 작성합니다.
-            return apiService.request(ApiRoute.Logout)
-    }
+
 
     override fun checkIdDuplicate(userId: String): Flow<AccountResponseDTO> {
         return apiService.request(ApiRoute.PostCheckAccount(AccountRequestDTO(account = userId)))

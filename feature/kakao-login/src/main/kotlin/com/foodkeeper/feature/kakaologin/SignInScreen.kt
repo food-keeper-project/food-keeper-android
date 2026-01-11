@@ -518,6 +518,8 @@ private fun FindIdContent(
                         focusedIndicatorColor = AppColors.point,
                         unfocusedIndicatorColor = AppColors.main
                     ),
+                    // ✅✅✅ 핵심 수정: 키보드 타입을 숫자 전용으로 변경 ✅✅✅
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
 //                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
 //                    keyboardActions = KeyboardActions(
 //                        onDone = { focusManager.clearFocus() }
@@ -648,6 +650,8 @@ private fun FindPasswordContent(
                         focusedIndicatorColor = AppColors.point,
                         unfocusedIndicatorColor = AppColors.main
                     ),
+                    // ✅✅✅ 핵심 수정: 키보드 타입을 숫자 전용으로 변경 ✅✅✅
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
 //                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
 //                    keyboardActions = KeyboardActions(
 //                        onDone = { focusManager.clearFocus() }
