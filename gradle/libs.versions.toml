@@ -20,6 +20,8 @@ serialization = "1.7.3"
 datetime = "0.6.1"
 ktor = "2.3.13"
 firebaseBom = "33.1.2"
+firebaseCrashlyticsGradle = "2.9.9"
+firebase-crashlytics = "2.9.9"
 googleServices = "4.4.2"
 kakao = "2.20.1"
 material3 = "1.4.0"
@@ -94,6 +96,8 @@ ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version
 # ---------------- Firebase ----------------
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
 # ---------------- Kakao ----------------
 kakao-sdk-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kakao" }
@@ -109,3 +113,4 @@ kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" } # Kap
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsGradle" }

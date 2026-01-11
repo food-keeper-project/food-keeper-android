@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 kotlin {
     jvmToolchain(17)
@@ -102,6 +103,10 @@ dependencies {
     // Firebase FCM
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+
+    // Firebase 분석 툴
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // 실제 SDK 구현체는 app 모듈에만 위치시킵니다.
     implementation(libs.kakao.sdk.user)
