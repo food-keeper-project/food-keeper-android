@@ -581,7 +581,8 @@ fun NicknameSection(
                 onClick = {
                     onNext(text)
                 },
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.align(Alignment.End)
+                    .background(AppColors.main),
                 enabled = text.isNotBlank() // ✅ 비어있으면 클릭 불가
             ) {
                 Text("다음")

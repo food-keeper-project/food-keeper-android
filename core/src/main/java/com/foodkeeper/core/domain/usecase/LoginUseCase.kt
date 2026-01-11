@@ -28,6 +28,9 @@ class LoginUseCase @Inject constructor(
             if (!dto.accessToken.isNullOrEmpty()) {
                 // 4. 로그인 성공 시 토큰 저장
                 authRepository.saveTokens(dto.accessToken, dto.refreshToken ?: "")
+                // ✅✅✅ 핵심 추가: 로그인 방식을 'KAKAO'로 저장 ✅✅✅
+                authRepository.saveLoginType(AuthRepository.LoginType.KAKAO)
+
                 emit(LoginResult.Success(dto.accessToken))
             } else {
                 emit(LoginResult.Failure("서버 인증 실패: AccessToken이 없습니다."))

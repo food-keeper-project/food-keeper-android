@@ -8,6 +8,7 @@ import com.foodkeeper.core.data.network.ApiResult
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
+    enum class LoginType { KAKAO, EMAIL }
     suspend fun refreshToken(): Result<AuthTokenDTO>
     // 1. 로그인 상태 확인 (토큰 존재 여부)
     fun hasToken(): Flow<Boolean>
@@ -26,7 +27,6 @@ interface AuthRepository {
 
     // 6. 로그아웃
     suspend fun logout(): Result<Unit>
-    suspend fun logOut(): Flow<String>
     suspend fun withdrawAccount(): Flow<String>
     // ✅ 온보딩 완료 상태 저장
     suspend fun saveOnboardingStatus(completed: Boolean)
@@ -45,5 +45,6 @@ interface AuthRepository {
     suspend fun verifyPassword(email: String, account: String): Flow<String>
     suspend fun verifyPasswordCode(email: String, account: String, code: String):Flow<String>
     suspend fun resetPassword(email: String, account: String, password: String): Flow<String>
+    suspend fun saveLoginType(type: LoginType)
 
 }
