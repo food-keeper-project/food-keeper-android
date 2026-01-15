@@ -9,7 +9,7 @@
     <application
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:name=".KitchenLogApplication"
+        android:name=".FoodKeeperApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -41,24 +41,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- 2. 카카오 로그인에 필요한 액티비티 추가 -->
-        <!-- 이 액티비티는 직접 만드는 것이 아니라, SDK 라이브러리에 포함되어 있습니다. -->
-        <activity
-            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!--
-                  중요: "kakao" + "{네이티브 앱 키}" 형식으로 Redirect URI를 설정합니다.
-                  예: 네이티브 앱 키가 "123456" 이라면 android:scheme="kakao123456"
-                -->
-                <data android:scheme="kakao019455b78c75b46224c1828903b55643" />
             </intent-filter>
         </activity>
 

@@ -2,7 +2,7 @@
 
 // 안드로이드 라이브러리 플러그인을 적용합니다.
 plugins {
-    id("com.swyp.com.swyp.com.swyp.kitchenlog.android.library")
+    id("com.swyp.foodkeeper.android.library")
     // 아래와 같이 alias를 사용하는 것이 관리에 용이합니다.
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
@@ -68,5 +68,4 @@ dependencies {
     // core 모듈에만 필요한 특별한 의존성만 남깁니다.
 
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kakao.sdk.user)
 }

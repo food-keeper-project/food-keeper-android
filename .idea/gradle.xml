@@ -29,7 +29,7 @@
             <option value="$PROJECT_DIR$/feature/ai-recipe" />
             <option value="$PROJECT_DIR$/feature/foodKeeper-Main" />
             <option value="$PROJECT_DIR$/feature/home" />
-            <option value="$PROJECT_DIR$/feature/kakao-login" />
+            <option value="$PROJECT_DIR$/feature/login" />
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/splash" />
           </set>

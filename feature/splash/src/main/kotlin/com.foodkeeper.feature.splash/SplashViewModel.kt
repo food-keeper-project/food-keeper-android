@@ -1,4 +1,4 @@
-// feature/splash/src/main/kotlin/com/com.swyp.com.swyp.com.swyp.kitchenlog/feature/splash/SplashViewModel.kt
+// feature/splash/src/main/kotlin/com/com.swyp.com.swyp.com.swyp.com.swyp.foodkeeper/feature/splash/SplashViewModel.kt
 package com.foodkeeper.feature.splash
 
 import android.util.Log

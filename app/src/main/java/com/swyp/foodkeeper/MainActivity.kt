@@ -1,15 +1,12 @@
-package com.swyp.kitchenlog // 패키지 이름을 프로젝트에 맞게 통일합니다.
+package com.swyp.foodkeeper // 패키지 이름을 프로젝트에 맞게 통일합니다.
 
 import AiRecipeHistoryDetailScreen
 import WithdrawalRoute
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,13 +16,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.add_food.AddFoodScreen
-import com.foodkeeper.feature.kakaologin.LoginScreen
+import com.foodkeeper.feature.login.LoginScreen
 import com.foodkeeper.feature.airecipe.AiRecipeHistoryScreen
 import com.example.foodkeeper_main.MainScaffoldScreen
 import com.example.foodkeeper_main.MainTab
@@ -34,15 +29,13 @@ import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.util.AppColors
 import com.foodkeeper.feature.airecipe.AiRecipeGeneratorScreen
 import com.foodkeeper.feature.home.HomeScreen
-import com.foodkeeper.feature.home.HomeViewModel
-import com.foodkeeper.feature.kakaologin.SignInScreen
-import com.foodkeeper.feature.kakaologin.SignUpScreen
+import com.foodkeeper.feature.login.SignInScreen
+import com.foodkeeper.feature.login.SignUpScreen
 import com.foodkeeper.feature.profile.ProfileRoute
 import com.foodkeeper.feature.splash.OnboardingScreen
 import com.foodkeeper.feature.splash.SplashScreen
-import com.swyp.kitchenlog.theme.FoodKeeperTheme
+import com.swyp.foodkeeper.theme.FoodKeeperTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.security.MessageDigest
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

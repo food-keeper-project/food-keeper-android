@@ -1,4 +1,4 @@
-// core/src/main/java/com/com.swyp.com.swyp.com.swyp.kitchenlog/core/data/network/SessionManager.kt
+// core/src/main/java/com/com.swyp.com.swyp.com.swyp.com.swyp.foodkeeper/core/data/network/SessionManager.kt
 package com.foodkeeper.core.data.network
 
 import kotlinx.coroutines.flow.MutableSharedFlow

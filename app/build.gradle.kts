@@ -12,7 +12,7 @@ kotlin {
     jvmToolchain(17)
 }
 android {
-    namespace = "com.swyp.kitchenlog"
+    namespace = "com.swyp.foodkeeper"
     compileSdk = 36
     // ✅✅✅ 이 부분을 추가해주세요 ✅✅✅
     buildFeatures {
@@ -20,11 +20,11 @@ android {
     }
 //텟
     defaultConfig {
-        applicationId = "com.swyp.kitchenlog"
+        applicationId = "com.swyp.foodkeeper"
         minSdk = 24
         targetSdk = 36
-        versionCode =10
-        versionName = "10.0.1"
+        versionCode =2
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -113,13 +113,11 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
 
-    // 실제 SDK 구현체는 app 모듈에만 위치시킵니다.
-    implementation(libs.kakao.sdk.user)
     // --- 아래 한 줄을 추가하여 :app 모듈이 :core 모듈을 참조하도록 합니다 ---
     implementation(project(":core"))
     // ----------------------------------------------------------------
     // 기존에 있던 다른 모듈 의존성
-    implementation(project(":feature:kakao-login"))
+    implementation(project(":feature:login"))
     implementation(project(":feature:home"))
     implementation(project(":feature:splash"))
     implementation(project(":feature:foodKeeper-Main"))

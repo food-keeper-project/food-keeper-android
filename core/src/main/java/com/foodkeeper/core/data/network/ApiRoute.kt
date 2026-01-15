@@ -25,10 +25,6 @@ sealed class ApiRoute {
     //open val requiresAuth: Boolean = true
     // ========== Auth APIs ==========
     // 2. Route 정의는 데이터만 전달하는 역할만 수행
-    data class KakaoLogin(
-        val kakaoAccessToken: String, // 카카오에서 받은 토큰
-        val mFcmToken: String?         // FCM 토큰
-    ) : ApiRoute()
     data class LocalLogin(
         val account: String, // 카카오에서 받은 토큰
         val pw: String,
@@ -99,7 +95,6 @@ sealed class ApiRoute {
         // TODO: URL 선언 시 앞에 '/' 제거!!
         get() = when (this) {
             // Auth
-            is KakaoLogin -> "api/v1/auth/sign-in/kakao" //로그인 API
             is RefreshToken -> "api/v1/auth/refresh" // 엑세스 토큰 갱신 API
             is Logout -> "api/v1/auth/sign-out" // 로그아웃 api
             is PostCheckAccount -> "api/v1/auth/check/account" // 중복확인 api
@@ -138,7 +133,6 @@ sealed class ApiRoute {
     // ========== HTTP 메서드 정의 ==========
     val method: HttpMethod
         get() = when (this) {
-            is KakaoLogin -> HttpMethod.Post
             is RefreshToken -> HttpMethod.Post
             is Logout -> HttpMethod.Delete
             is AddFood -> HttpMethod.Post
@@ -165,7 +159,7 @@ sealed class ApiRoute {
     // ========== 인증 필요 여부 ==========
     val requiresAuth: Boolean
         get() = when (this) {
-            is KakaoLogin, is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail
+             is PostAccountVerify, is PostAccountCodeVerify,is RefreshToken, is LocalLogin,is PostSignUp , is PostCheckAccount, is PostVerifyEmailCode, is PostVerifyEmail
                 ,is PostPwVerify, is PostPwCodeVerify, is PostPwReset -> false
             else -> true
         }
@@ -180,9 +174,6 @@ sealed class ApiRoute {
     // ========== Body 데이터 ==========
     val body: Any?
         get() = when (this) {
-            is KakaoLogin ->  mapOf(
-                "accessToken" to kakaoAccessToken,
-                "fcmToken" to mFcmToken)
             is RefreshToken -> mapOf(
                 "refreshToken" to curRefreshToken)
             is AddFood -> buildAddFoodMultipart(

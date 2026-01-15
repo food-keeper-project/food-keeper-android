@@ -1,4 +1,4 @@
-package com.swyp.kitchenlog.theme
+package com.swyp.foodkeeper.theme
 
 import android.app.Activity
 import android.graphics.Color

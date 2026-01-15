@@ -1,6 +1,6 @@
 plugins {
     // build-logic에 정의한 공통 라이브러리 플러그인을 적용합니다.
-    id("com.swyp.com.swyp.com.swyp.kitchenlog.android.library")
+    id("com.swyp.foodkeeper.android.library")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
@@ -26,7 +26,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.kakao.sdk.user)
 
     implementation(libs.hilt.android)
     implementation(libs.coil.compose)

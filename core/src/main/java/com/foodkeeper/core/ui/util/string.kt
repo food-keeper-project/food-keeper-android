@@ -4,7 +4,7 @@ import android.util.Patterns
 import java.util.regex.Pattern
 
 object AppString {
-    val appName = "키친로그"
+    val appName = "푸드키퍼"
 
 }
 

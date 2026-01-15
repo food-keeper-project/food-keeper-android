@@ -1,15 +1,9 @@
-package com.foodkeeper.feature.kakaologin
+package com.foodkeeper.feature.login
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.foodkeeper.core.domain.model.LoginResult
-import com.foodkeeper.core.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 // UI가 관찰할 로그인 상태를 정의하는 sealed interface.
@@ -23,7 +17,7 @@ sealed interface LoginUiState {
 
 @HiltViewModel
 class LoginViewModel  @Inject constructor(
-    private val loginUseCase: LoginUseCase // 레포지토리 대신 UseCase 주입
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -39,17 +33,5 @@ class LoginViewModel  @Inject constructor(
         // 로그인 시작 시 상태를 Loading으로 변경하여 UI에 프로그레스 바 등을 표시하도록 알립니다.
         _uiState.value = LoginUiState.Loading
 
-        loginUseCase(context)
-            .onEach { result ->
-                // :core 모듈에서 정의한 LoginResult 결과에 따라 UI 상태를 업데이트합니다.
-                val newState = when (result) {
-                    is LoginResult.Success -> LoginUiState.Success(result.accessToken)
-                    is LoginResult.Failure -> LoginUiState.Error(result.message)
-                    // 사용자가 로그인을 취소하면 다시 초기 상태로 돌아갑니다.
-                    is LoginResult.Canceled -> LoginUiState.Idle
-                }
-                _uiState.update { newState }
-            }
-            .launchIn(viewModelScope) // viewModelScope 내에서 Flow를 안전하게 수집합니다.
     }
 }

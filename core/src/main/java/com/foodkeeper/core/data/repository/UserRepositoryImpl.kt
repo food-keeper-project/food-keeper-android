@@ -4,7 +4,6 @@ import android.util.Log
 import com.foodkeeper.core.data.datasource.external.UserRemoteDataSource
 import com.foodkeeper.core.data.datasource.local.TokenManager
 import com.foodkeeper.core.data.mapper.external.ProfileDTO
-import com.kakao.sdk.user.UserApiClient
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -41,24 +40,6 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             // 1. 저장된 마지막 로그인 방식을 가져옵니다.
             val lastLoginType = tokenManager.loginType.first()
-
-            // 2. 로그인 방식이 'KAKAO'일 경우, 카카오 로그아웃을 먼저 시도합니다.
-            if (lastLoginType == TokenManager.LoginType.KAKAO) {
-                // suspendCoroutine을 사용하여 콜백 기반의 카카오 SDK를 코루틴으로 변환합니다.
-                suspendCoroutine { continuation ->
-                    UserApiClient.instance.logout { error ->
-                        if (error != null) {
-                            // 카카오 로그아웃이 실패하더라도 (예: 오프라인 상태)
-                            // 우리 앱의 로그아웃 절차는 계속 진행해야 하므로 에러를 로깅만 하고 무시합니다.
-                            Log.w("AuthRepoImpl", "Kakao SDK logout failed, but proceeding. Error: ${error.message}")
-                        } else {
-                            Log.d("AuthRepoImpl", "Kakao SDK logout successful.")
-                        }
-                        // 성공/실패 여부와 관계없이 코루틴을 재개하여 다음 단계를 진행합니다.
-                        continuation.resume(Unit)
-                    }
-                }
-            }
 
             // 3. (공통) 우리 서버에 로그아웃 API를 호출합니다. (선택적이지만 권장)
             // 서버에 FCM 토큰을 삭제해달라고 요청하는 등의 역할을 합니다.

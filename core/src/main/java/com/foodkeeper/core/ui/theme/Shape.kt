@@ -2,7 +2,7 @@ package com.foodkeeper.core.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
-//import com.com.swyp.com.swyp.com.swyp.kitchenlog.core.ui.theme.Shapes
+//import com.com.swyp.com.swyp.com.swyp.com.swyp.foodkeeper.core.ui.theme.Shapes
 
 //val Shapes = Shapes(
 //    small = RoundedCornerShape(4.dp),

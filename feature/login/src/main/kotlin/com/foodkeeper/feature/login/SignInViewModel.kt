@@ -1,4 +1,4 @@
-package com.foodkeeper.feature.kakaologin
+package com.foodkeeper.feature.login
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

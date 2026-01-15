@@ -22,7 +22,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             extensions.configure<ApplicationExtension> {
                 compileSdk = 36
                 defaultConfig {
-                    applicationId = "com.com.swyp.com.swyp.com.swyp.kitchenlog"
+                    applicationId = "com.swyp.foodkeeper"
                     targetSdk = 36
                     minSdk = 24
                     versionCode = 1

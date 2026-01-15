@@ -70,7 +70,7 @@ object NetworkModule {
     }
 
     // ✅ 2. Coil(이미지 로딩) 전용 OkHttpClient 제공
-    // Hostname com.swyp.com.swyp.kitchenlog.gcdn.ntruss.com not verified 에러 해결용
+    // Hostname com.swyp.com.swyp.com.swyp.foodkeeper.gcdn.ntruss.com not verified 에러 해결용
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {

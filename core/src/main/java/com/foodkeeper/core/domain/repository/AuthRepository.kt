@@ -8,19 +8,14 @@ import com.foodkeeper.core.data.network.ApiResult
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
-    enum class LoginType { KAKAO, EMAIL }
+    enum class LoginType { EMAIL }
     suspend fun refreshToken(): Result<AuthTokenDTO>
     // 1. 로그인 상태 확인 (토큰 존재 여부)
     fun hasToken(): Flow<Boolean>
 
-    // 2. 카카오 로그인 인증 (카카오로부터 토큰만 받아옴)
-    suspend fun loginWithKakao(activityContext: Context): Result<String>
 
     // 3. FCM 토큰 획득
     suspend fun getFcmToken(): String?
-
-    // 4. 서버 로그인 (백엔드 인증)
-    fun signInWithServer(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
 
     // 5. 토큰 저장
     suspend fun saveTokens(accessToken: String, refreshToken: String)

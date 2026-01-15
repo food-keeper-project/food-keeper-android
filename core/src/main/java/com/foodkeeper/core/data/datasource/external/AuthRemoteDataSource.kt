@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 interface AuthRemoteDataSource {
-    fun signInWithKakao(kakaoToken: String, fcmToken: String?): Flow<AuthTokenDTO>
     fun refreshToken(accessToken: String,refreshToken:String): Flow<AuthTokenDTO>
     fun withdrawAccount(): Flow<String>
     // ✅ 로그아웃 추가
@@ -42,18 +41,6 @@ class DefaultAuthRemoteDataSource @Inject constructor(
     private val apiService: FoodApiService
 ) : AuthRemoteDataSource {
 
-
-    override fun signInWithKakao(
-        kakaoToken: String,
-        fcmToken: String?
-    ): Flow<AuthTokenDTO> {
-        return apiService.request(
-            ApiRoute.KakaoLogin(
-                kakaoAccessToken = kakaoToken,
-                mFcmToken = fcmToken
-            )
-        )
-    }
 
     override fun refreshToken(accessToken:String,refreshToken: String): Flow<AuthTokenDTO> {
         return apiService.request(

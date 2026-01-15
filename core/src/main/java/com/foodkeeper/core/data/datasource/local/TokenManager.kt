@@ -15,7 +15,7 @@ import javax.inject.Singleton
 class TokenManager @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
-    enum class LoginType { KAKAO, EMAIL }
+    enum class LoginType { EMAIL }
     companion object {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("accessToken")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refreshToken")

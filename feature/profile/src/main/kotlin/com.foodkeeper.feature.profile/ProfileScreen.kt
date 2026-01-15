@@ -65,7 +65,7 @@ internal fun ProfileScreen(
 ) {
     // ✅ 웹 링크를 열기 위한 UriHandler 가져오기
     val uriHandler = LocalUriHandler.current
-    val termsUrl = "https://doc-hosting.flycricket.io/kicinrogeu-iyongyaggwan-gaeinjeongboceoribangcim/eff196bc-7dc6-427a-9875-8a3ec243dbcc/terms" // 여기에 실제 약관 주소를 넣으세요
+    val termsUrl = "https://doc-hosting.flycricket.io/pudeukipeo-iyongyaggwan-gaeinjeongboceoribangcim/eff196bc-7dc6-427a-9875-8a3ec243dbcc/terms" // 여기에 실제 약관 주소를 넣으세요
 
 
     Surface(
