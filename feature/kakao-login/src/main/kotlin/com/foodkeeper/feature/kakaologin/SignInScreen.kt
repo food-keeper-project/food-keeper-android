@@ -542,7 +542,7 @@ private fun FindIdContent(
     } else {
         // --- 인증 후 ---
         Text(
-            text = if (foundId != null) "회원님의 아이디는 $foundId 입니다." else "가입된 정보를 찾을 수 없습니다.",
+            text = "해당 이메일로 아이디를 확인해주세요.",
             style = AppFonts.size16Body1
         )
     }

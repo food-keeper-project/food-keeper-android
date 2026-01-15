@@ -95,25 +95,25 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 카카오로 시작하기
-                    Button(
-                        onClick = { viewModel.login(context) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFEE500),
-                            contentColor = Color(0xFF191919)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                    ) {
-                        Text(
-                            text = "카카오로 시작하기",
-                            style = AppFonts.size16Body1,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        )
-                    }
+//                    // 카카오로 시작하기
+//                    Button(
+//                        onClick = { viewModel.login(context) },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(56.dp),
+//                        shape = RoundedCornerShape(12.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color(0xFFFEE500),
+//                            contentColor = Color(0xFF191919)
+//                        ),
+//                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+//                    ) {
+//                        Text(
+//                            text = "카카오로 시작하기",
+//                            style = AppFonts.size16Body1,
+//                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+//                        )
+//                    }
 
                     // 아이디로 시작하기
                     Button(
@@ -195,29 +195,29 @@ fun LoginScreen(
 //    }
 }
 
-@Composable
-private fun KakaoLoginButton(onClick: () -> Unit) {
-    // 실제 카카오 로그인 버튼 이미지는 res/drawable 폴더에 추가해야 합니다.
-    // 카카오 디자인 가이드에 맞는 공식 이미지를 사용하는 것을 권장합니다.
-    // 예: R.drawable.kakao_login_large_wide
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 32.dp)
-            .clickable(onClick = onClick) // 클릭 이벤트를 Box에 연결
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.app_icon),
-            contentDescription = null,
-            modifier = Modifier.size(160.dp)
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        Image(
-            painterResource(R.drawable.kakao_login_medium_narrow),
-            // 파일 이름에 맞춰 수정
-            contentDescription = "카카오로 시작하기"
-        )
-    }
-}
+//@Composable
+//private fun KakaoLoginButton(onClick: () -> Unit) {
+//    // 실제 카카오 로그인 버튼 이미지는 res/drawable 폴더에 추가해야 합니다.
+//    // 카카오 디자인 가이드에 맞는 공식 이미지를 사용하는 것을 권장합니다.
+//    // 예: R.drawable.kakao_login_large_wide
+//    Box(
+//        modifier = Modifier
+//            .padding(horizontal = 32.dp)
+//            .clickable(onClick = onClick) // 클릭 이벤트를 Box에 연결
+//    ) {
+//        Image(
+//            painter = painterResource(id = R.drawable.app_icon),
+//            contentDescription = null,
+//            modifier = Modifier.size(160.dp)
+//        )
+//        Spacer(modifier = Modifier.height(20.dp))
+//        Image(
+//            painterResource(R.drawable.kakao_login_medium_narrow),
+//            // 파일 이름에 맞춰 수정
+//            contentDescription = "카카오로 시작하기"
+//        )
+//    }
+//}
 
 //
 //@Preview(showBackground = true)
