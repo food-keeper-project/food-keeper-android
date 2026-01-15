@@ -23,8 +23,8 @@ android {
         applicationId = "com.swyp.kitchenlog"
         minSdk = 24
         targetSdk = 36
-        versionCode =6
-        versionName = "6.0.1"
+        versionCode =10
+        versionName = "10.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
