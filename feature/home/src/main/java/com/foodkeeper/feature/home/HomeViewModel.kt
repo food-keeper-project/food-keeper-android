@@ -1,8 +1,10 @@
 package com.foodkeeper.feature.home
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.domain.usecase.CategoryUseCase
 import kotlinx.coroutines.flow.launchIn
@@ -19,9 +21,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,8 +44,8 @@ class HomeViewModel @Inject constructor(
     private val _expiringFoodList = MutableStateFlow<List<Food>>(emptyList())
     val expiringFoodList: StateFlow<List<Food>> = _expiringFoodList.asStateFlow()
 
-    private val _foodCategories = MutableStateFlow<List<String>>(emptyList())
-    val foodCategories: StateFlow<List<String>> = _foodCategories.asStateFlow()
+    private val _foodCategories = MutableStateFlow<List<Category>>(emptyList())
+    val foodCategories: StateFlow<List<Category>> = _foodCategories.asStateFlow()
 
     private val _foodList = MutableStateFlow<List<Food>>(emptyList())
     val foodList: StateFlow<List<Food>> = _foodList.asStateFlow()
@@ -68,7 +72,7 @@ class HomeViewModel @Inject constructor(
             combine(
                 foodUseCase.getFoodList(),
                 foodUseCase.getExpiringSoonFoodList(),
-                categoryUseCase.getFoodCategoryList()
+                categoryUseCase.getDetailFoodCategoryList()
             ) { allFoods, expiringFoods, categories ->
                 Triple(allFoods, expiringFoods, categories)
             }
@@ -145,6 +149,33 @@ class HomeViewModel @Inject constructor(
                         _uiState.value = BaseUiState.Processing
                         onScreenEnter()
                         _toastMessage.emit("${food.name}을(를) 소비했습니다.")
+                        _uiState.value = BaseUiState.Content
+                    } else {
+                        _toastMessage.emit("다시 시도해 주세요.")
+                    }
+                }
+
+        }
+    }
+    fun onUpdateFood(imageUri: Uri?, food: Food) {
+        viewModelScope.launch {
+            val category = foodCategories.value.firstOrNull { it.name == food.category }
+            if (category == null) {
+                _toastMessage.emit("카테고리를 찾을 수 없습니다.")
+                return@launch
+            }
+            val updateFood = food.copy(categoryModel = listOf(category))
+
+            foodUseCase.updateFood(imageUri,updateFood)
+                .catch {
+                    _toastMessage.emit("다시 시도해 주세요.")
+                }
+                .collect { success ->
+                    if (success) {
+                        _selectedFood.value = null
+                        _uiState.value = BaseUiState.Processing
+                        onScreenEnter()
+                        _toastMessage.emit("${food.name}을(를) 수정했습니다.")
                         _uiState.value = BaseUiState.Content
                     } else {
                         _toastMessage.emit("다시 시도해 주세요.")

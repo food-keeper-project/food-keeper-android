@@ -1,7 +1,11 @@
 package com.foodkeeper.core.domain.model
 
+import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
+import com.foodkeeper.core.data.mapper.external.AuthTokenDTO
+import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
+import com.foodkeeper.core.ui.util.toIsoUtcString
 import java.util.Date
 import kotlinx.parcelize.Parcelize
 
@@ -38,3 +42,14 @@ data class Food(
     val categoryModel: List<Category>, //카테고리
     val expiryAlarm: Int = 0, // 알람일
 ): Parcelable
+
+fun Food.toFoodCreateRequest(): FoodCreateRequestDTO {
+    return FoodCreateRequestDTO(
+        name = name,
+        categoryIds = categoryModel.map { it.id },
+        storageMethod = storageMethod.displayName,
+        expiryDate = expiryDate.toIsoUtcString(),
+        expiryAlarm = expiryAlarm,
+        memo = memo
+    )
+}

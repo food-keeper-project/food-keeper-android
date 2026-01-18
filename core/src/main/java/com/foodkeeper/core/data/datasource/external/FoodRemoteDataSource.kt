@@ -45,6 +45,17 @@ class FoodRemoteDataSource @Inject constructor(
         )
     }
 
+    //식재료 업데이트
+    fun requestUpdateFood(foodId: Long, request: FoodCreateRequestDTO, imageBytes: ByteArray?): Flow<ResultDTO> {
+        return apiService.request(
+            ApiRoute.UpdateFood(
+                foodId = foodId,
+                request = request,
+                imageBytes = imageBytes
+            )
+        )
+    }
+
     fun requestConsumptionFood(foodId: Long): Flow<ResultDTO> {
         return apiService.request(
             ApiRoute.ConsumptionFood(

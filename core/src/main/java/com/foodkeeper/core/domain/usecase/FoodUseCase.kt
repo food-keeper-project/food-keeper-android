@@ -5,6 +5,7 @@ import android.net.Uri
 import com.foodkeeper.core.data.repository.UserRepository
 import com.foodkeeper.core.domain.model.AddFoodInput
 import com.foodkeeper.core.domain.model.Food
+import com.foodkeeper.core.domain.model.toFoodCreateRequest
 import com.foodkeeper.core.domain.model.toRequest
 import com.foodkeeper.core.domain.repository.FoodRepository
 import com.foodkeeper.core.ui.util.isExpiringSoon
@@ -27,6 +28,7 @@ interface FoodUseCase {
     fun ConsumptionFood(food: Food): Flow<Boolean>
 
     fun addFood(food: AddFoodInput): Flow<Boolean>
+    fun updateFood(imageUri: Uri?, food: Food): Flow<Boolean>
 }
 
 class DefaultFoodUseCase @Inject constructor(
@@ -53,6 +55,13 @@ class DefaultFoodUseCase @Inject constructor(
     override fun addFood(food: AddFoodInput): Flow<Boolean> {
         val imageBytes = food.imageUri?.toByteArray(context)
         return foodRepository.addFood(food.toRequest(), imageBytes).map { requestResult ->
+            requestResult.result
+        }
+    }
+    //식재료 수정
+    override fun updateFood(imageUri: Uri?, food: Food): Flow<Boolean> {
+        val imageBytes = imageUri?.toByteArray(context)
+        return foodRepository.updateFood(food.id,food.toFoodCreateRequest(), imageBytes).map { requestResult ->
             requestResult.result
         }
     }

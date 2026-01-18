@@ -1,5 +1,6 @@
 package com.foodkeeper.feature.home
 
+import FoodDetailDialog
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
@@ -51,6 +52,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.foodkeeper.core.R
+import com.foodkeeper.core.domain.model.Category
 import com.foodkeeper.core.domain.model.Food
 import com.foodkeeper.core.ui.base.BaseUiState
 import com.foodkeeper.core.ui.util.AppColors
@@ -60,13 +62,13 @@ import com.foodkeeper.core.ui.util.toyyMMddString
 import com.foodkeeper.feature.home.component.allFoodsSection.CategoryTabs
 import com.foodkeeper.feature.home.component.allFoodsSection.DateHeader
 import com.foodkeeper.feature.home.component.allFoodsSection.FoodListItem
-import com.foodkeeper.feature.home.component.dialog.FoodDetailDialog
 import com.foodkeeper.feature.home.component.dialog.RecipeRecommendationDialog
 import com.foodkeeper.feature.home.component.dialog.findActivity
 import com.foodkeeper.feature.home.component.dialog.showGoToSettingsDialog
 import com.foodkeeper.feature.home.component.dialog.showNotificationRationaleDialog
 import com.foodkeeper.feature.home.component.expiringFoodsSection.ExpiringFoodsSection
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * 메인 홈 화면
@@ -188,8 +190,10 @@ fun HomeScreen(
     selectedFood?.let { food ->
         FoodDetailDialog(
             food = food,
+            categorys = foodCategorys,
             onDismiss = viewModel::onDismissDialog,
-            onConsumption = viewModel::onConsumptionFood
+            onConsumption = viewModel::onConsumptionFood,
+            onUpdate = viewModel::onUpdateFood
         )
     }
     selectedRecipeRecommend?.let { list ->
@@ -269,12 +273,12 @@ fun HomeErrorScreen(
 @Composable
 private fun HomeContent(
     expiringFoodList: List<Food>,
-    foodCategorys: List<String>,
+    foodCategorys: List<Category>,
     foodList: List<Food>,
 //    onFoodItemClick: (Food) -> Unit
     onFoodItemClick: (Food) -> Unit
 ) {
-    val tabs = listOf("전체") + foodCategorys
+    val tabs = listOf("전체") + foodCategorys.map { it.name }
     var selectedTab by remember { mutableStateOf("전체") }
 
     val filteredFoodList = remember(foodList, selectedTab) {
