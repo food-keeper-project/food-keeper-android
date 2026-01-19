@@ -158,7 +158,7 @@ sealed class ApiRoute {
             is PostPwCodeVerify->HttpMethod.Post
             is PostPwReset->HttpMethod.Post
             is LocalLogin->HttpMethod.Post
-            is UpdateFood-> HttpMethod.Patch
+            is UpdateFood-> HttpMethod.Put
             else -> HttpMethod.Get //선언이 없을 경우 디폴트값 GET
 //            is Logout -> HttpMethod.GET
         }

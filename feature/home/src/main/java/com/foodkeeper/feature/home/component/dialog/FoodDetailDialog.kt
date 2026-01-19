@@ -1,5 +1,7 @@
 import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +31,7 @@ import androidx.compose.animation.AnimatedVisibility
 import com.foodkeeper.core.domain.model.Category
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.foodkeeper.core.R
@@ -49,13 +52,26 @@ fun FoodDetailDialog(
     var isEditMode by remember { mutableStateOf(false) }
     var editedFood by remember { mutableStateOf(food) }
     var categoryList by remember { mutableStateOf(categorys) }
-    val imageUri: Uri? = null //이미지 URL
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    // 🔥 이미지 선택 런처
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { imageUri = it }
+    }
+
+
+
     // 🔥 DatePicker 다이얼로그 상태
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
     // 수정 취소 시 원복
     LaunchedEffect(isEditMode) {
-        if (!isEditMode) editedFood = food
+        if (!isEditMode) {
+            editedFood = food
+            imageUri = null
+        }
     }
 
     Dialog(
@@ -105,22 +121,17 @@ fun FoodDetailDialog(
 
                 /* ---------- Image ---------- */
                 Box(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .border(1.dp, AppColors.main, RoundedCornerShape(20.dp))
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    AsyncImage(
-                        model = editedFood.imageURL,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(20.dp)),
-                        error = painterResource(id = R.drawable.foodplaceholder),
-                        placeholder = painterResource(id = R.drawable.foodplaceholder)
+                    FoodImageSection(
+                        isEditMode = isEditMode,
+                        imageUrl = editedFood.imageURL,
+                        imageUri = imageUri,
+                        onImageClick = { imagePickerLauncher.launch("image/*") }
                     )
                 }
+
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -236,6 +247,87 @@ fun FoodDetailDialog(
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📁 개별 필드 컴포넌트
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * 이미지 섹션 (수정 모드에서 클릭 가능)
+ */
+@Composable
+fun FoodImageSection(
+    isEditMode: Boolean,
+    imageUrl: String?,
+    imageUri: Uri?,
+    onImageClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(90.dp)
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .border(1.dp, if (!isEditMode) AppColors.main else AppColors.light5Gray, RoundedCornerShape(20.dp))
+            .background(AppColors.white, RoundedCornerShape(20.dp))
+            .then(
+                if (isEditMode) {
+                    Modifier.clickable { onImageClick() }
+                } else Modifier
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        // 이미지 표시 우선순위: imageUri > imageUrl > placeholder
+        val displayImage = imageUri ?: imageUrl
+
+        if (displayImage != null) {
+            AsyncImage(
+                model = displayImage,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp)),
+                error = painterResource(id = R.drawable.foodplaceholder),
+                placeholder = painterResource(id = R.drawable.foodplaceholder)
+            )
+        } else {
+            // placeholder 이미지
+            Image(
+                painter = painterResource(id = R.drawable.foodplaceholder),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+// 🔥 수정 모드일 때 중앙에 카메라 아이콘 오버레이
+        if (isEditMode) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Color.Black.copy(alpha = 0.3f),
+                        RoundedCornerShape(20.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // 🔥 카메라 아이콘 흰색 배경 컨테이너
+                Box(
+                    modifier = Modifier
+                        .size(35.dp) // 👉 아이콘 28dp + 여백
+                        .background(
+                            color = Color.White,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.vector),
+                        contentDescription = "사진 변경",
+                        tint = AppColors.light3Gray,
+                        modifier = Modifier.size(22.dp) // 🔥 카메라 아이콘 사이즈
+                    )
+                }
+            }
+        }
+    }
+}
 
 /**
  * 식재료명 필드 (텍스트 입력)
