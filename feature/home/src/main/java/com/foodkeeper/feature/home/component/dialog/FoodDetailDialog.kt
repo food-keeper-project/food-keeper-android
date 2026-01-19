@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.foodkeeper.core.R
+import com.foodkeeper.core.domain.model.ExpiryAlarm
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📁 메인 다이얼로그
@@ -171,6 +172,21 @@ fun FoodDetailDialog(
                 ) { name ->
                     storageMethods.find { it.displayName == name }?.let {
                         editedFood = editedFood.copy(storageMethod = it)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                // 알림일시
+                val expiryAlarm = ExpiryAlarm.values().toList()
+                FoodDropdownRow(
+                    label = "알림일시",
+                    isEditMode = isEditMode,
+                    value = ExpiryAlarm.fromDaysBefore(editedFood.expiryAlarm)?.displayName ?: "알수없음" ,
+                    options = expiryAlarm.map { it.displayName },
+                    isBadge = false
+                ) { name ->
+                    expiryAlarm.find { it.displayName == name }?.let {
+                        editedFood = editedFood.copy(expiryAlarm = it.daysBefore)
                     }
                 }
 
@@ -383,7 +399,7 @@ fun FoodDropdownRow(
             horizontalArrangement = Arrangement.Start
         ) {
             if (isEditMode) {
-                // 🔥 수정 모드: 텍스트 + 화살표 (wrapContent)
+                // 수정 모드
                 Text(text = value, style = AppFonts.size14Body2)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
@@ -392,20 +408,28 @@ fun FoodDropdownRow(
                     modifier = Modifier.size(16.dp)
                 )
             } else {
-                // 읽기 모드: 배지 형태
-                Surface(
-                    color = AppColors.point,
-                    shape = RoundedCornerShape(4.dp)
-                ) {
+                // 읽기 모드
+                if (!isBadge) {
+                    // 🔥 배지 제거 → 텍스트만
                     Text(
                         text = value,
-                        style = AppFonts.size12Caption1,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        style = AppFonts.size14Body2
                     )
+                } else {
+                    // 기존 배지 유지
+                    Surface(
+                        color = AppColors.point,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = value,
+                            style = AppFonts.size14Body2,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
         }
-
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },

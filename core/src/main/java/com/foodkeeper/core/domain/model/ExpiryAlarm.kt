@@ -6,5 +6,11 @@ enum class ExpiryAlarm(val displayName: String, val daysBefore: Int) {
     TWO_DAYS("2일 전 알림", 2),
     THREE_DAYS("3일 전 알림", 3),
     ONE_WEEK("1주일 전 알림", 7),
-    TWO_WEEKS("2주일 전 알림", 14)
+    TWO_WEEKS("2주일 전 알림", 14);
+
+    companion object {
+        fun fromDaysBefore(daysBefore: Int): ExpiryAlarm? {
+            return values().find { it.daysBefore == daysBefore }
+        }
+    }
 }
