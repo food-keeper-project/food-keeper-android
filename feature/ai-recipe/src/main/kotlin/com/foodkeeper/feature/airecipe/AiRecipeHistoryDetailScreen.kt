@@ -1,3 +1,4 @@
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,7 +51,11 @@ fun AiRecipeHistoryDetailScreen(
     viewModel: AiRecipeDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+// enabled = true는 뒤로가기 버튼을 항상 가로채겠다는 의미입니다.
+    BackHandler(enabled = true) {
+        // 시스템 뒤로가기 버튼을 누르면 onBackClick 함수를 실행합니다.
+        onBackClick()
+    }
     LaunchedEffect(recipeId) {
         viewModel.fetchRecipeDetail(recipeId)
     }
