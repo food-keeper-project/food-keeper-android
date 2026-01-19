@@ -29,7 +29,7 @@ fun SaveFloatingButton(uiState: AiRecipeUiState, viewModel: AiRecipeDetailViewMo
         shape = RoundedCornerShape(22.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp), // 2. 버튼 내부 패딩 사용
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (uiState.isSaved) AppColors.point else AppColors.light5Gray,
+            containerColor = if (uiState.isSaved) AppColors.main else AppColors.light5Gray,
         )
     ) {
         if (uiState.isSaving) {
@@ -42,7 +42,7 @@ fun SaveFloatingButton(uiState: AiRecipeUiState, viewModel: AiRecipeDetailViewMo
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (uiState.isSaved) "저장됨" else "레시피 저장하기",
+                    text = if (uiState.isSaved) "레시피 저장됨" else "레시피 저장하기",
                     color = if (uiState.isSaved) AppColors.white else AppColors.light3Gray,
                     style = com.foodkeeper.core.ui.util.AppFonts.size14Body2 // 4. 폰트 명시 (너무 크면 잘림)
                 )
@@ -70,12 +70,13 @@ fun RegenerateFloatingButton(onClick: () -> Unit, modifier: Modifier) {
         modifier = modifier.height(44.dp),
         shape = RoundedCornerShape(22.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.main)
+        colors = ButtonDefaults.buttonColors(containerColor = AppColors.white)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "다시 생성하기",
-                style = com.foodkeeper.core.ui.util.AppFonts.size14Body2
+                style = com.foodkeeper.core.ui.util.AppFonts.size14Body2,
+                color = AppColors.main
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -83,7 +84,8 @@ fun RegenerateFloatingButton(onClick: () -> Unit, modifier: Modifier) {
             Icon(
                 painter = painterResource(id = R.drawable.refresh_icon),
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
+                tint = AppColors.main
             )
         }
     }
