@@ -1,5 +1,7 @@
 package com.foodkeeper.core.data.network
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.foodkeeper.core.data.mapper.request.AccountRequestDTO
 import com.foodkeeper.core.data.mapper.request.FoodCreateRequestDTO
 import com.foodkeeper.core.data.mapper.request.RecipeCreateRequest
@@ -14,6 +16,7 @@ import io.ktor.http.HttpMethod // Ktor의 HttpMethod 사용
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.ByteArrayOutputStream
 
 
 sealed class ApiRoute {
@@ -216,14 +219,30 @@ sealed class ApiRoute {
             imageBytes: ByteArray,
             fileName: String
         ) {
+            val compressedBytes = compressImage(
+                originalBytes = imageBytes,
+                quality = 70
+            )
+
             builder.append(
                 "image",
-                imageBytes,
+                compressedBytes,
                 Headers.build {
                     append(HttpHeaders.ContentType, "image/jpeg")
                     append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
                 }
             )
+        }
+        private fun compressImage(
+            originalBytes: ByteArray,
+            quality: Int = 70
+        ): ByteArray {
+            val bitmap = BitmapFactory.decodeByteArray(originalBytes, 0, originalBytes.size)
+
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+
+            return outputStream.toByteArray()
         }
 
         private fun buildAddFoodMultipart(
