@@ -275,7 +275,6 @@ private fun HomeContent(
     expiringFoodList: List<Food>,
     foodCategorys: List<Category>,
     foodList: List<Food>,
-//    onFoodItemClick: (Food) -> Unit
     onFoodItemClick: (Food) -> Unit
 ) {
     val tabs = listOf("전체") + foodCategorys.map { it.name }
@@ -301,7 +300,8 @@ private fun HomeContent(
             item {
                 ExpiringFoodsSection(
                     expiringCount = expiringFoodList.size,
-                    foodItems = expiringFoodList
+                    foodItems = expiringFoodList,
+                    onFoodItemClick = onFoodItemClick
                 )
             }
 

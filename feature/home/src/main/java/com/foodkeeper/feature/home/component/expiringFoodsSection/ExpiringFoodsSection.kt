@@ -37,7 +37,8 @@ import com.foodkeeper.core.ui.util.AppFonts
 @Composable
 fun ExpiringFoodsSection(
     expiringCount: Int,
-    foodItems: List<Food>
+    foodItems: List<Food>,
+    onFoodItemClick: (Food) -> Unit
 ) {
     // 빈 리스트일 경우 처리
     if (foodItems.isEmpty()) {
@@ -82,7 +83,10 @@ fun ExpiringFoodsSection(
             Spacer(modifier = Modifier.height(16.dp))
 
             // ✨ 2줄 동시 스크롤 리스트
-            TwoRowSyncedList(foodItems = foodItems)
+            TwoRowSyncedList(
+                foodItems = foodItems,
+                onFoodItemClick = onFoodItemClick
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

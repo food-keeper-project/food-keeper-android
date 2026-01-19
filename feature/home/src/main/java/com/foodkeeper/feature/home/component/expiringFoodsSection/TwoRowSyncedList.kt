@@ -18,7 +18,10 @@ import com.foodkeeper.core.domain.model.Food
  * 둘째 줄: 1, 3, 5, 7...
  */
 @Composable
-fun TwoRowSyncedList(foodItems: List<Food>) {
+fun TwoRowSyncedList(
+    foodItems: List<Food>,
+    onFoodItemClick: (Food) -> Unit
+) {
     val firstRowItems = foodItems.filterIndexed { index, _ -> index % 2 == 0 }
     val secondRowItems = foodItems.filterIndexed { index, _ -> index % 2 == 1 }
 
@@ -52,7 +55,10 @@ fun TwoRowSyncedList(foodItems: List<Food>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(firstRowItems) { item ->
-                ExpiringFoodCardCompact(item = item)
+                ExpiringFoodCardCompact(
+                    item = item,
+                    onFoodItemClick = onFoodItemClick
+                )
             }
         }
 
@@ -63,7 +69,10 @@ fun TwoRowSyncedList(foodItems: List<Food>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(secondRowItems) { item ->
-                ExpiringFoodCardCompact(item = item)
+                ExpiringFoodCardCompact(
+                    item = item,
+                    onFoodItemClick = onFoodItemClick
+                )
             }
         }
     }

@@ -39,7 +39,8 @@ import com.foodkeeper.feature.home.component.badges.CompactDDayBadge
  */
 @Composable
 fun ExpiringFoodCardCompact(
-    item: Food
+    item: Food,
+    onFoodItemClick: (Food) -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -47,6 +48,7 @@ fun ExpiringFoodCardCompact(
             .height(37.dp),
         shape = RoundedCornerShape(40.dp),  // 더 둥근 모서리
         color = Color.White,
+        onClick = { onFoodItemClick(item) }
     ) {
         Row(
             modifier = Modifier
