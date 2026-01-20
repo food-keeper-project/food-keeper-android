@@ -62,9 +62,9 @@ fun String.parseServerDate(): Date {
 fun Date.toIsoUtcString(): String {
     val formatter = SimpleDateFormat(
         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        Locale.US
+        Locale.getDefault()
     )
-    formatter.timeZone = TimeZone.getTimeZone("UTC")
+//    formatter.timeZone = TimeZone.getTimeZone("UTC")
     return formatter.format(this)
 }
 

@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.foodkeeper.core.R
 import com.foodkeeper.core.domain.model.ExpiryAlarm
+import java.util.TimeZone
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 📁 메인 다이얼로그
@@ -229,10 +230,15 @@ fun FoodDetailDialog(
         }
     }
 
-    // 🔥 DatePicker 팝업 다이얼로그
+// 🔥 DatePicker 팝업 다이얼로그
     if (showDatePickerDialog) {
+        // 로컬 시간대와 UTC의 차이를 계산하여 보정된 밀리초 생성
+        val dateValue = editedFood.expiryDate.time
+        val timeZoneOffset = TimeZone.getDefault().getOffset(dateValue)
+        val correctedMillis = dateValue + timeZoneOffset
+
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = editedFood.expiryDate.time
+            initialSelectedDateMillis = correctedMillis // 보정된 값 전달
         )
 
         DatePickerDialog(
@@ -241,6 +247,8 @@ fun FoodDetailDialog(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
+                            // 저장할 때는 다시 로컬 시간대로 돌려서 저장 (필요 시)
+                            // 또는 선택된 UTC 0시 값을 그대로 Date 객체로 변환
                             editedFood = editedFood.copy(expiryDate = Date(millis))
                         }
                         showDatePickerDialog = false
@@ -255,7 +263,12 @@ fun FoodDetailDialog(
                 }
             }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false,
+                title = null,
+                headline = null
+            )
         }
     }
 }
