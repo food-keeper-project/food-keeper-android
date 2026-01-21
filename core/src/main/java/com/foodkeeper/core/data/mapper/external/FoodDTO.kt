@@ -25,7 +25,9 @@ data class FoodDTO(
     @SerialName("createdAt")
     val createdAt: String,       // "2025-12-29T14:33:52.752Z"
     @SerialName("categories")
-    val categoryIds: List<CategoryDTO>
+    val categoryIds: List<CategoryDTO>,
+    @SerialName("expiryAlarm")
+    val expiryAlarm: Int
 )
 
 
@@ -55,7 +57,7 @@ fun FoodDTO.toFood(): Food {
         createdAt = createdAt.parseServerDate(),
         category = categoryIds.firstOrNull()?.name ?: "미분류",
         categoryModel = categoryIds.map { it.toCategory() },
-        expiryAlarm = 0
+        expiryAlarm = expiryAlarm
     )
 }
 
